@@ -1,0 +1,18 @@
+<sysdef top="MAIN">
+
+<block name="SYS1">
+  <creg name="CTRL" desc="Control register" stb="1" />
+  <sreg name="STATUS" desc="Control register" ack="1" />
+  <creg name="ENABLEs" desc="Link enable registers" reps="10"/>
+</block>
+
+<block name="MAIN">
+  <subblock name="LINKS" type="SYS1" reps="5"/>
+  <creg name="CTRL" desc="Control register">
+    <field name="CLK_ENABLE" width="1"/>
+    <field name="CLK_FREQ" width="4"/>
+    <field name="PLL_RESET" width="1"/>
+  </creg>
+</block>
+
+</sysdef>
