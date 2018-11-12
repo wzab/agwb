@@ -10,7 +10,7 @@ The code is published under LGPL V2 license
 """
 import xml.etree.ElementTree as et
 import wb_block as wb
-sysdef=et.ElementTree(file="test1.xml")
+sysdef=et.ElementTree(file="../example1.xml")
 # We get the root element, and find the corresponding block
 er=sysdef.getroot()
 top_name=er.attrib["top"]
@@ -22,19 +22,17 @@ top_name=er.attrib["top"]
 # analyze the block dependencies.
 
 # Create the list of blocks
-blocks={}
-
 for el in er.findall("block"):
    # Here we take each block and count registers inside
    # We also prepare the list of subblocks (of vectors of
    # subblocks)
    bn=el.attrib['name']
-   if bn in blocks:
+   if bn in wb.blocks:
       raise Exception("Duplicate definition of block: "+bn)
-   blocks[bn] = wb.wb_block(el)
-   # Here we have everything, we could get from the first scan.
-   # Now we need to perform a possibly recursive scan to finalize the allocation
-   self.analyze()
-   # Now we should have assigned all addresses, and we can generate
-   # the output files.
+   bl = wb.wb_block(el)
+   wb.blocks[bn] = bl
+# Here we have everything, we could get from the first scan.
+bl=wb.blocks[top_name]
+bl.analyze()
+
    

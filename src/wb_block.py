@@ -33,7 +33,7 @@ entity {p_entity} is
     slave_i : t_wishbone_slave_in;
     slave_o : t_wishbone_slave_out;
 {subblk_busses}
-{signal_cons}
+{signal_ports}
     );
 
 end wb_test_top;
@@ -44,6 +44,9 @@ architecture gener of {p_entity} is
   signal int_wbs_out : t_wishbone_slave_out;
   signal int_wbs_in : t_wishbone_slave_in;
   signal int_addr : std_logic_vector({valid_bits}-1 downto 0);
+  signal wb_s_out : t_wishbone_slave_out_array(0 to {nof_subblks});
+  signal wb_s_in : t_wishbone_slave_in_array(0 to {nof_subblks});
+
   -- Constants
   constant block_id_addr : std_logic_vector({valid_bits}-1 downto 0) := (others => '1');
   constant block_ver_addr : std_logic_vector({valid_bits}-1 downto 0) := (0=>'0', 'others => '1');
@@ -59,16 +62,16 @@ begin
 -- Main crossbar 
   xwb_crossbar_1: entity work.xwb_crossbar
   generic map (
-     g_num_masters => {n_masters},
-     g_num_slaves  => {n_slaves},
+     g_num_masters => 1,
+     g_num_slaves  => 1+nof_subblks,
      g_registered  => {p_registered},
-     g_address     => {p_address} ,
-     g_mask        => {p_mask})
+     g_address     => {p_addresses},
+     g_mask        => {p_masks})
   port map (
      clk_sys_i => clk_sys_i,
      rst_n_i   => rst_n_i,
-     slave_i   => wb_m_out,
-     slave_o   => wb_m_in,
+     slave_i   => slave_i,
+     slave_o   => slave_o,
      master_i  => wb_s_out,
      master_o  => wb_s_in,
     sdb_sel_o => open);
@@ -101,27 +104,40 @@ begin
   end process
 
 """
-
-templ_wb_crb = """\
-"""
-
+blocks={}
 
 class wb_reg(object):
-    """ The class wb_reg describes a single register
-    """
-
-   def __init__(self,el):
-     """
-     The constructor gets the XML node defining the register
-     """
-     pass
+   """ The class wb_reg describes a single register
+   """
+   def __init__(self,el,adr):
+       """
+       The constructor gets the XML node defining the register
+       """
+       nregs=1
+       if 'reps' in el.attrib:
+           nregs = int(el.attrib['reps'])
+       self.base = adr;
+       self.size = nregs
+       self.name = el.attrib['name']
+       self.ack = 0
+       if 'ack' in el.attrib:
+           self.ack = int(el.attrib['ack'])
+       self.stb = 0
+       if 'stb' in el.attrib:
+           self.stb = int(el.attrib['stb'])
+           
+       
 
    def gen_vhdl(self):
-     """
-     The method generates the VHDL block responsible for access
-     to the registers.
-     """
-
+       """
+       The method generates the VHDL block responsible for access
+       to the registers.
+       We need to generate two sections:
+       * Declaration of signals used to input or output the signal,
+          and the optoional ACK or STB flags
+       * Read or write sequence to be embedded in the process
+       """
+       pass
 
    def gen_pkg(self):
      """
@@ -130,6 +146,18 @@ class wb_reg(object):
      """
      pass
 
+class wb_area(object):
+    """ The class representing the address area
+    """
+    def __init__(self,size,obj):
+        self.size=size
+        self.obj=obj
+        self.adr=0
+        self.mask=0
+        self.total_size=0
+    def sort_key(self):
+        return self.size
+    
 class wb_block(object):
    def __init__(self,el):
      """
@@ -137,33 +165,80 @@ class wb_block(object):
      It also calculates the number of registers, and creates
      the description of the record
      """
+     self.name = el.attrib['name']
+     # We prepare the list of address areas
+     self.areas=[]
      # We prepare the table for storing the registers.
-     self.adrmap=[]
-     self.free_addr=0 # The first free address
+     self.regs=[]
+     self.free_reg_addr=0 # The first free address
      # Prepare the list of subblocks
      self.subblks=[]
      for child in el.findall("*"):
+         # Now for registers we allocate addresses in order
+         # We don't to alignment (yet)
         if child.tag == 'creg':
-           # This is a control register
-           
-           pass
+            # This is a control register
+           reg = wb_reg(child,self.free_reg_addr)
+           self.free_reg_addr += reg.size
+           self.regs.append(reg)
         elif child.tag == 'sreg':
-           # This is a status register
-           pass
+            # This is a status register
+           reg = wb_reg(child,self.free_reg_addr)
+           self.free_reg_addr += reg.size
+           self.regs.append(reg)
         elif child.tag == 'subblock':
-           # This is a subblock definition
-           pass
+            # This is a subblock definition
+            # We only add it to the list, the addresses can't be allocated yet
+           self.subblks.append(child)
         else:
-           # Unknown child
+            # Unknown child
            raise Exception("Unknown node in block: "+el.name)
-   def analyze(self):
-     # Prepare the map of address areas
-     self.areas=[]
-     # Do the local stuff
-     # Scan the subblocks
-     for bl in self.subblks[]:
-        # If the subblock was not analyzed yet, analyze it now
-        bl.analyze()
-        # Now we can be sure, that it is analyzed, so we can 
-        # add its address space to ours.
+       # After that procedure, the field free_reg_addr contains
+       # the length of the block of internal registers
         
+   def analyze(self):
+     # Add the length of the local addresses to the list of areas
+     self.areas.append(wb_area(self.free_reg_addr, None))
+     # Scan the subblocks
+     for sblk in self.subblks:
+        #@!@ Here we must to correct something! The name of the subblock
+        #Is currently lost. We must to decide how it should be passed
+        #To the generated code@!@
+        bl = blocks[sblk.attrib['type']]
+        # If the subblock was not analyzed yet, analyze it now
+        if len(bl.areas)==0:
+            bl.analyze()
+            # Now we can be sure, that it is analyzed, so we can 
+            # add its address space to ours.
+        self.areas.append(wb_area(bl.addr_size,bl))
+        # Now we can calculate the total length of address space
+        # We use the simplest algorithm - all blocks are sorted,
+        # their size is rounded up to the nearest power of 2
+        # They are allocated in order.
+     cur_base = 0
+     self.areas.sort(key=wb_area.sort_key, reverse=True)
+     for ar in self.areas:
+         if ar.obj==None:
+             # This is the register block
+             self.reg_base = cur_base
+         ar.adr = cur_base
+         ar.adr_bits = (ar.size-1).bit_length()
+         ar.total_size = 1 << ar.adr_bits
+         # Now we shift the position of the next block
+         cur_base += ar.total_size
+         self.addr_size = cur_base
+           
+     print('analyze: '+self.name+" addr_size:"+str(self.addr_size))
+     
+   def gen_vhdl(self):
+       # To fill the template, we must to set the following values:
+       # p_entity, valid_bits
+       
+       # subblk_busses, signal_ports, signal_decls
+       # nof_subblks,
+       # subblk_assignments,
+       # n_slaves,
+       # p_registered,
+       # p_addresses, p_masks
+       # block_id, block_ver - to verify that design matches the software
+       pass
