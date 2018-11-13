@@ -106,6 +106,16 @@ begin
 """
 blocks={}
 
+class wb_field(object):
+   def __init__(self,fl,lsb):
+      self.name = fl.attrib['name']
+      self.lsb = lsb
+      self.size = fl.attrib['width']
+      self.msb = lsb + self.size - 1
+      self.type = 'stlv'
+      if 'type' in fl.attrib:
+          
+
 class wb_reg(object):
    """ The class wb_reg describes a single register
    """
@@ -113,32 +123,38 @@ class wb_reg(object):
        """
        The constructor gets the XML node defining the register
        """
-       nregs=1
-       if 'reps' in el.attrib:
-           nregs = int(el.attrib['reps'])
+       nregs=el.get('reps',1)
+       self.type = el.tag         
        self.base = adr
        self.nregs = nregs
        self.size = nregs
        self.name = el.attrib['name']
-       self.ack = 0
-       if 'ack' in el.attrib:
-           self.ack = int(el.attrib['ack'])
-       self.stb = 0
-       if 'stb' in el.attrib:
-           self.stb = int(el.attrib['stb'])
-           
+       self.ack = el.get('ack',0)
+       self.stb = el.get('stb',0)
+       # Read list of fields
+       self.fields=[]
+       self.free_bit=0
+       for fl in el.findall('field')
+           fdef=wb_field(fl,self.free_bit)
+           self.free_bit += fdef.size
+           if self.free_bit > 32:
+              raise Exception("Total width of fields in register " +self.name+ " is above 32-bits")
+           self.fields.append(fdef)
        
 
-   def gen_vhdl(self):
+   def gen_vhdl(self,parent):
        """
        The method generates the VHDL block responsible for access
        to the registers.
+       We append our definitions to the appropriate sections
+       in the parrent block.
+       
        We need to generate two sections:
        * Declaration of signals used to input or output the signal,
           and the optoional ACK or STB flags
        * Read or write sequence to be embedded in the process
        """
-       pass
+       
 
    def gen_pkg(self):
      """
@@ -213,10 +229,8 @@ class wb_block(object):
             # Now we can be sure, that it is analyzed, so we can 
             # add its address space to ours.
         # Check if this is a vector of subblocks
-        reps = 1
-        if 'reps' in sblk.attrib:
-           reps = int(sblk.attrib['reps'])
-           print("reps:"+str(reps))
+        reps = sblk.get('reps',1)
+        print("reps:"+str(reps))
         # Now recalculate the size of the area, considering possible
         # block repetitions
         addr_size = bl.addr_size * reps
@@ -241,6 +255,8 @@ class wb_block(object):
      # We must adjust the address space to the power of two
      self.adr_bits = (self.addr_size-1).bit_length()
      self.addr_size = 1 << self.adr_bits
+     # In fact, here we should be able to generate the HDL code
+     
      print('analyze: '+self.name+" addr_size:"+str(self.addr_size))
 
 #@!@ How to represent base addresses for subblocks in vectors?
