@@ -116,7 +116,8 @@ class wb_reg(object):
        nregs=1
        if 'reps' in el.attrib:
            nregs = int(el.attrib['reps'])
-       self.base = adr;
+       self.base = adr
+       self.nregs = nregs
        self.size = nregs
        self.name = el.attrib['name']
        self.ack = 0
@@ -149,12 +150,13 @@ class wb_reg(object):
 class wb_area(object):
     """ The class representing the address area
     """
-    def __init__(self,size,obj):
+    def __init__(self,size,obj,reps):
         self.size=size
         self.obj=obj
         self.adr=0
         self.mask=0
         self.total_size=0
+        self.reps=reps
     def sort_key(self):
         return self.size
     
@@ -198,7 +200,7 @@ class wb_block(object):
         
    def analyze(self):
      # Add the length of the local addresses to the list of areas
-     self.areas.append(wb_area(self.free_reg_addr, None))
+     self.areas.append(wb_area(self.free_reg_addr, None,1))
      # Scan the subblocks
      for sblk in self.subblks:
         #@!@ Here we must to correct something! The name of the subblock
@@ -210,11 +212,19 @@ class wb_block(object):
             bl.analyze()
             # Now we can be sure, that it is analyzed, so we can 
             # add its address space to ours.
-        self.areas.append(wb_area(bl.addr_size,bl))
-        # Now we can calculate the total length of address space
-        # We use the simplest algorithm - all blocks are sorted,
-        # their size is rounded up to the nearest power of 2
-        # They are allocated in order.
+        # Check if this is a vector of subblocks
+        reps = 1
+        if 'reps' in sblk.attrib:
+           reps = int(sblk.attrib['reps'])
+           print("reps:"+str(reps))
+        # Now recalculate the size of the area, considering possible
+        # block repetitions
+        addr_size = bl.addr_size * reps
+        self.areas.append(wb_area(addr_size,bl,reps))
+     # Now we can calculate the total length of address space
+     # We use the simplest algorithm - all blocks are sorted,
+     # their size is rounded up to the nearest power of 2
+     # They are allocated in order.
      cur_base = 0
      self.areas.sort(key=wb_area.sort_key, reverse=True)
      for ar in self.areas:
@@ -226,9 +236,15 @@ class wb_block(object):
          ar.total_size = 1 << ar.adr_bits
          # Now we shift the position of the next block
          cur_base += ar.total_size
-         self.addr_size = cur_base
-           
+         print("added size:"+str(ar.total_size))
+     self.addr_size = cur_base
+     # We must adjust the address space to the power of two
+     self.adr_bits = (self.addr_size-1).bit_length()
+     self.addr_size = 1 << self.adr_bits
      print('analyze: '+self.name+" addr_size:"+str(self.addr_size))
+
+#@!@ How to represent base addresses for subblocks in vectors?
+
      
    def gen_vhdl(self):
        # To fill the template, we must to set the following values:
@@ -241,4 +257,12 @@ class wb_block(object):
        # p_registered,
        # p_addresses, p_masks
        # block_id, block_ver - to verify that design matches the software
+
+       # First - generate code for registers
+       signal_ports=""
+       for reg in regs:
+          #generate 
+          if reg.reps=1
+             
+        
        pass
