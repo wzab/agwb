@@ -34,5 +34,8 @@ for el in er.findall("block"):
 # Here we have everything, we could get from the first scan.
 bl=wb.blocks[top_name]
 bl.analyze()
+for key,bl in wb.blocks.items():
+   bl.gen_vhdl()
+
 
    
