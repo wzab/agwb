@@ -112,8 +112,8 @@ class wb_field(object):
       self.lsb = lsb
       self.size = fl.attrib['width']
       self.msb = lsb + self.size - 1
-      self.type = 'stlv'
-      if 'type' in fl.attrib:
+      self.type = get('type','std_logic_vector')
+     
           
 
 class wb_reg(object):
@@ -124,9 +124,9 @@ class wb_reg(object):
        The constructor gets the XML node defining the register
        """
        nregs=el.get('reps',1)
-       self.type = el.tag         
+       self.regtype = el.tag
+       self.type = el.get('type','std_logic_vector')
        self.base = adr
-       self.nregs = nregs
        self.size = nregs
        self.name = el.attrib['name']
        self.ack = el.get('ack',0)
@@ -154,8 +154,48 @@ class wb_reg(object):
           and the optoional ACK or STB flags
        * Read or write sequence to be embedded in the process
        """
-       
+       # Generate the type corresponding to the register
+       tname = "t_"+self.name
+       if len(self.fields) == 0:
+          # Simple register, no fields
+          dt="subtype "+tname+" is "+\
+             self.type+"(31 downto 0);\n" 
+       else:
+          # Register with fields, we have to create a record
+          dt="type "+tname+" is record\n"
+          for fl in self.fields:
+             dt+= "  "+fl.vhdl_type()+";\n"
+          dt+="end record;\n"
+       # If this is a vector of registers, create the array type
+       if self.size > 1:
+          dt+="type "+tname+"_array is array(0 to "+ str(self.size-1) +") of "+tname+";\n"
+       # Append the generated types to the parents package section
+       parent.add_templ('p_package',dt,4)
 
+       # Now generate the entity ports
+       sfx = '_i'
+       sdir = "in "
+       if self.type == 'creg':
+         sfx = '_o'
+         sdir = "out "
+       if self.size == 1:
+          dt=self.name+sfx+" : "+sdir+" "+tname+";\n"
+       else:
+          dt=self.name+sfx+" : "+sdir+" "+tname+"_array;\n"
+       # Now we generate the STB or ACK ports (if required)
+       if self.type == 'creg' and self.stb == 1:
+          # We need to generate STB output
+          pass # To be implemented!
+       if self.type == 'sreg' and self.ack == 1:
+          # We need to generate ACK output
+          pass # To be implemented!          
+       parent.add_templ('signal_ports',dt,4)
+       # Generate the intermediate signals for output ports
+       # (because they can't be read back)
+       pass # To be implemented
+       # Generate the signal assignment in the process
+       pass # To be implemented
+ 
    def gen_pkg(self):
      """
      The method generates the VHDL package code.
@@ -213,7 +253,7 @@ class wb_block(object):
            raise Exception("Unknown node in block: "+el.name)
        # After that procedure, the field free_reg_addr contains
        # the length of the block of internal registers
-        
+       
    def analyze(self):
      # Add the length of the local addresses to the list of areas
      self.areas.append(wb_area(self.free_reg_addr, None,1))
@@ -260,7 +300,11 @@ class wb_block(object):
      print('analyze: '+self.name+" addr_size:"+str(self.addr_size))
 
 #@!@ How to represent base addresses for subblocks in vectors?
-
+   def add_templ(self,templ_key,value):
+       """ That function adds the new text to the dictionary
+           used to fill the templates for code generation.
+       """
+       pass # To be implemented!
      
    def gen_vhdl(self):
        # To fill the template, we must to set the following values:
