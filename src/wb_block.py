@@ -195,6 +195,8 @@ class wb_reg(object):
        pass # To be implemented
        # Generate the signal assignment in the process
        pass # To be implemented
+
+
  
    def gen_pkg(self):
      """
@@ -322,7 +324,9 @@ class wb_block(object):
        signal_ports=""
        for reg in regs:
           #generate 
-          if reg.reps=1
-             
+          reg.gen_vhdl(self)
+       # Generate code for subblocks
+       for sblk in subblocks:
+          
         
        pass
