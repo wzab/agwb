@@ -13,7 +13,21 @@ import re
 
 # Template for generation of the VHDL package
 templ_pkg = """\
+library ieee;
+
+use ieee.std_logic_1164.all;
+use ieee.numeric_std.all;
+
+library work;
+use work.wishbone_pkg.all;
+
+package {p_entity}_pkg is
 {p_package}
+end {p_entity}_pkg
+
+package_body {p_entity}_pkg is
+{p_package_body}
+end {p_entity}_pkg
 """
 
 # Template for generation of the VHDL code
@@ -25,8 +39,9 @@ templ_wb = """\
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
-use work.wishbone_pkg.all;
 library work;
+use work.wishbone_pkg.all;
+use work.{p_entity}_pkg.all
 
 entity {p_entity} is
   generic (
@@ -153,26 +168,50 @@ class wb_reg(object):
        
        We need to generate two sections:
        * Declaration of signals used to input or output the signal,
-          and the optoional ACK or STB flags
+          and the optional ACK or STB flags
        * Read or write sequence to be embedded in the process
        """
+       dt=""
+       dtb=""
        # Generate the type corresponding to the register
        tname = "t_"+self.name
        if len(self.fields) == 0:
           # Simple register, no fields
-          dt="subtype "+tname+" is "+\
+          dt+="subtype "+tname+" is "+\
              self.type+"(31 downto 0);\n" 
        else:
           # Register with fields, we have to create a record
-          dt="type "+tname+" is record\n"
+          dt+="type "+tname+" is record\n"
           for fl in self.fields:
-             dt+= "  "+fl.name+":"+fl.type+";\n"
-          dt+="end record;\n"
+             dt+= "  "+fl.name+":"+fl.type+"("+str(fl.size-1)+" downto 0);\n"
+          dt+="end record;\n\n"
+
+          #Conversion function stlv to record
+          dt+="function stlv2"+tname+"(x : std_logic_vector) return "+tname+";\n"
+          dtb+="function stlv2"+tname+"(x : std_logic_vector) return "+tname+" is\n"
+          dtb+="variable res : "+tname+";\n"
+          dtb+="begin\n"
+          for fl in self.fields:
+            dtb+="  res."+fl.name+" := "+fl.type+"(x("+str(fl.msb)+" downto "+str(fl.lsb)+"));\n"
+          dtb+="  return res;\n"
+          dtb+="end stlv2"+tname+";\n\n"
+          
+          #conversion function record to stlv
+          dt+="function "+tname+"2stlv(x : "+tname+") return std_logic_vector;\n"
+          dtb+="function "+tname+"2stlv(x : "+tname+") return std_logic_vector is\n"
+          dtb+="variable res : std_logic_vector;\n"
+          dtb+="begin\n"
+          dtb+="  res := (others => '0');\n"
+          for fl in self.fields:
+            dtb+="  res("+str(fl.msb)+" downto "+str(fl.lsb)+") := std_logic_vector(x."+fl.name+"));\n"
+          dtb+="  return res;\n"
+          dtb+="end "+tname+"2stlv;\n\n"
        # If this is a vector of registers, create the array type
        if self.size > 1:
           dt+="type "+tname+"_array is array(0 to "+ str(self.size-1) +") of "+tname+";\n"
        # Append the generated types to the parents package section
-       parent.add_templ('p_package',dt,4)
+       parent.add_templ('p_package',dt,0)
+       parent.add_templ('p_package_body',dtb,0)
 
        # Now generate the entity ports
        sfx = '_i'
@@ -353,6 +392,8 @@ class wb_block(object):
        # First - generate code for registers
        # We give empty declaration in case if the block does not contain
        # any registers
+       self.add_templ('p_package','',0)
+       self.add_templ('p_package_body','',0)
        self.add_templ('signal_decls','',0)
        self.add_templ('register_access','',0)
        self.add_templ('subblk_busses','',0)
