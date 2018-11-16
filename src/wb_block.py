@@ -23,11 +23,11 @@ use work.wishbone_pkg.all;
 
 package {p_entity}_pkg is
 {p_package}
-end {p_entity}_pkg
+end {p_entity}_pkg;
 
-package_body {p_entity}_pkg is
+package body {p_entity}_pkg is
 {p_package_body}
-end {p_entity}_pkg
+end {p_entity}_pkg;
 """
 
 # Template for generation of the VHDL code
@@ -41,55 +41,55 @@ use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 library work;
 use work.wishbone_pkg.all;
-use work.{p_entity}_pkg.all
+use work.{p_entity}_pkg.all;
 
 entity {p_entity} is
-  generic (
-    base_addr : unsigned(31 downto 0);
-    valid_bits : integer := {valid_bits};
-  );
   port (
-    rst_n_i : in std_logic;
-    clk_sys_i : in std_logic
-    slave_i : t_wishbone_slave_in;
-    slave_o : t_wishbone_slave_out;
+    slave_i : in t_wishbone_slave_in;
+    slave_o : out t_wishbone_slave_out;
 {subblk_busses}
 {signal_ports}
+    rst_n_i : in std_logic;
+    clk_sys_i : in std_logic
     );
 
-end wb_test_top;
+end {p_entity};
 
 architecture gener of {p_entity} is
 {signal_decls}
   -- Internal WB declaration
   signal int_regs_wb_s_o : t_wishbone_slave_out;
   signal int_regs_wb_s_i : t_wishbone_slave_in;
-  signal int_addr : std_logic_vector({valid_bits}-1 downto 0);
-  signal wb_s_out : t_wishbone_slave_out_array(0 to {nof_subblks});
-  signal wb_s_in : t_wishbone_slave_in_array(0 to {nof_subblks});
+  signal int_addr : std_logic_vector({reg_addr_bits}-1 downto 0);
+  signal wb_up_o : t_wishbone_slave_out_array(0 to 0);
+  signal wb_up_i : t_wishbone_slave_in_array(0 to 0);
+  signal wb_s_o : t_wishbone_slave_out_array(0 to {nof_subblks}-1);
+  signal wb_s_i : t_wishbone_slave_in_array(0 to {nof_subblks}-1);
 
   -- Constants
-  constant block_id_addr : std_logic_vector({valid_bits}-1 downto 0) := (others => '0');
-  constant block_ver_addr : std_logic_vector({valid_bits}-1 downto 0) := (0=>'1', 'others => '0');
+  constant c_address : t_wishbone_address_array := {p_addresses};
+  constant c_mask : t_wishbone_address_array := {p_masks};
 
 begin
-  int_addr <= int_regs_wb_s_i.adr({valid_bits}-1 downto 0);
+  wb_up_i(0) <= slave_i;
+  slave_o <= wb_up_o(0);
+  int_addr <= int_regs_wb_s_i.adr({reg_addr_bits}-1 downto 0);
 
 -- Main crossbar 
   xwb_crossbar_1: entity work.xwb_crossbar
   generic map (
      g_num_masters => 1,
-     g_num_slaves  => 1+nof_subblks,
+     g_num_slaves  => {nof_subblks},
      g_registered  => {p_registered},
-     g_address     => {p_addresses},
-     g_mask        => {p_masks})
+     g_address     => c_address,
+     g_mask        => c_mask)
   port map (
      clk_sys_i => clk_sys_i,
      rst_n_i   => rst_n_i,
-     slave_i   => slave_i,
-     slave_o   => slave_o,
-     master_i  => wb_s_out,
-     master_o  => wb_s_in,
+     slave_i   => wb_up_i,
+     slave_o   => wb_up_o,
+     master_i  => wb_s_o,
+     master_o  => wb_s_i,
     sdb_sel_o => open);
 
 -- Process for register access
@@ -104,10 +104,10 @@ begin
           -- Access, now we handle consecutive registers
           case int_addr is
 {register_access}
-          when block_id_addr =>
+          when {block_id_addr} =>
              int_regs_wb_s_o.dat <= {block_id};
-             int_regs__wb_s_o.ack <= '1';
-          when block_ver_addr =>
+             int_regs_wb_s_o.ack <= '1';
+          when {block_ver_addr} =>
              int_regs_wb_s_o.dat <= {block_ver};
              int_regs_wb_s_o.ack <= '1';
           when others =>
@@ -199,11 +199,11 @@ class wb_reg(object):
           #conversion function record to stlv
           dt+="function "+tname+"2stlv(x : "+tname+") return std_logic_vector;\n"
           dtb+="function "+tname+"2stlv(x : "+tname+") return std_logic_vector is\n"
-          dtb+="variable res : std_logic_vector;\n"
+          dtb+="variable res : std_logic_vector(31 downto 0);\n"
           dtb+="begin\n"
           dtb+="  res := (others => '0');\n"
           for fl in self.fields:
-            dtb+="  res("+str(fl.msb)+" downto "+str(fl.lsb)+") := std_logic_vector(x."+fl.name+"));\n"
+            dtb+="  res("+str(fl.msb)+" downto "+str(fl.lsb)+") := std_logic_vector(x."+fl.name+");\n"
           dtb+="  return res;\n"
           dtb+="end "+tname+"2stlv;\n\n"
        # If this is a vector of registers, create the array type
@@ -229,11 +229,19 @@ class wb_reg(object):
           pass # To be implemented!
        if self.regtype == 'sreg' and self.ack == 1:
           # We need to generate ACK output
-          pass # To be implemented!          
+          pass # To be implemented!
        parent.add_templ('signal_ports',dt,4)
        # Generate the intermediate signals for output ports
        # (because they can't be read back)
-       
+       if self.regtype == 'creg':
+          #Create the intermediate readable signal
+          if self.size == 1:
+            dt = "signal int_"+self.name+sfx+" : "+tname+";\n"
+          else:  
+            dt = "signal int_"+self.name+sfx+" : "+tname+"_array;\n"
+          dt2 = self.name+sfx+" <= int_"+self.name+sfx+";\n"
+          parent.add_templ('signal_decls',dt,4)
+          parent.add_templ('cont_assigns',dt2,4)          
        # Generate the signal assignment in the process
        for i in range(0,self.size):
           # We prepare the index string used in case if this is a vector of registers
@@ -241,7 +249,7 @@ class wb_reg(object):
              ind ="("+str(i)+")"
           else:
              ind = ""
-          dt= "when \""+format(self.base+i,"032b")+"\" => -- "+hex(self.base+i)+"\n"
+          dt= "when \""+format(self.base+i,"0"+str(parent.reg_addr_bits)+"b")+"\" => -- "+hex(self.base+i)+"\n"
           # The conversion functions
           if len(self.fields)==0:
              conv_fun="std_logic_vector"
@@ -257,7 +265,7 @@ class wb_reg(object):
           # Write access
           if self.regtype == 'creg':
              dt+="   if int_regs_wb_s_i.we = '1' then\n"
-             dt+="     int_"+self.name+"_o"+ind+") <= "+iconv_fun+"(int_regs_wb_s_i.dat);\n"
+             dt+="     int_"+self.name+"_o"+ind+" <= "+iconv_fun+"(int_regs_wb_s_i.dat);\n"
              dt+="   end if;\n"
           parent.add_templ('register_access',dt,10)
  
@@ -320,7 +328,8 @@ class wb_block(object):
            raise Exception("Unknown node in block: "+el.name)
        # After that procedure, the field free_reg_addr contains
        # the length of the block of internal registers
-
+     self.reg_addr_bits = (self.free_reg_addr-1).bit_length()
+       
    def analyze(self):
      # Add the length of the local addresses to the list of areas
      self.areas.append(wb_area(self.free_reg_addr,"int_regs",None,1))
@@ -418,8 +427,8 @@ class wb_block(object):
                  dt += ar.name+"_wb_s_i : in t_wishbone_slave_in;\n"
                  self.add_templ('subblk_busses',dt,4)
               #generate the signal assignment
-              dt = "wb_s_o("+str(ar.first_port)+") <= "+ar.name+"_wb_s_i;\n"
-              dt += ar.name+"_wb_s_i  <= "+"wb_s_o("+str(ar.first_port)+");\n"
+              dt = "wb_s_o("+str(ar.first_port)+") <= "+ar.name+"_wb_s_o;\n"
+              dt += ar.name+"_wb_s_i  <= "+"wb_s_i("+str(ar.first_port)+");\n"
               self.add_templ('cont_assigns',dt,4)
            else: 
               # The area is associated with the vector of subblocks
@@ -437,8 +446,8 @@ class wb_block(object):
                  ar_addresses.append(base)
                  base += ar.obj.addr_size
                  ar_adr_bits.append(ar.obj.adr_bits)
-                 dt = "wb_s_o("+str(nport)+") <= "+ar.name+"_wb_s_i("+str(i)+");\n"
-                 dt = ar.name+"_wb_s_i("+str(i)+")  <= "+"wb_s_o("+str(nport)+");\n"
+                 dt = "wb_s_i("+str(nport)+") <= "+ar.name+"_wb_s_i("+str(i)+");\n"
+                 dt = ar.name+"_wb_s_o("+str(i)+")  <= "+"wb_s_o("+str(nport)+");\n"
                  self.add_templ('cont_assigns',dt,4)
                  nport += 1
        #Now generate vectors with addresses and masks
@@ -448,10 +457,16 @@ class wb_block(object):
           if i>0:
              adrs+=","
              masks+=","
-          adrs +="\""+format(ar_addresses[i],"032b")+"\""
-          masks +="\""+format((1<<ar_adr_bits[i])-1,"032b")+"\""
-       adrs += ");"
-       masks += ");"
+          adrs +=str(i)+"=>\""+format(ar_addresses[i],"032b")+"\""
+          #Calculate the mask
+          maskval = ((1<<self.adr_bits)-1) ^ ((1<<ar_adr_bits[i])-1)
+          masks +=str(i)+"=>\""+format(maskval,"032b")+"\""
+       adrs += ")"
+       masks += ")"
+       #Generate the register address for
+       self.add_templ('block_id_addr',"\""+format(0,"0"+str(self.reg_addr_bits)+"b")+"\"",0)
+       self.add_templ('block_ver_addr',"\""+format(1,"0"+str(self.reg_addr_bits)+"b")+"\"",0)
+       self.add_templ('reg_addr_bits',str(self.reg_addr_bits),0)
        self.add_templ('block_id',"x\"00001234\"",0)
        self.add_templ('block_ver',"x\"12344321\"",0)
        self.add_templ('p_addresses',adrs,0)
@@ -459,7 +474,6 @@ class wb_block(object):
        self.add_templ('p_registered','false',0)
        self.add_templ('nof_subblks',str(n_ports),0)
        self.add_templ('p_entity',self.name+"_wb",0)
-       self.add_templ('valid_bits',str(self.adr_bits),0)
        # All template is filled, so we can now generate the files
        print(self.templ_dict)
        with open(self.name+"_wb.vhd","w") as fo:
