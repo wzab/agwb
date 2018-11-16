@@ -17,8 +17,8 @@ entity sim_wb_ctrl is
     );
 
   port (
-    wb_m_out  : out t_wishbone_master_out;
-    wb_m_in   : in  t_wishbone_master_in;
+    wb_m_out  : out t_wishbone_master_out := c_DUMMY_WB_MASTER_OUT;
+    wb_m_in   : in  t_wishbone_master_in := c_DUMMY_WB_MASTER_IN;
     clk_sys_i : in  std_logic
     );
 
@@ -180,6 +180,7 @@ begin  -- simul
       wb_m_out.we  <= '0';
       wb_m_out.stb <= '1';
       wb_m_out.cyc <= '1';
+      wb_m_out.sel <= (others => '0');
       lr1 : loop
         wait until rising_edge(clk_sys_i);
         if wb_m_in.ack = '1' then
@@ -222,6 +223,7 @@ begin  -- simul
       wb_m_out.we  <= '1';
       wb_m_out.stb <= '1';
       wb_m_out.cyc <= '1';
+      wb_m_out.sel <= (others => '1');
       lw1 : loop
         wait until rising_edge(clk_sys_i);
         if wb_m_in.ack = '1' then

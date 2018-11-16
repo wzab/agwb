@@ -64,6 +64,8 @@ begin  -- architecture test
     -- insert signal assignments here
     rst_i <= '1';
     wait until Clk = '1';
+    wait until Clk = '0';
+    wait until Clk = '1';
     wait for 5 ns;
     rst_i <= '0';
     wait;

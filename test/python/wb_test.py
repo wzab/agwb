@@ -1,11 +1,11 @@
 #!/usr/bin/python3
 import cbus
-cnt=0x10
+cnt=0x0
 mem=0x0
 mem_mod=0x80000000
 cbus.bus_delay(100)
 print("Test the counter")
-cbus.bus_write(cnt,100)
+cbus.bus_read(cnt)
 cbus.bus_delay(250)
 print("First read:"+hex(cbus.bus_read(cnt)))
 cbus.bus_delay(250)

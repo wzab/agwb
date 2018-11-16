@@ -447,7 +447,7 @@ class wb_block(object):
                  base += ar.obj.addr_size
                  ar_adr_bits.append(ar.obj.adr_bits)
                  dt = "wb_s_i("+str(nport)+") <= "+ar.name+"_wb_s_i("+str(i)+");\n"
-                 dt = ar.name+"_wb_s_o("+str(i)+")  <= "+"wb_s_o("+str(nport)+");\n"
+                 dt += ar.name+"_wb_s_o("+str(i)+")  <= "+"wb_s_o("+str(nport)+");\n"
                  self.add_templ('cont_assigns',dt,4)
                  nport += 1
        #Now generate vectors with addresses and masks

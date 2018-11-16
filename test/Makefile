@@ -4,6 +4,7 @@ VSTD=93c
 ENTITY=wb_test_top_tb
 # --unbuffered option must be added in the new GHDL
 RUN_OPTIONS= --unbuffered --stop-time=3900ns --wave=${ENTITY}.ghw 
+#RUN_OPTIONS+= --trace-signals
 #RUN_OPTIONS= --stop-time=290000ns 
 #RUN_OPTIONS=  --wave=${ENTITY}.ghw 
 SOURCES = \
