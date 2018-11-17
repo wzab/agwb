@@ -96,6 +96,7 @@ def cbus_read_nodes(addr_directory,address_table_file,base_name="",base_addr=0,n
             #This is a nested module
             cbus_read_nodes(addr_directory,el.get('module'),name,adr,nodes)
         else:
+          # This is a register
           perm = el.attrib['permission']
           mask = int(el.get('mask','0x0'),16)
           # Now we need to check if there are bitfields inside...
