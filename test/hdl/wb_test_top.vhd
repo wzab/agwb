@@ -27,8 +27,8 @@ architecture simul of wb_test_top is
 
   constant addrwidth, datawidth : integer := 32;
 
-  signal wb_m_out   : t_wishbone_master_out;
-  signal wb_m_in  : t_wishbone_master_in;
+  signal wb_m_out   : t_wishbone_master_out := c_DUMMY_WB_MASTER_OUT;
+  signal wb_m_in  : t_wishbone_master_in := c_DUMMY_WB_MASTER_IN;
 
   signal rst_n_i : std_logic;
   

@@ -28,8 +28,8 @@ begin  -- architecture rtl
 
   SYS1_wb_1: entity work.SYS1_wb
     port map (
-      slave_i   => slave_i,
-      slave_o   => slave_o,
+      slave_i   => wb_s_in,
+      slave_o   => wb_s_out,
       CTRL_o    => CTRL_o,
       STATUS_i  => STATUS_i,
       ENABLEs_o => ENABLEs_o,

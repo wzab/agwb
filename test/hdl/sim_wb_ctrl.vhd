@@ -17,8 +17,8 @@ entity sim_wb_ctrl is
     );
 
   port (
-    wb_m_out  : out t_wishbone_master_out := c_DUMMY_WB_MASTER_OUT;
-    wb_m_in   : in  t_wishbone_master_in := c_DUMMY_WB_MASTER_IN;
+    wb_m_out  : out t_wishbone_master_out;
+    wb_m_in   : in  t_wishbone_master_in;
     clk_sys_i : in  std_logic
     );
 
@@ -256,7 +256,13 @@ begin  -- simul
   begin  -- process
     file_open(write_pipe, wrpipename, read_mode);
     file_open(read_pipe, rdpipename, write_mode);
-    wb_m_out <= c_DUMMY_WB_MASTER_OUT;
+    wb_m_out.dat <= (others => '0');
+    wb_m_out.adr <= (others => '0');
+    wb_m_out.sel <= (others => '0');
+    wb_m_out.cyc <= '0';
+    wb_m_out.stb <= '0';
+    wb_m_out.we <= '0';
+        
     while not endfile(write_pipe) loop
       -- We read the command from the wrpipe
       readline (write_pipe, rd_line);

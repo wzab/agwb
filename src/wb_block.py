@@ -67,8 +67,8 @@ architecture gener of {p_entity} is
   signal wb_m_i : t_wishbone_master_in_array(0 to {nof_subblks}-1);
 
   -- Constants
-  constant c_address : t_wishbone_address_array := {p_addresses};
-  constant c_mask : t_wishbone_address_array := {p_masks};
+  constant c_address : t_wishbone_address_array(0 to {nof_subblks}-1) := {p_addresses};
+  constant c_mask : t_wishbone_address_array(0 to {nof_subblks}-1) := {p_masks};
 
 begin
   wb_up_i(0) <= slave_i;
@@ -98,6 +98,7 @@ begin
     if rising_edge(clk_sys_i) then
       if rst_n_i = '0' then
         -- Reset of the core
+        int_regs_wb_m_i <= c_DUMMY_WB_MASTER_IN;
       else
         -- Normal operation
         int_regs_wb_m_i.rty <= '0';
