@@ -274,7 +274,9 @@ class wb_reg(object):
           if self.regtype == 'sreg':
              dt+="   int_regs_wb_m_i.dat <= "+conv_fun+"("+self.name+"_i"+ind+");\n"
              if self.ack == 1:
-                dt += self.name+sfx+"_ack <= '1';\n"
+                dt += "   if int_regs_wb_m_i.ack = \'0\' then\n" #We shorten the STB to a single clock
+                dt += "      "+self.name+sfx+"_ack <= '1';\n"
+                dt += "   end if;\n"
                 # Add clearing of ACK signal at the begining of the process
                 dti += self.name+sfx+"_ack <= '0';\n"
           else:
@@ -284,7 +286,9 @@ class wb_reg(object):
              dt+="   if int_regs_wb_m_o.we = '1' then\n"
              dt+="     int_"+self.name+"_o"+ind+" <= "+iconv_fun+"(int_regs_wb_m_o.dat);\n"
              if self.stb == 1:
-                dt += self.name+sfx+"_stb <= '1';\n"                
+                dt += "   if int_regs_wb_m_i.ack = \'0\' then\n" #We shorten the STB to a single clock
+                dt += "      "+self.name+sfx+"_stb <= '1';\n"
+                dt += "   end if;\n"
                 # Add clearing of STB signal at the begining of the process
                 dti += self.name+sfx+"_stb <= '0';\n"
              dt+="   end if;\n"
@@ -504,5 +508,3 @@ class wb_block(object):
           fo.write(templ_wb.format(**self.templ_dict))
        with open(self.name+"_pkg.vhd","w") as fo:
           fo.write(templ_pkg.format(**self.templ_dict))
-        
-       pass
