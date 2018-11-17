@@ -315,9 +315,9 @@ class wb_reg(object):
             raise Exception("Unknown type of register")
          # Finally the format of the description depends on the presence of bitfields
          if len(self.fields) == 0:
-            res+="  <node id=\""+rname+"\" address=\"0x"+format(self.base+rn,"08x")+"\" permissions=\""+perms+"\"/>\n"
+            res+="  <node id=\""+rname+"\" address=\"0x"+format(self.base+rn,"08x")+"\" permission=\""+perms+"\"/>\n"
          else:
-            res+="  <node id=\""+rname+"\" address=\"0x"+format(self.base+rn,"08x")+"\" permissions=\""+perms+"\">\n"
+            res+="  <node id=\""+rname+"\" address=\"0x"+format(self.base+rn,"08x")+"\" permission=\""+perms+"\">\n"
             for bf in self.fields:
                maskval=((1<<(bf.msb+1))-1) ^ ((1<<bf.lsb)-1)
                mask = format(maskval,"08x")
@@ -553,13 +553,13 @@ class wb_block(object):
             #Subblock or vector of subblocks            
             if ar.reps==1:
                #Single subblock
-               res += "  <node id=\""+ar.obj.name+"\""+\
+               res += "  <node id=\""+ar.name+"\""+\
                       " address=\"0x"+format(ar.adr,"08x")+"\""+\
                       " module=\""+ar.obj.name+"_address.xml\"/>\n"                      
             else:
                #Vector of subblocks
                for nb in range(0,ar.reps):
-                  res += "  <node id=\""+ar.obj.name+"\""+\
+                  res += "  <node id=\""+ar.name+"["+str(nb)+"]\""+\
                          " address=\"0x"+format(ar.adr+nb*ar.obj.addr_size,"08x")+"\""+\
                          " module=\""+ar.obj.name+"_address.xml\"/>\n"
       res+="</node>\n"
