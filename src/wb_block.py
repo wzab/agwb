@@ -297,10 +297,11 @@ class wb_reg(object):
           parent.add_templ('register_access',dt,10)
           parent.add_templ('signals_idle',dti,10)
 
-   def gen_ipbus_xml(self):
+   def gen_ipbus_xml(self,reg_base):
       # The generated code depends on the fact it is a single register or the vector of registers
       res=""
       for rn in range(0,self.size):
+         adr = reg_base+self.base+rn
          # The name format depends whether its a single register or an item in a vector
          if self.size == 1:
             rname = self.name
@@ -315,9 +316,9 @@ class wb_reg(object):
             raise Exception("Unknown type of register")
          # Finally the format of the description depends on the presence of bitfields
          if len(self.fields) == 0:
-            res+="  <node id=\""+rname+"\" address=\"0x"+format(self.base+rn,"08x")+"\" permission=\""+perms+"\"/>\n"
+            res+="  <node id=\""+rname+"\" address=\"0x"+format(adr,"08x")+"\" permission=\""+perms+"\"/>\n"
          else:
-            res+="  <node id=\""+rname+"\" address=\"0x"+format(self.base+rn,"08x")+"\" permission=\""+perms+"\">\n"
+            res+="  <node id=\""+rname+"\" address=\"0x"+format(adr,"08x")+"\" permission=\""+perms+"\">\n"
             for bf in self.fields:
                maskval=((1<<(bf.msb+1))-1) ^ ((1<<bf.lsb)-1)
                mask = format(maskval,"08x")
@@ -544,11 +545,12 @@ class wb_block(object):
          if ar.obj == None:
             #Registers area
             #Add two standard registers - ID and VER
-            res+="  <node id=\"ID\" address=\"0x00000000\" permission=\"r\"/>\n"
-            res+="  <node id=\"VER\" address=\"0x00000001\" permission=\"r\"/>\n"
+            adr = ar.adr
+            res+="  <node id=\"ID\" address=\""+format(adr,"08x")+"\" permission=\"r\"/>\n"
+            res+="  <node id=\"VER\" address=\""+format(adr+1,"08x")+"\" permission=\"r\"/>\n"
             #Now add other registers in a loop
             for reg in self.regs:
-               res += reg.gen_ipbus_xml()
+               res += reg.gen_ipbus_xml(adr)
          else:
             #Subblock or vector of subblocks            
             if ar.reps==1:

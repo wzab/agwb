@@ -97,10 +97,12 @@ def cbus_read_nodes(addr_directory,address_table_file,base_name="",base_addr=0,n
             cbus_read_nodes(addr_directory,el.get('module'),name,adr,nodes)
         else:
           perm = el.attrib['permission']
-          if 'mask' in el.attrib:
-             mask = int(el.attrib['mask'],16)
-          else:
-             mask = 0
+          mask = int(el.get('mask','0x0'),16)
+          # Now we need to check if there are bitfields inside...
+          for bf in el.findall("node"):
+             mask = int(bf.get('mask','0x0'),16)
+             bfname=name+"."+bf.get('id')
+             nodes[bfname]=cbus_obj(adr,perm,mask)
           nodes[name]=cbus_obj(adr,perm,mask)
     return nodes
 

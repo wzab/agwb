@@ -1,19 +1,20 @@
 [*]
 [*] GTKWave Analyzer v3.3.94 (w)1999-2018 BSI
-[*] Sat Nov 17 22:00:18 2018
+[*] Sat Nov 17 22:40:50 2018
 [*]
 [dumpfile] "/home/wzab/tmp/addr_gen_wb/test/wb_test_top_tb.ghw"
-[dumpfile_mtime] "Sat Nov 17 21:56:48 2018"
-[dumpfile_size] 66229
+[dumpfile_mtime] "Sat Nov 17 22:38:07 2018"
+[dumpfile_size] 77914
 [savefile] "/home/wzab/tmp/addr_gen_wb/test/wb_test_top_tb.sav"
-[timestart] 492000000
+[timestart] 1755800000
 [size] 1280 939
 [pos] -1 -1
-*-29.123140 1593000000 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+*-27.123140 1593000000 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
 [treeopen] top.
 [treeopen] top.wb_test_top_tb.
 [treeopen] top.wb_test_top_tb.dut.
 [treeopen] top.wb_test_top_tb.dut.main_1.
+[treeopen] top.wb_test_top_tb.dut.main_1.ctrl_o.
 [treeopen] top.wb_test_top_tb.dut.main_1.gl1[0].
 [treeopen] top.wb_test_top_tb.dut.main_1.gl1[0].sys1_1.
 [treeopen] top.wb_test_top_tb.dut.main_1.gl1[0].sys1_1.sys1_wb_1.
@@ -30,7 +31,7 @@
 [treeopen] top.wb_test_top_tb.dut.sim_wb_ctrl_1.wb_m_in.
 [treeopen] top.wb_test_top_tb.dut.sim_wb_ctrl_1.wb_m_out.
 [sst_width] 332
-[signals_width] 126
+[signals_width] 134
 [sst_expanded] 1
 [sst_vpaned_height] 270
 @28
@@ -185,7 +186,7 @@ top.wb_test_top_tb.dut.main_1.gl1[0].sys1_1.sys1_wb_1.wb_up_o[0].rty
 top.wb_test_top_tb.dut.main_1.gl1[0].sys1_1.sys1_wb_1.wb_up_o[0].stall
 top.wb_test_top_tb.dut.main_1.gl1[0].sys1_1.status_i_ack
 top.wb_test_top_tb.dut.main_1.gl1[0].sys1_1.ctrl_o_stb
-@23
+@22
 #{top.wb_test_top_tb.dut.main_1.gl1[0].sys1_1.sys1_wb_1.ctrl_o[31:0]} top.wb_test_top_tb.dut.main_1.gl1[0].sys1_1.sys1_wb_1.ctrl_o[31] top.wb_test_top_tb.dut.main_1.gl1[0].sys1_1.sys1_wb_1.ctrl_o[30] top.wb_test_top_tb.dut.main_1.gl1[0].sys1_1.sys1_wb_1.ctrl_o[29] top.wb_test_top_tb.dut.main_1.gl1[0].sys1_1.sys1_wb_1.ctrl_o[28] top.wb_test_top_tb.dut.main_1.gl1[0].sys1_1.sys1_wb_1.ctrl_o[27] top.wb_test_top_tb.dut.main_1.gl1[0].sys1_1.sys1_wb_1.ctrl_o[26] top.wb_test_top_tb.dut.main_1.gl1[0].sys1_1.sys1_wb_1.ctrl_o[25] top.wb_test_top_tb.dut.main_1.gl1[0].sys1_1.sys1_wb_1.ctrl_o[24] top.wb_test_top_tb.dut.main_1.gl1[0].sys1_1.sys1_wb_1.ctrl_o[23] top.wb_test_top_tb.dut.main_1.gl1[0].sys1_1.sys1_wb_1.ctrl_o[22] top.wb_test_top_tb.dut.main_1.gl1[0].sys1_1.sys1_wb_1.ctrl_o[21] top.wb_test_top_tb.dut.main_1.gl1[0].sys1_1.sys1_wb_1.ctrl_o[20] top.wb_test_top_tb.dut.main_1.gl1[0].sys1_1.sys1_wb_1.ctrl_o[19] top.wb_test_top_tb.dut.main_1.gl1[0].sys1_1.sys1_wb_1.ctrl_o[18] top.wb_test_top_tb.dut.main_1.gl1[0].sys1_1.sys1_wb_1.ctrl_o[17] top.wb_test_top_tb.dut.main_1.gl1[0].sys1_1.sys1_wb_1.ctrl_o[16] top.wb_test_top_tb.dut.main_1.gl1[0].sys1_1.sys1_wb_1.ctrl_o[15] top.wb_test_top_tb.dut.main_1.gl1[0].sys1_1.sys1_wb_1.ctrl_o[14] top.wb_test_top_tb.dut.main_1.gl1[0].sys1_1.sys1_wb_1.ctrl_o[13] top.wb_test_top_tb.dut.main_1.gl1[0].sys1_1.sys1_wb_1.ctrl_o[12] top.wb_test_top_tb.dut.main_1.gl1[0].sys1_1.sys1_wb_1.ctrl_o[11] top.wb_test_top_tb.dut.main_1.gl1[0].sys1_1.sys1_wb_1.ctrl_o[10] top.wb_test_top_tb.dut.main_1.gl1[0].sys1_1.sys1_wb_1.ctrl_o[9] top.wb_test_top_tb.dut.main_1.gl1[0].sys1_1.sys1_wb_1.ctrl_o[8] top.wb_test_top_tb.dut.main_1.gl1[0].sys1_1.sys1_wb_1.ctrl_o[7] top.wb_test_top_tb.dut.main_1.gl1[0].sys1_1.sys1_wb_1.ctrl_o[6] top.wb_test_top_tb.dut.main_1.gl1[0].sys1_1.sys1_wb_1.ctrl_o[5] top.wb_test_top_tb.dut.main_1.gl1[0].sys1_1.sys1_wb_1.ctrl_o[4] top.wb_test_top_tb.dut.main_1.gl1[0].sys1_1.sys1_wb_1.ctrl_o[3] top.wb_test_top_tb.dut.main_1.gl1[0].sys1_1.sys1_wb_1.ctrl_o[2] top.wb_test_top_tb.dut.main_1.gl1[0].sys1_1.sys1_wb_1.ctrl_o[1] top.wb_test_top_tb.dut.main_1.gl1[0].sys1_1.sys1_wb_1.ctrl_o[0]
 @28
 top.wb_test_top_tb.dut.main_1.gl1[0].sys1_1.clk_sys_i
@@ -212,5 +213,13 @@ top.wb_test_top_tb.dut.main_1.gl1[4].sys1_1.status_i_ack
 top.wb_test_top_tb.dut.main_1.gl1[4].sys1_1.ctrl_o_stb
 @22
 #{top.wb_test_top_tb.dut.main_1.gl1[4].sys1_1.ctrl_o[31:0]} top.wb_test_top_tb.dut.main_1.gl1[4].sys1_1.ctrl_o[31] top.wb_test_top_tb.dut.main_1.gl1[4].sys1_1.ctrl_o[30] top.wb_test_top_tb.dut.main_1.gl1[4].sys1_1.ctrl_o[29] top.wb_test_top_tb.dut.main_1.gl1[4].sys1_1.ctrl_o[28] top.wb_test_top_tb.dut.main_1.gl1[4].sys1_1.ctrl_o[27] top.wb_test_top_tb.dut.main_1.gl1[4].sys1_1.ctrl_o[26] top.wb_test_top_tb.dut.main_1.gl1[4].sys1_1.ctrl_o[25] top.wb_test_top_tb.dut.main_1.gl1[4].sys1_1.ctrl_o[24] top.wb_test_top_tb.dut.main_1.gl1[4].sys1_1.ctrl_o[23] top.wb_test_top_tb.dut.main_1.gl1[4].sys1_1.ctrl_o[22] top.wb_test_top_tb.dut.main_1.gl1[4].sys1_1.ctrl_o[21] top.wb_test_top_tb.dut.main_1.gl1[4].sys1_1.ctrl_o[20] top.wb_test_top_tb.dut.main_1.gl1[4].sys1_1.ctrl_o[19] top.wb_test_top_tb.dut.main_1.gl1[4].sys1_1.ctrl_o[18] top.wb_test_top_tb.dut.main_1.gl1[4].sys1_1.ctrl_o[17] top.wb_test_top_tb.dut.main_1.gl1[4].sys1_1.ctrl_o[16] top.wb_test_top_tb.dut.main_1.gl1[4].sys1_1.ctrl_o[15] top.wb_test_top_tb.dut.main_1.gl1[4].sys1_1.ctrl_o[14] top.wb_test_top_tb.dut.main_1.gl1[4].sys1_1.ctrl_o[13] top.wb_test_top_tb.dut.main_1.gl1[4].sys1_1.ctrl_o[12] top.wb_test_top_tb.dut.main_1.gl1[4].sys1_1.ctrl_o[11] top.wb_test_top_tb.dut.main_1.gl1[4].sys1_1.ctrl_o[10] top.wb_test_top_tb.dut.main_1.gl1[4].sys1_1.ctrl_o[9] top.wb_test_top_tb.dut.main_1.gl1[4].sys1_1.ctrl_o[8] top.wb_test_top_tb.dut.main_1.gl1[4].sys1_1.ctrl_o[7] top.wb_test_top_tb.dut.main_1.gl1[4].sys1_1.ctrl_o[6] top.wb_test_top_tb.dut.main_1.gl1[4].sys1_1.ctrl_o[5] top.wb_test_top_tb.dut.main_1.gl1[4].sys1_1.ctrl_o[4] top.wb_test_top_tb.dut.main_1.gl1[4].sys1_1.ctrl_o[3] top.wb_test_top_tb.dut.main_1.gl1[4].sys1_1.ctrl_o[2] top.wb_test_top_tb.dut.main_1.gl1[4].sys1_1.ctrl_o[1] top.wb_test_top_tb.dut.main_1.gl1[4].sys1_1.ctrl_o[0]
+@201
+-MAIN.CTRL
+@28
+top.wb_test_top_tb.dut.main_1.ctrl_o.clk_enable[0]
+@22
+#{top.wb_test_top_tb.dut.main_1.ctrl_o.clk_freq[3:0]} top.wb_test_top_tb.dut.main_1.ctrl_o.clk_freq[3] top.wb_test_top_tb.dut.main_1.ctrl_o.clk_freq[2] top.wb_test_top_tb.dut.main_1.ctrl_o.clk_freq[1] top.wb_test_top_tb.dut.main_1.ctrl_o.clk_freq[0]
+@28
+top.wb_test_top_tb.dut.main_1.ctrl_o.pll_reset[0]
 [pattern_trace] 1
 [pattern_trace] 0
