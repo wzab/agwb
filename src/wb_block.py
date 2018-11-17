@@ -254,7 +254,7 @@ class wb_reg(object):
             dt = "signal int_"+self.name+sfx+" : "+tname+"_array;\n"
           dt2 = self.name+sfx+" <= int_"+self.name+sfx+";\n"
           parent.add_templ('signal_decls',dt,4)
-          parent.add_templ('cont_assigns',dt2,4)          
+          parent.add_templ('cont_assigns',dt2,2)          
        # Generate the signal assignment in the process
        for i in range(0,self.size):
           # We prepare the index string used in case if this is a vector of registers
@@ -296,12 +296,35 @@ class wb_reg(object):
           dt += "   int_regs_wb_m_i.err <= '0';\n"
           parent.add_templ('register_access',dt,10)
           parent.add_templ('signals_idle',dti,10)
-   def gen_pkg(self):
-     """
-     The method generates the VHDL package code.
-     For example the record type to access the bitfields.
-     """
-     pass
+
+   def gen_ipbus_xml(self):
+      # The generated code depends on the fact it is a single register or the vector of registers
+      res=""
+      for rn in range(0,self.size):
+         # The name format depends whether its a single register or an item in a vector
+         if self.size == 1:
+            rname = self.name
+         else:
+            rname = self.name + "["+str(rn)+"]"
+         # Set permissions
+         if self.regtype == 'creg':
+            perms = "rw"
+         elif self.regtype == 'sreg':
+            perms = "r"
+         else:
+            raise Exception("Unknown type of register")
+         # Finally the format of the description depends on the presence of bitfields
+         if len(self.fields) == 0:
+            res+="  <node id=\""+rname+"\" address=\"0x"+format(self.base+rn,"08x")+"\" permissions=\""+perms+"\"/>\n"
+         else:
+            res+="  <node id=\""+rname+"\" address=\"0x"+format(self.base+rn,"08x")+"\" permissions=\""+perms+"\">\n"
+            for bf in self.fields:
+               maskval=((1<<(bf.msb+1))-1) ^ ((1<<bf.lsb)-1)
+               mask = format(maskval,"08x")
+               res+="    <node id=\""+bf.name+"\" mask=\"0x"+mask+"\"/>\n"
+            res+="  </node>\n"
+            
+      return res
 
 class wb_area(object):
     """ The class representing the address area
@@ -324,6 +347,7 @@ class wb_block(object):
      It also calculates the number of registers, and creates
      the description of the record
      """
+     self.used = False # Mark the block as not used yet
      self.templ_dict={}
      self.name = el.attrib['name']
      # We prepare the list of address areas
@@ -398,6 +422,7 @@ class wb_block(object):
      # We must adjust the address space to the power of two
      self.adr_bits = (self.addr_size-1).bit_length()
      self.addr_size = 1 << self.adr_bits
+     self.used = True
      # In fact, here we should be able to generate the HDL code
      
      print('analyze: '+self.name+" addr_size:"+str(self.addr_size))
@@ -508,3 +533,35 @@ class wb_block(object):
           fo.write(templ_wb.format(**self.templ_dict))
        with open(self.name+"_pkg.vhd","w") as fo:
           fo.write(templ_pkg.format(**self.templ_dict))
+
+   def gen_ipbus_xml(self,ver_id):
+      """ This function generates the address map in the XML format
+
+      """
+      res="<node id=\""+self.name+"\">\n"
+      # Iterate the areas, generating the addresses
+      for ar in self.areas:
+         if ar.obj == None:
+            #Registers area
+            #Add two standard registers - ID and VER
+            res+="  <node id=\"ID\" address=\"0x00000000\" permission=\"r\"/>\n"
+            res+="  <node id=\"VER\" address=\"0x00000001\" permission=\"r\"/>\n"
+            #Now add other registers in a loop
+            for reg in self.regs:
+               res += reg.gen_ipbus_xml()
+         else:
+            #Subblock or vector of subblocks            
+            if ar.reps==1:
+               #Single subblock
+               res += "  <node id=\""+ar.obj.name+"\""+\
+                      " address=\"0x"+format(ar.adr,"08x")+"\""+\
+                      " module=\""+ar.obj.name+"_address.xml\"/>\n"                      
+            else:
+               #Vector of subblocks
+               for nb in range(0,ar.reps):
+                  res += "  <node id=\""+ar.obj.name+"\""+\
+                         " address=\"0x"+format(ar.adr+nb*ar.obj.addr_size,"08x")+"\""+\
+                         " module=\""+ar.obj.name+"_address.xml\"/>\n"
+      res+="</node>\n"
+      with open(self.name+"_address.xml","w") as fo:
+         fo.write(res)

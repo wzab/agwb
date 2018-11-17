@@ -41,7 +41,13 @@ for el in er.findall("block"):
 bl=wb.blocks[top_name]
 bl.analyze()
 for key,bl in wb.blocks.items():
-   bl.gen_vhdl(ver_id)
+   if bl.used:
+     bl.gen_vhdl(ver_id)
+# Now we generate the address tables
+for key,bl in wb.blocks.items():
+   if bl.used:
+     bl.gen_ipbus_xml(ver_id)
+
 
 
    
