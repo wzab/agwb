@@ -58,13 +58,13 @@ end {p_entity};
 architecture gener of {p_entity} is
 {signal_decls}
   -- Internal WB declaration
-  signal int_regs_wb_s_o : t_wishbone_slave_out;
-  signal int_regs_wb_s_i : t_wishbone_slave_in;
+  signal int_regs_wb_m_o : t_wishbone_master_out;
+  signal int_regs_wb_m_i : t_wishbone_master_in;
   signal int_addr : std_logic_vector({reg_addr_bits}-1 downto 0);
   signal wb_up_o : t_wishbone_slave_out_array(0 to 0);
   signal wb_up_i : t_wishbone_slave_in_array(0 to 0);
-  signal wb_s_o : t_wishbone_slave_out_array(0 to {nof_subblks}-1);
-  signal wb_s_i : t_wishbone_slave_in_array(0 to {nof_subblks}-1);
+  signal wb_m_o : t_wishbone_master_out_array(0 to {nof_subblks}-1);
+  signal wb_m_i : t_wishbone_master_in_array(0 to {nof_subblks}-1);
 
   -- Constants
   constant c_address : t_wishbone_address_array := {p_addresses};
@@ -73,7 +73,7 @@ architecture gener of {p_entity} is
 begin
   wb_up_i(0) <= slave_i;
   slave_o <= wb_up_o(0);
-  int_addr <= int_regs_wb_s_i.adr({reg_addr_bits}-1 downto 0);
+  int_addr <= int_regs_wb_m_o.adr({reg_addr_bits}-1 downto 0);
 
 -- Main crossbar 
   xwb_crossbar_1: entity work.xwb_crossbar
@@ -88,8 +88,8 @@ begin
      rst_n_i   => rst_n_i,
      slave_i   => wb_up_i,
      slave_o   => wb_up_o,
-     master_i  => wb_s_o,
-     master_o  => wb_s_i,
+     master_i  => wb_m_i,
+     master_o  => wb_m_o,
     sdb_sel_o => open);
 
 -- Process for register access
@@ -100,19 +100,26 @@ begin
         -- Reset of the core
       else
         -- Normal operation
-        if (int_regs_wb_s_i.cyc = '1') and (int_regs_wb_s_i.stb = '1') then
+        int_regs_wb_m_i.rty <= '0';
+        int_regs_wb_m_i.ack <= '0';
+        int_regs_wb_m_i.err <= '0';
+        if (int_regs_wb_m_o.cyc = '1') and (int_regs_wb_m_o.stb = '1') then
+          int_regs_wb_m_i.err <= '1'; -- in case of missed address
           -- Access, now we handle consecutive registers
           case int_addr is
 {register_access}
           when {block_id_addr} =>
-             int_regs_wb_s_o.dat <= {block_id};
-             int_regs_wb_s_o.ack <= '1';
+             int_regs_wb_m_i.dat <= {block_id};
+             int_regs_wb_m_i.ack <= '1';
+             int_regs_wb_m_i.err <= '0';
           when {block_ver_addr} =>
-             int_regs_wb_s_o.dat <= {block_ver};
-             int_regs_wb_s_o.ack <= '1';
+             int_regs_wb_m_i.dat <= {block_ver};
+             int_regs_wb_m_i.ack <= '1';
+             int_regs_wb_m_i.err <= '0';
           when others =>
-             int_regs_wb_s_o.dat <= x"A5A5A5A5";
-             int_regs_wb_s_o.ack <= '1';
+             int_regs_wb_m_i.dat <= x"A5A5A5A5";
+             int_regs_wb_m_i.ack <= '1';
+             int_regs_wb_m_i.err <= '0';
           end case;
         end if;
       end if;
@@ -259,14 +266,16 @@ class wb_reg(object):
              iconv_fun="stlv2t_"+self.name
           # Read access
           if self.regtype == 'sreg':
-             dt+="   int_regs_wb_s_o.dat <= "+conv_fun+"("+self.name+"_i"+ind+");\n"
+             dt+="   int_regs_wb_m_i.dat <= "+conv_fun+"("+self.name+"_i"+ind+");\n"
           else:
-             dt+="   int_regs_wb_s_o.dat <= "+conv_fun+"(int_"+self.name+"_o"+ind+");\n"             
+             dt+="   int_regs_wb_m_i.dat <= "+conv_fun+"(int_"+self.name+"_o"+ind+");\n"             
           # Write access
           if self.regtype == 'creg':
-             dt+="   if int_regs_wb_s_i.we = '1' then\n"
-             dt+="     int_"+self.name+"_o"+ind+" <= "+iconv_fun+"(int_regs_wb_s_i.dat);\n"
+             dt+="   if int_regs_wb_m_o.we = '1' then\n"
+             dt+="     int_"+self.name+"_o"+ind+" <= "+iconv_fun+"(int_regs_wb_m_o.dat);\n"
              dt+="   end if;\n"
+          dt += "   int_regs_wb_m_i.ack <= '1';\n"
+          dt += "   int_regs_wb_m_i.err <= '0';\n"
           parent.add_templ('register_access',dt,10)
  
    def gen_pkg(self):
@@ -423,12 +432,12 @@ class wb_block(object):
               ar_adr_bits.append(ar.adr_bits)
               #generate the entity port but not for internal registers
               if ar.obj != None:
-                 dt = ar.name+"_wb_s_o : out t_wishbone_slave_out;\n"
-                 dt += ar.name+"_wb_s_i : in t_wishbone_slave_in;\n"
+                 dt = ar.name+"_wb_m_o : out t_wishbone_master_out;\n"
+                 dt += ar.name+"_wb_m_i : in t_wishbone_master_in;\n"
                  self.add_templ('subblk_busses',dt,4)
               #generate the signal assignment
-              dt = "wb_s_o("+str(ar.first_port)+") <= "+ar.name+"_wb_s_o;\n"
-              dt += ar.name+"_wb_s_i  <= "+"wb_s_i("+str(ar.first_port)+");\n"
+              dt = "wb_m_i("+str(ar.first_port)+") <= "+ar.name+"_wb_m_i;\n"
+              dt += ar.name+"_wb_m_o  <= "+"wb_m_o("+str(ar.first_port)+");\n"
               self.add_templ('cont_assigns',dt,4)
            else: 
               # The area is associated with the vector of subblocks
@@ -436,8 +445,8 @@ class wb_block(object):
               ar.last_port = n_ports+ar.reps-1
               n_ports += ar.reps
               #generate the entity port
-              dt = ar.name+"_wb_s_o : out t_wishbone_slave_out_array("+str(ar.first_port)+" to "+str(ar.last_port)+");\n"
-              dt += ar.name+"_wb_s_i : in t_wishbone_slave_in_array("+str(ar.first_port)+" to "+str(ar.last_port)+");\n"
+              dt = ar.name+"_wb_m_o : out t_wishbone_master_out_array("+str(ar.first_port)+" to "+str(ar.last_port)+");\n"
+              dt += ar.name+"_wb_m_i : in t_wishbone_master_in_array("+str(ar.first_port)+" to "+str(ar.last_port)+");\n"
               self.add_templ('subblk_busses',dt,4)              
               # Now we have to assign addresses and masks for each subblock and connect the port
               base = ar.adr
@@ -446,8 +455,8 @@ class wb_block(object):
                  ar_addresses.append(base)
                  base += ar.obj.addr_size
                  ar_adr_bits.append(ar.obj.adr_bits)
-                 dt = "wb_s_i("+str(nport)+") <= "+ar.name+"_wb_s_i("+str(i)+");\n"
-                 dt += ar.name+"_wb_s_o("+str(i)+")  <= "+"wb_s_o("+str(nport)+");\n"
+                 dt = "wb_m_i("+str(nport)+") <= "+ar.name+"_wb_m_i("+str(i)+");\n"
+                 dt += ar.name+"_wb_m_o("+str(i)+")  <= "+"wb_m_o("+str(nport)+");\n"
                  self.add_templ('cont_assigns',dt,4)
                  nport += 1
        #Now generate vectors with addresses and masks
