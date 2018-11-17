@@ -10,6 +10,12 @@ The code is published under LGPL V2 license
 """
 import xml.etree.ElementTree as et
 import wb_block as wb
+import time
+
+# As the version for generated code (HDL and SW)
+# we take the 32-bit of the system time.
+ver_id = int(time.time()) & 0xFFFFffff
+
 sysdef=et.ElementTree(file="../example1.xml")
 # We get the root element, and find the corresponding block
 er=sysdef.getroot()
@@ -35,7 +41,7 @@ for el in er.findall("block"):
 bl=wb.blocks[top_name]
 bl.analyze()
 for key,bl in wb.blocks.items():
-   bl.gen_vhdl()
+   bl.gen_vhdl(ver_id)
 
 
    

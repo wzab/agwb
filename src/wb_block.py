@@ -10,6 +10,7 @@ The code is published under LGPL V2 license
 This file implements the class handling a Wishbone connected block
 """
 import re
+import zlib
 
 # Template for generation of the VHDL package
 templ_pkg = """\
@@ -104,6 +105,7 @@ begin
         int_regs_wb_m_i.rty <= '0';
         int_regs_wb_m_i.ack <= '0';
         int_regs_wb_m_i.err <= '0';
+{signals_idle}
         if (int_regs_wb_m_o.cyc = '1') and (int_regs_wb_m_o.stb = '1') then
           int_regs_wb_m_i.err <= '1'; -- in case of missed address
           -- Access, now we handle consecutive registers
@@ -181,6 +183,7 @@ class wb_reg(object):
        """
        dt=""
        dtb=""
+       dti=""
        # Generate the type corresponding to the register
        tname = "t_"+self.name
        if len(self.fields) == 0:
@@ -233,9 +236,11 @@ class wb_reg(object):
           dt=self.name+sfx+" : "+sdir+" "+tname+"_array;\n"
        # Now we generate the STB or ACK ports (if required)
        if self.regtype == 'creg' and self.stb == 1:
+          dt += self.name+sfx+"_stb : out std_logic;\n"
           # We need to generate STB output
           pass # To be implemented!
        if self.regtype == 'sreg' and self.ack == 1:
+          dt += self.name+sfx+"_ack : out std_logic;\n"
           # We need to generate ACK output
           pass # To be implemented!
        parent.add_templ('signal_ports',dt,4)
@@ -268,17 +273,25 @@ class wb_reg(object):
           # Read access
           if self.regtype == 'sreg':
              dt+="   int_regs_wb_m_i.dat <= "+conv_fun+"("+self.name+"_i"+ind+");\n"
+             if self.ack == 1:
+                dt += self.name+sfx+"_ack <= '1';\n"
+                # Add clearing of ACK signal at the begining of the process
+                dti += self.name+sfx+"_ack <= '0';\n"
           else:
              dt+="   int_regs_wb_m_i.dat <= "+conv_fun+"(int_"+self.name+"_o"+ind+");\n"             
           # Write access
           if self.regtype == 'creg':
              dt+="   if int_regs_wb_m_o.we = '1' then\n"
              dt+="     int_"+self.name+"_o"+ind+" <= "+iconv_fun+"(int_regs_wb_m_o.dat);\n"
+             if self.stb == 1:
+                dt += self.name+sfx+"_stb <= '1';\n"                
+                # Add clearing of STB signal at the begining of the process
+                dti += self.name+sfx+"_stb <= '0';\n"
              dt+="   end if;\n"
           dt += "   int_regs_wb_m_i.ack <= '1';\n"
           dt += "   int_regs_wb_m_i.err <= '0';\n"
           parent.add_templ('register_access',dt,10)
- 
+          parent.add_templ('signals_idle',dti,10)
    def gen_pkg(self):
      """
      The method generates the VHDL package code.
@@ -396,7 +409,7 @@ class wb_block(object):
           if ln != "":
              self.templ_dict[templ_key] += indent*" " + ln            
      
-   def gen_vhdl(self):
+   def gen_vhdl(self,ver_id):
        # To fill the template, we must to set the following values:
        # p_entity, valid_bits
        
@@ -477,8 +490,9 @@ class wb_block(object):
        self.add_templ('block_id_addr',"\""+format(0,"0"+str(self.reg_addr_bits)+"b")+"\"",0)
        self.add_templ('block_ver_addr',"\""+format(1,"0"+str(self.reg_addr_bits)+"b")+"\"",0)
        self.add_templ('reg_addr_bits',str(self.reg_addr_bits),0)
-       self.add_templ('block_id',"x\"00001234\"",0)
-       self.add_templ('block_ver',"x\"12344321\"",0)
+       block_id_val = zlib.crc32(bytes(self.name.encode('utf-8')))
+       self.add_templ('block_id',"x\""+format(block_id_val,"08x")+"\"",0)
+       self.add_templ('block_ver',"x\""+format(ver_id,"08x")+"\"",0)
        self.add_templ('p_addresses',adrs,0)
        self.add_templ('p_masks',masks,0)
        self.add_templ('p_registered','false',0)
