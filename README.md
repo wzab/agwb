@@ -4,4 +4,4 @@ The [wbgen2](https://www.ohwr.org/projects/wishbone-gen/wiki/wbgen2-documentatio
 The code is licensed under GPL v2 license.
 The generated code is free, and you can freely use it in your design.
 
-Please note, that the code is under initial development, and is not usable yet.
+I'd like to thank Marek Gumiński for important suggestions related to concept of that solution.
