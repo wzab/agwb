@@ -61,7 +61,7 @@ architecture gener of {p_entity} is
   -- Internal WB declaration
   signal int_regs_wb_m_o : t_wishbone_master_out;
   signal int_regs_wb_m_i : t_wishbone_master_in;
-  signal int_addr : std_logic_vector({reg_addr_bits}-1 downto 0);
+  signal int_addr : std_logic_vector({reg_adr_bits}-1 downto 0);
   signal wb_up_o : t_wishbone_slave_out_array(0 to 0);
   signal wb_up_i : t_wishbone_slave_in_array(0 to 0);
   signal wb_m_o : t_wishbone_master_out_array(0 to {nof_subblks}-1);
@@ -74,7 +74,7 @@ architecture gener of {p_entity} is
 begin
   wb_up_i(0) <= slave_i;
   slave_o <= wb_up_o(0);
-  int_addr <= int_regs_wb_m_o.adr({reg_addr_bits}-1 downto 0);
+  int_addr <= int_regs_wb_m_o.adr({reg_adr_bits}-1 downto 0);
 
 -- Main crossbar 
   xwb_crossbar_1: entity work.xwb_crossbar
@@ -132,6 +132,7 @@ begin
 end architecture;
 """
 blocks={}
+blackboxes={}
 
 class wb_field(object):
    def __init__(self,fl,lsb):
@@ -262,7 +263,7 @@ class wb_reg(object):
              ind ="("+str(i)+")"
           else:
              ind = ""
-          dt= "when \""+format(self.base+i,"0"+str(parent.reg_addr_bits)+"b")+"\" => -- "+hex(self.base+i)+"\n"
+          dt= "when \""+format(self.base+i,"0"+str(parent.reg_adr_bits)+"b")+"\" => -- "+hex(self.base+i)+"\n"
           # The conversion functions
           if len(self.fields)==0:
              conv_fun="std_logic_vector"
@@ -340,7 +341,14 @@ class wb_area(object):
         self.reps=reps
     def sort_key(self):
         return self.size
-    
+
+class wb_blackbox(object):     
+   def __init__(self,el):
+      self.name = el.attrib['name']
+      self.adr_bits = int(el.attrib['addrbits'])
+      self.addr_size = 1<<self.adr_bits
+      #We do not store "reps" in the instance, as it may depend on the instance!
+   
 class wb_block(object):
    def __init__(self,el):
      """
@@ -375,34 +383,51 @@ class wb_block(object):
             # This is a subblock definition
             # We only add it to the list, the addresses can't be allocated yet
            self.subblks.append(child)
+        elif child.tag == 'blackbox':
+            # This is a blackbox subblock definition
+            # We only add it to the list, the addresses can't be allocated yet
+           self.subblks.append(child)
         else:
             # Unknown child
            raise Exception("Unknown node in block: "+el.name)
        # After that procedure, the field free_reg_addr contains
        # the length of the block of internal registers
-     self.reg_addr_bits = (self.free_reg_addr-1).bit_length()
+     self.reg_adr_bits = (self.free_reg_addr-1).bit_length()
        
    def analyze(self):
      # Add the length of the local addresses to the list of areas
      self.areas.append(wb_area(self.free_reg_addr,"int_regs",None,1))
      # Scan the subblocks
      for sblk in self.subblks:
-        #@!@ Here we must to correct something! The name of the subblock
-        #Is currently lost. We must to decide how it should be passed
-        #To the generated code@!@
-        bl = blocks[sblk.attrib['type']]
-        # If the subblock was not analyzed yet, analyze it now
-        if len(bl.areas)==0:
-            bl.analyze()
-            # Now we can be sure, that it is analyzed, so we can 
-            # add its address space to ours.
-        # Check if this is a vector of subblocks
-        reps = int(sblk.get('reps',1))
-        print("reps:"+str(reps))
-        # Now recalculate the size of the area, considering possible
-        # block repetitions
-        addr_size = bl.addr_size * reps
-        self.areas.append(wb_area(addr_size,sblk.get('name'),bl,reps))
+        if sblk.tag == 'subblock':
+           #@!@ Here we must to correct something! The name of the subblock
+           #Is currently lost. We must to decide how it should be passed
+           #To the generated code@!@
+           bl = blocks[sblk.attrib['type']]
+           # If the subblock was not analyzed yet, analyze it now
+           if len(bl.areas)==0:
+               bl.analyze()
+               # Now we can be sure, that it is analyzed, so we can 
+               # add its address space to ours.
+           # Check if this is a vector of subblocks
+           reps = int(sblk.get('reps',1))
+           print("reps:"+str(reps))
+           # Now recalculate the size of the area, considering possible
+           # block repetitions
+           addr_size = bl.addr_size * reps
+           self.areas.append(wb_area(addr_size,sblk.get('name'),bl,reps))
+        elif sblk.tag == 'blackbox':
+           # We don't need to analyze the blackbox. We allready have its
+           # address area size.
+           if not sblk.attrib['type'] in blackboxes:
+              blackboxes[sblk.attrib['type']] = wb_blackbox(sblk)
+           bl = blackboxes[sblk.attrib['type']]
+           reps = int(sblk.get('reps',1))
+           print("reps:"+str(reps))
+           addr_size = bl.addr_size * reps
+           self.areas.append(wb_area(addr_size,sblk.get('name'),bl,reps))
+        else:
+           raise Exception("Unknown type of subblock")        
      # Now we can calculate the total length of address space
      # We use the simplest algorithm - all blocks are sorted,
      # their size is rounded up to the nearest power of 2
@@ -482,15 +507,15 @@ class wb_block(object):
               #generate the signal assignment
               dt = "wb_m_i("+str(ar.first_port)+") <= "+ar.name+"_wb_m_i;\n"
               dt += ar.name+"_wb_m_o  <= "+"wb_m_o("+str(ar.first_port)+");\n"
-              self.add_templ('cont_assigns',dt,4)
+              self.add_templ('cont_assigns',dt,2)
            else: 
               # The area is associated with the vector of subblocks
               ar.first_port = n_ports
               ar.last_port = n_ports+ar.reps-1
               n_ports += ar.reps
               #generate the entity port
-              dt = ar.name+"_wb_m_o : out t_wishbone_master_out_array("+str(ar.first_port)+" to "+str(ar.last_port)+");\n"
-              dt += ar.name+"_wb_m_i : in t_wishbone_master_in_array("+str(ar.first_port)+" to "+str(ar.last_port)+");\n"
+              dt = ar.name+"_wb_m_o : out t_wishbone_master_out_array(0 to "+str(ar.last_port-ar.first_port)+");\n"
+              dt += ar.name+"_wb_m_i : in t_wishbone_master_in_array(0 to "+str(ar.last_port-ar.first_port)+");\n"
               self.add_templ('subblk_busses',dt,4)              
               # Now we have to assign addresses and masks for each subblock and connect the port
               base = ar.adr
@@ -501,7 +526,7 @@ class wb_block(object):
                  ar_adr_bits.append(ar.obj.adr_bits)
                  dt = "wb_m_i("+str(nport)+") <= "+ar.name+"_wb_m_i("+str(i)+");\n"
                  dt += ar.name+"_wb_m_o("+str(i)+")  <= "+"wb_m_o("+str(nport)+");\n"
-                 self.add_templ('cont_assigns',dt,4)
+                 self.add_templ('cont_assigns',dt,2)
                  nport += 1
        #Now generate vectors with addresses and masks
        adrs="("
@@ -517,9 +542,9 @@ class wb_block(object):
        adrs += ")"
        masks += ")"
        #Generate the register address for
-       self.add_templ('block_id_addr',"\""+format(0,"0"+str(self.reg_addr_bits)+"b")+"\"",0)
-       self.add_templ('block_ver_addr',"\""+format(1,"0"+str(self.reg_addr_bits)+"b")+"\"",0)
-       self.add_templ('reg_addr_bits',str(self.reg_addr_bits),0)
+       self.add_templ('block_id_addr',"\""+format(0,"0"+str(self.reg_adr_bits)+"b")+"\"",0)
+       self.add_templ('block_ver_addr',"\""+format(1,"0"+str(self.reg_adr_bits)+"b")+"\"",0)
+       self.add_templ('reg_adr_bits',str(self.reg_adr_bits),0)
        block_id_val = zlib.crc32(bytes(self.name.encode('utf-8')))
        self.add_templ('block_id',"x\""+format(block_id_val,"08x")+"\"",0)
        self.add_templ('block_ver',"x\""+format(ver_id,"08x")+"\"",0)

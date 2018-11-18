@@ -1,0 +1,5 @@
+<node id="EXTERN">
+  <node id="REG0" address="00000000" permission="rw"/>
+  <node id="REG1" address="00000001" permission="rw"/>
+  <node id="REG2" address="0x00000002" permission="rw"/>
+</node>

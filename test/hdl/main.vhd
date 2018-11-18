@@ -19,6 +19,8 @@ end entity main;
 architecture rtl of main is
   signal LINKS_wb_m_o : t_wishbone_master_out_array(0 to 4);
   signal LINKS_wb_m_i : t_wishbone_master_in_array(0 to 4);
+  signal EXTERN_wb_m_o : t_wishbone_master_out_array(0 to 1);
+  signal EXTERN_wb_m_i : t_wishbone_master_in_array(0 to 1);
   signal CTRL_o       : t_CTRL;
 begin  -- architecture rtl
 
@@ -28,6 +30,8 @@ begin  -- architecture rtl
       slave_o      => wb_s_out,
       LINKS_wb_m_o => LINKS_wb_m_o,
       LINKS_wb_m_i => LINKS_wb_m_i,
+      EXTERN_wb_m_o => EXTERN_wb_m_o,
+      EXTERN_wb_m_i => EXTERN_wb_m_i,
       CTRL_o       => CTRL_o,
       rst_n_i      => rst_n_i,
       clk_sys_i    => clk_sys_i);
@@ -42,6 +46,17 @@ begin  -- architecture rtl
         wb_s_out  => LINKS_wb_m_i(i));
     
   end generate gl1;
+
+  gl2: for i in 0 to 1 generate
+
+    ext_1: entity work.extern
+      port map (
+        rst_n_i   => rst_n_i,
+        clk_sys_i => clk_sys_i,
+        wb_s_in   => EXTERN_wb_m_o(i),
+        wb_s_out  => EXTERN_wb_m_i(i));
+    
+  end generate gl2;
 
   
 end architecture rtl;
