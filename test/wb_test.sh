@@ -5,5 +5,5 @@ rm -f /tmp/rdpipe /tmp/wrpipe
 mknod /tmp/rdpipe p
 mknod /tmp/wrpipe p
 # Run the python script in the other xterm
-xterm -e "python3 -i python/wb_test.py; echo 'press ENTER'; read" &
+xterm -e "python3 python/wb_test.py; echo 'press ENTER'; read" &
 make
