@@ -50,6 +50,10 @@ begin  -- architecture rtl
   gl2: for i in 0 to 1 generate
 
     ext_1: entity work.extern
+      generic map (
+      instance_number => i,
+      addr_size => 10
+      )
       port map (
         rst_n_i   => rst_n_i,
         clk_sys_i => clk_sys_i,
