@@ -16,7 +16,7 @@ SOURCES = \
  hdl/sys1.vhd \
  gen/MAIN_pkg.vhd \
  gen/MAIN_wb.vhd \
- hdl/extern.vhd \
+ hdl/exttest.vhd \
  hdl/main.vhd \
  hdl/sim_wb_ctrl.vhd \
  hdl/wb_test_top.vhd \

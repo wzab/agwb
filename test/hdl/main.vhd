@@ -49,7 +49,7 @@ begin  -- architecture rtl
 
   gl2: for i in 0 to 1 generate
 
-    ext_1: entity work.extern
+    ext_1: entity work.exttest
       generic map (
       instance_number => i,
       addr_size => 10

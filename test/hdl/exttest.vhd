@@ -4,7 +4,7 @@ use ieee.numeric_std.all;
 library work;
 use work.wishbone_pkg.all;
 
-entity extern is
+entity exttest is
   generic (
     instance_number : integer := 0;
     addr_size       : integer := 8);
@@ -16,9 +16,9 @@ entity extern is
     wb_s_out  : out t_wishbone_slave_out
     );
 
-end entity extern;
+end entity exttest;
 
-architecture rtl of extern is
+architecture rtl of exttest is
 
   signal ack : std_logic := '0';
 
