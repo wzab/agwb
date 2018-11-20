@@ -7,5 +7,5 @@ The generated code is free, and you can freely use it in your design.
 I'd like to thank Marek Gumiński for important suggestions related to concept of that solution.
 
 To see the demonstration of the system, please go to the "test" directory, then run the "prepare.sh" script (which downloads the Wishbone related components), after that run the "generate.sh" script (which generates the files for a simple demo system described by "example1.xml"), and finally run "test_wb.sh".
-Please note, that ghdl must be in your PATH.
+Please note, that ghdl must be in your PATH, and it must be a decent version of GHDL (I use 0.36 from github).
 
