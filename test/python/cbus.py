@@ -75,7 +75,11 @@ class cbus_obj(object):
       return val
 
 def cbus_read_nodes(addr_directory,address_table_file,base_name="",base_addr=0,nodes={}):
-    plik1=et.ElementTree(file=addr_directory+'/'+address_table_file)
+    #If address_table_file starts with "file://", remove it, and add addr_directory
+    furl="file://"
+    if address_table_file.find(furl)==0:
+       address_table_file=addr_directory+"/"+address_table_file.replace(furl,"")
+    plik1=et.ElementTree(file=address_table_file)
     print("Reading file: "+address_table_file)
     #Take the root element
     er=plik1.getroot()

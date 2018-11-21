@@ -582,13 +582,13 @@ class wb_block(object):
                #Single subblock
                res += "  <node id=\""+ar.name+"\""+\
                       " address=\"0x"+format(ar.adr,"08x")+"\""+\
-                      " module=\""+ar.obj.name+"_address.xml\"/>\n"                      
+                      " module=\"file://"+ar.obj.name+"_address.xml\"/>\n"
             else:
                #Vector of subblocks
                for nb in range(0,ar.reps):
                   res += "  <node id=\""+ar.name+"["+str(nb)+"]\""+\
                          " address=\"0x"+format(ar.adr+nb*ar.obj.addr_size,"08x")+"\""+\
-                         " module=\""+ar.obj.name+"_address.xml\"/>\n"
+                         " module=\"file://"+ar.obj.name+"_address.xml\"/>\n"
       res+="</node>\n"
       with open(self.name+"_address.xml","w") as fo:
          fo.write(res)
