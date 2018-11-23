@@ -1,13 +1,13 @@
 [*]
-[*] GTKWave Analyzer v3.3.94 (w)1999-2018 BSI
-[*] Sat Nov 17 22:40:50 2018
+[*] GTKWave Analyzer v3.3.86 (w)1999-2017 BSI
+[*] Fri Nov 23 10:22:08 2018
 [*]
-[dumpfile] "/home/wzab/tmp/addr_gen_wb/test/wb_test_top_tb.ghw"
-[dumpfile_mtime] "Sat Nov 17 22:38:07 2018"
-[dumpfile_size] 77914
-[savefile] "/home/wzab/tmp/addr_gen_wb/test/wb_test_top_tb.sav"
-[timestart] 1755800000
-[size] 1280 939
+[dumpfile] "/home/wzab/addr_gen_wb/test/wb_test_top_tb.ghw"
+[dumpfile_mtime] "Fri Nov 23 10:15:40 2018"
+[dumpfile_size] 78057
+[savefile] "/home/wzab/addr_gen_wb/test/wb_test_top_tb.sav"
+[timestart] 4208400000
+[size] 1600 706
 [pos] -1 -1
 *-27.123140 1593000000 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
 [treeopen] top.
@@ -28,12 +28,14 @@
 [treeopen] top.wb_test_top_tb.dut.main_1.main_wb_1.int_regs_wb_m_i.
 [treeopen] top.wb_test_top_tb.dut.main_1.main_wb_1.xwb_crossbar_1.master_i.
 [treeopen] top.wb_test_top_tb.dut.main_1.main_wb_1.xwb_crossbar_1.master_o.
+[treeopen] top.wb_test_top_tb.dut.main_1.wb_cdc_1.
+[treeopen] top.wb_test_top_tb.dut.main_1.wb_cdc_1.master_o.
 [treeopen] top.wb_test_top_tb.dut.sim_wb_ctrl_1.wb_m_in.
 [treeopen] top.wb_test_top_tb.dut.sim_wb_ctrl_1.wb_m_out.
 [sst_width] 332
-[signals_width] 134
+[signals_width] 142
 [sst_expanded] 1
-[sst_vpaned_height] 270
+[sst_vpaned_height] 220
 @28
 top.wb_test_top_tb.clk
 top.wb_test_top_tb.clk_sys_i
@@ -213,7 +215,7 @@ top.wb_test_top_tb.dut.main_1.gl1[4].sys1_1.status_i_ack
 top.wb_test_top_tb.dut.main_1.gl1[4].sys1_1.ctrl_o_stb
 @22
 #{top.wb_test_top_tb.dut.main_1.gl1[4].sys1_1.ctrl_o[31:0]} top.wb_test_top_tb.dut.main_1.gl1[4].sys1_1.ctrl_o[31] top.wb_test_top_tb.dut.main_1.gl1[4].sys1_1.ctrl_o[30] top.wb_test_top_tb.dut.main_1.gl1[4].sys1_1.ctrl_o[29] top.wb_test_top_tb.dut.main_1.gl1[4].sys1_1.ctrl_o[28] top.wb_test_top_tb.dut.main_1.gl1[4].sys1_1.ctrl_o[27] top.wb_test_top_tb.dut.main_1.gl1[4].sys1_1.ctrl_o[26] top.wb_test_top_tb.dut.main_1.gl1[4].sys1_1.ctrl_o[25] top.wb_test_top_tb.dut.main_1.gl1[4].sys1_1.ctrl_o[24] top.wb_test_top_tb.dut.main_1.gl1[4].sys1_1.ctrl_o[23] top.wb_test_top_tb.dut.main_1.gl1[4].sys1_1.ctrl_o[22] top.wb_test_top_tb.dut.main_1.gl1[4].sys1_1.ctrl_o[21] top.wb_test_top_tb.dut.main_1.gl1[4].sys1_1.ctrl_o[20] top.wb_test_top_tb.dut.main_1.gl1[4].sys1_1.ctrl_o[19] top.wb_test_top_tb.dut.main_1.gl1[4].sys1_1.ctrl_o[18] top.wb_test_top_tb.dut.main_1.gl1[4].sys1_1.ctrl_o[17] top.wb_test_top_tb.dut.main_1.gl1[4].sys1_1.ctrl_o[16] top.wb_test_top_tb.dut.main_1.gl1[4].sys1_1.ctrl_o[15] top.wb_test_top_tb.dut.main_1.gl1[4].sys1_1.ctrl_o[14] top.wb_test_top_tb.dut.main_1.gl1[4].sys1_1.ctrl_o[13] top.wb_test_top_tb.dut.main_1.gl1[4].sys1_1.ctrl_o[12] top.wb_test_top_tb.dut.main_1.gl1[4].sys1_1.ctrl_o[11] top.wb_test_top_tb.dut.main_1.gl1[4].sys1_1.ctrl_o[10] top.wb_test_top_tb.dut.main_1.gl1[4].sys1_1.ctrl_o[9] top.wb_test_top_tb.dut.main_1.gl1[4].sys1_1.ctrl_o[8] top.wb_test_top_tb.dut.main_1.gl1[4].sys1_1.ctrl_o[7] top.wb_test_top_tb.dut.main_1.gl1[4].sys1_1.ctrl_o[6] top.wb_test_top_tb.dut.main_1.gl1[4].sys1_1.ctrl_o[5] top.wb_test_top_tb.dut.main_1.gl1[4].sys1_1.ctrl_o[4] top.wb_test_top_tb.dut.main_1.gl1[4].sys1_1.ctrl_o[3] top.wb_test_top_tb.dut.main_1.gl1[4].sys1_1.ctrl_o[2] top.wb_test_top_tb.dut.main_1.gl1[4].sys1_1.ctrl_o[1] top.wb_test_top_tb.dut.main_1.gl1[4].sys1_1.ctrl_o[0]
-@201
+@200
 -MAIN.CTRL
 @28
 top.wb_test_top_tb.dut.main_1.ctrl_o.clk_enable[0]
@@ -221,5 +223,65 @@ top.wb_test_top_tb.dut.main_1.ctrl_o.clk_enable[0]
 #{top.wb_test_top_tb.dut.main_1.ctrl_o.clk_freq[3:0]} top.wb_test_top_tb.dut.main_1.ctrl_o.clk_freq[3] top.wb_test_top_tb.dut.main_1.ctrl_o.clk_freq[2] top.wb_test_top_tb.dut.main_1.ctrl_o.clk_freq[1] top.wb_test_top_tb.dut.main_1.ctrl_o.clk_freq[0]
 @28
 top.wb_test_top_tb.dut.main_1.ctrl_o.pll_reset[0]
+@200
+-CDC
+@28
+top.wb_test_top_tb.dut.main_1.wb_cdc_1.ack_m
+@22
+#{top.wb_test_top_tb.dut.main_1.wb_cdc_1.dat_m[31:0]} top.wb_test_top_tb.dut.main_1.wb_cdc_1.dat_m[31] top.wb_test_top_tb.dut.main_1.wb_cdc_1.dat_m[30] top.wb_test_top_tb.dut.main_1.wb_cdc_1.dat_m[29] top.wb_test_top_tb.dut.main_1.wb_cdc_1.dat_m[28] top.wb_test_top_tb.dut.main_1.wb_cdc_1.dat_m[27] top.wb_test_top_tb.dut.main_1.wb_cdc_1.dat_m[26] top.wb_test_top_tb.dut.main_1.wb_cdc_1.dat_m[25] top.wb_test_top_tb.dut.main_1.wb_cdc_1.dat_m[24] top.wb_test_top_tb.dut.main_1.wb_cdc_1.dat_m[23] top.wb_test_top_tb.dut.main_1.wb_cdc_1.dat_m[22] top.wb_test_top_tb.dut.main_1.wb_cdc_1.dat_m[21] top.wb_test_top_tb.dut.main_1.wb_cdc_1.dat_m[20] top.wb_test_top_tb.dut.main_1.wb_cdc_1.dat_m[19] top.wb_test_top_tb.dut.main_1.wb_cdc_1.dat_m[18] top.wb_test_top_tb.dut.main_1.wb_cdc_1.dat_m[17] top.wb_test_top_tb.dut.main_1.wb_cdc_1.dat_m[16] top.wb_test_top_tb.dut.main_1.wb_cdc_1.dat_m[15] top.wb_test_top_tb.dut.main_1.wb_cdc_1.dat_m[14] top.wb_test_top_tb.dut.main_1.wb_cdc_1.dat_m[13] top.wb_test_top_tb.dut.main_1.wb_cdc_1.dat_m[12] top.wb_test_top_tb.dut.main_1.wb_cdc_1.dat_m[11] top.wb_test_top_tb.dut.main_1.wb_cdc_1.dat_m[10] top.wb_test_top_tb.dut.main_1.wb_cdc_1.dat_m[9] top.wb_test_top_tb.dut.main_1.wb_cdc_1.dat_m[8] top.wb_test_top_tb.dut.main_1.wb_cdc_1.dat_m[7] top.wb_test_top_tb.dut.main_1.wb_cdc_1.dat_m[6] top.wb_test_top_tb.dut.main_1.wb_cdc_1.dat_m[5] top.wb_test_top_tb.dut.main_1.wb_cdc_1.dat_m[4] top.wb_test_top_tb.dut.main_1.wb_cdc_1.dat_m[3] top.wb_test_top_tb.dut.main_1.wb_cdc_1.dat_m[2] top.wb_test_top_tb.dut.main_1.wb_cdc_1.dat_m[1] top.wb_test_top_tb.dut.main_1.wb_cdc_1.dat_m[0]
+@28
+top.wb_test_top_tb.dut.main_1.wb_cdc_1.err_m
+top.wb_test_top_tb.dut.main_1.wb_cdc_1.master_clk_i
+top.wb_test_top_tb.dut.main_1.wb_cdc_1.master_i.ack
+@22
+#{top.wb_test_top_tb.dut.main_1.wb_cdc_1.master_i.dat[31:0]} top.wb_test_top_tb.dut.main_1.wb_cdc_1.master_i.dat[31] top.wb_test_top_tb.dut.main_1.wb_cdc_1.master_i.dat[30] top.wb_test_top_tb.dut.main_1.wb_cdc_1.master_i.dat[29] top.wb_test_top_tb.dut.main_1.wb_cdc_1.master_i.dat[28] top.wb_test_top_tb.dut.main_1.wb_cdc_1.master_i.dat[27] top.wb_test_top_tb.dut.main_1.wb_cdc_1.master_i.dat[26] top.wb_test_top_tb.dut.main_1.wb_cdc_1.master_i.dat[25] top.wb_test_top_tb.dut.main_1.wb_cdc_1.master_i.dat[24] top.wb_test_top_tb.dut.main_1.wb_cdc_1.master_i.dat[23] top.wb_test_top_tb.dut.main_1.wb_cdc_1.master_i.dat[22] top.wb_test_top_tb.dut.main_1.wb_cdc_1.master_i.dat[21] top.wb_test_top_tb.dut.main_1.wb_cdc_1.master_i.dat[20] top.wb_test_top_tb.dut.main_1.wb_cdc_1.master_i.dat[19] top.wb_test_top_tb.dut.main_1.wb_cdc_1.master_i.dat[18] top.wb_test_top_tb.dut.main_1.wb_cdc_1.master_i.dat[17] top.wb_test_top_tb.dut.main_1.wb_cdc_1.master_i.dat[16] top.wb_test_top_tb.dut.main_1.wb_cdc_1.master_i.dat[15] top.wb_test_top_tb.dut.main_1.wb_cdc_1.master_i.dat[14] top.wb_test_top_tb.dut.main_1.wb_cdc_1.master_i.dat[13] top.wb_test_top_tb.dut.main_1.wb_cdc_1.master_i.dat[12] top.wb_test_top_tb.dut.main_1.wb_cdc_1.master_i.dat[11] top.wb_test_top_tb.dut.main_1.wb_cdc_1.master_i.dat[10] top.wb_test_top_tb.dut.main_1.wb_cdc_1.master_i.dat[9] top.wb_test_top_tb.dut.main_1.wb_cdc_1.master_i.dat[8] top.wb_test_top_tb.dut.main_1.wb_cdc_1.master_i.dat[7] top.wb_test_top_tb.dut.main_1.wb_cdc_1.master_i.dat[6] top.wb_test_top_tb.dut.main_1.wb_cdc_1.master_i.dat[5] top.wb_test_top_tb.dut.main_1.wb_cdc_1.master_i.dat[4] top.wb_test_top_tb.dut.main_1.wb_cdc_1.master_i.dat[3] top.wb_test_top_tb.dut.main_1.wb_cdc_1.master_i.dat[2] top.wb_test_top_tb.dut.main_1.wb_cdc_1.master_i.dat[1] top.wb_test_top_tb.dut.main_1.wb_cdc_1.master_i.dat[0]
+@28
+top.wb_test_top_tb.dut.main_1.wb_cdc_1.master_i.err
+top.wb_test_top_tb.dut.main_1.wb_cdc_1.master_i.rty
+top.wb_test_top_tb.dut.main_1.wb_cdc_1.master_i.stall
+@22
+#{top.wb_test_top_tb.dut.main_1.wb_cdc_1.master_o.adr[31:0]} top.wb_test_top_tb.dut.main_1.wb_cdc_1.master_o.adr[31] top.wb_test_top_tb.dut.main_1.wb_cdc_1.master_o.adr[30] top.wb_test_top_tb.dut.main_1.wb_cdc_1.master_o.adr[29] top.wb_test_top_tb.dut.main_1.wb_cdc_1.master_o.adr[28] top.wb_test_top_tb.dut.main_1.wb_cdc_1.master_o.adr[27] top.wb_test_top_tb.dut.main_1.wb_cdc_1.master_o.adr[26] top.wb_test_top_tb.dut.main_1.wb_cdc_1.master_o.adr[25] top.wb_test_top_tb.dut.main_1.wb_cdc_1.master_o.adr[24] top.wb_test_top_tb.dut.main_1.wb_cdc_1.master_o.adr[23] top.wb_test_top_tb.dut.main_1.wb_cdc_1.master_o.adr[22] top.wb_test_top_tb.dut.main_1.wb_cdc_1.master_o.adr[21] top.wb_test_top_tb.dut.main_1.wb_cdc_1.master_o.adr[20] top.wb_test_top_tb.dut.main_1.wb_cdc_1.master_o.adr[19] top.wb_test_top_tb.dut.main_1.wb_cdc_1.master_o.adr[18] top.wb_test_top_tb.dut.main_1.wb_cdc_1.master_o.adr[17] top.wb_test_top_tb.dut.main_1.wb_cdc_1.master_o.adr[16] top.wb_test_top_tb.dut.main_1.wb_cdc_1.master_o.adr[15] top.wb_test_top_tb.dut.main_1.wb_cdc_1.master_o.adr[14] top.wb_test_top_tb.dut.main_1.wb_cdc_1.master_o.adr[13] top.wb_test_top_tb.dut.main_1.wb_cdc_1.master_o.adr[12] top.wb_test_top_tb.dut.main_1.wb_cdc_1.master_o.adr[11] top.wb_test_top_tb.dut.main_1.wb_cdc_1.master_o.adr[10] top.wb_test_top_tb.dut.main_1.wb_cdc_1.master_o.adr[9] top.wb_test_top_tb.dut.main_1.wb_cdc_1.master_o.adr[8] top.wb_test_top_tb.dut.main_1.wb_cdc_1.master_o.adr[7] top.wb_test_top_tb.dut.main_1.wb_cdc_1.master_o.adr[6] top.wb_test_top_tb.dut.main_1.wb_cdc_1.master_o.adr[5] top.wb_test_top_tb.dut.main_1.wb_cdc_1.master_o.adr[4] top.wb_test_top_tb.dut.main_1.wb_cdc_1.master_o.adr[3] top.wb_test_top_tb.dut.main_1.wb_cdc_1.master_o.adr[2] top.wb_test_top_tb.dut.main_1.wb_cdc_1.master_o.adr[1] top.wb_test_top_tb.dut.main_1.wb_cdc_1.master_o.adr[0]
+@28
+top.wb_test_top_tb.dut.main_1.wb_cdc_1.master_o.cyc
+@22
+#{top.wb_test_top_tb.dut.main_1.wb_cdc_1.master_o.dat[31:0]} top.wb_test_top_tb.dut.main_1.wb_cdc_1.master_o.dat[31] top.wb_test_top_tb.dut.main_1.wb_cdc_1.master_o.dat[30] top.wb_test_top_tb.dut.main_1.wb_cdc_1.master_o.dat[29] top.wb_test_top_tb.dut.main_1.wb_cdc_1.master_o.dat[28] top.wb_test_top_tb.dut.main_1.wb_cdc_1.master_o.dat[27] top.wb_test_top_tb.dut.main_1.wb_cdc_1.master_o.dat[26] top.wb_test_top_tb.dut.main_1.wb_cdc_1.master_o.dat[25] top.wb_test_top_tb.dut.main_1.wb_cdc_1.master_o.dat[24] top.wb_test_top_tb.dut.main_1.wb_cdc_1.master_o.dat[23] top.wb_test_top_tb.dut.main_1.wb_cdc_1.master_o.dat[22] top.wb_test_top_tb.dut.main_1.wb_cdc_1.master_o.dat[21] top.wb_test_top_tb.dut.main_1.wb_cdc_1.master_o.dat[20] top.wb_test_top_tb.dut.main_1.wb_cdc_1.master_o.dat[19] top.wb_test_top_tb.dut.main_1.wb_cdc_1.master_o.dat[18] top.wb_test_top_tb.dut.main_1.wb_cdc_1.master_o.dat[17] top.wb_test_top_tb.dut.main_1.wb_cdc_1.master_o.dat[16] top.wb_test_top_tb.dut.main_1.wb_cdc_1.master_o.dat[15] top.wb_test_top_tb.dut.main_1.wb_cdc_1.master_o.dat[14] top.wb_test_top_tb.dut.main_1.wb_cdc_1.master_o.dat[13] top.wb_test_top_tb.dut.main_1.wb_cdc_1.master_o.dat[12] top.wb_test_top_tb.dut.main_1.wb_cdc_1.master_o.dat[11] top.wb_test_top_tb.dut.main_1.wb_cdc_1.master_o.dat[10] top.wb_test_top_tb.dut.main_1.wb_cdc_1.master_o.dat[9] top.wb_test_top_tb.dut.main_1.wb_cdc_1.master_o.dat[8] top.wb_test_top_tb.dut.main_1.wb_cdc_1.master_o.dat[7] top.wb_test_top_tb.dut.main_1.wb_cdc_1.master_o.dat[6] top.wb_test_top_tb.dut.main_1.wb_cdc_1.master_o.dat[5] top.wb_test_top_tb.dut.main_1.wb_cdc_1.master_o.dat[4] top.wb_test_top_tb.dut.main_1.wb_cdc_1.master_o.dat[3] top.wb_test_top_tb.dut.main_1.wb_cdc_1.master_o.dat[2] top.wb_test_top_tb.dut.main_1.wb_cdc_1.master_o.dat[1] top.wb_test_top_tb.dut.main_1.wb_cdc_1.master_o.dat[0]
+#{top.wb_test_top_tb.dut.main_1.wb_cdc_1.master_o.sel[3:0]} top.wb_test_top_tb.dut.main_1.wb_cdc_1.master_o.sel[3] top.wb_test_top_tb.dut.main_1.wb_cdc_1.master_o.sel[2] top.wb_test_top_tb.dut.main_1.wb_cdc_1.master_o.sel[1] top.wb_test_top_tb.dut.main_1.wb_cdc_1.master_o.sel[0]
+@28
+top.wb_test_top_tb.dut.main_1.wb_cdc_1.master_o.stb
+top.wb_test_top_tb.dut.main_1.wb_cdc_1.master_o.we
+top.wb_test_top_tb.dut.main_1.wb_cdc_1.master_rst_n_i
+top.wb_test_top_tb.dut.main_1.wb_cdc_1.new_resp
+top.wb_test_top_tb.dut.main_1.wb_cdc_1.req
+top.wb_test_top_tb.dut.main_1.wb_cdc_1.req_m
+top.wb_test_top_tb.dut.main_1.wb_cdc_1.req_m0
+top.wb_test_top_tb.dut.main_1.wb_cdc_1.req_m1
+top.wb_test_top_tb.dut.main_1.wb_cdc_1.resp
+top.wb_test_top_tb.dut.main_1.wb_cdc_1.resp_m
+top.wb_test_top_tb.dut.main_1.wb_cdc_1.resp_s0
+top.wb_test_top_tb.dut.main_1.wb_cdc_1.resp_s1
+top.wb_test_top_tb.dut.main_1.wb_cdc_1.rst_ms_0
+top.wb_test_top_tb.dut.main_1.wb_cdc_1.rst_ms_p
+top.wb_test_top_tb.dut.main_1.wb_cdc_1.rst_sl_0
+top.wb_test_top_tb.dut.main_1.wb_cdc_1.rst_sl_p
+top.wb_test_top_tb.dut.main_1.wb_cdc_1.rty_m
+top.wb_test_top_tb.dut.main_1.wb_cdc_1.slave_clk_i
+@22
+#{top.wb_test_top_tb.dut.main_1.wb_cdc_1.slave_i.adr[31:0]} top.wb_test_top_tb.dut.main_1.wb_cdc_1.slave_i.adr[31] top.wb_test_top_tb.dut.main_1.wb_cdc_1.slave_i.adr[30] top.wb_test_top_tb.dut.main_1.wb_cdc_1.slave_i.adr[29] top.wb_test_top_tb.dut.main_1.wb_cdc_1.slave_i.adr[28] top.wb_test_top_tb.dut.main_1.wb_cdc_1.slave_i.adr[27] top.wb_test_top_tb.dut.main_1.wb_cdc_1.slave_i.adr[26] top.wb_test_top_tb.dut.main_1.wb_cdc_1.slave_i.adr[25] top.wb_test_top_tb.dut.main_1.wb_cdc_1.slave_i.adr[24] top.wb_test_top_tb.dut.main_1.wb_cdc_1.slave_i.adr[23] top.wb_test_top_tb.dut.main_1.wb_cdc_1.slave_i.adr[22] top.wb_test_top_tb.dut.main_1.wb_cdc_1.slave_i.adr[21] top.wb_test_top_tb.dut.main_1.wb_cdc_1.slave_i.adr[20] top.wb_test_top_tb.dut.main_1.wb_cdc_1.slave_i.adr[19] top.wb_test_top_tb.dut.main_1.wb_cdc_1.slave_i.adr[18] top.wb_test_top_tb.dut.main_1.wb_cdc_1.slave_i.adr[17] top.wb_test_top_tb.dut.main_1.wb_cdc_1.slave_i.adr[16] top.wb_test_top_tb.dut.main_1.wb_cdc_1.slave_i.adr[15] top.wb_test_top_tb.dut.main_1.wb_cdc_1.slave_i.adr[14] top.wb_test_top_tb.dut.main_1.wb_cdc_1.slave_i.adr[13] top.wb_test_top_tb.dut.main_1.wb_cdc_1.slave_i.adr[12] top.wb_test_top_tb.dut.main_1.wb_cdc_1.slave_i.adr[11] top.wb_test_top_tb.dut.main_1.wb_cdc_1.slave_i.adr[10] top.wb_test_top_tb.dut.main_1.wb_cdc_1.slave_i.adr[9] top.wb_test_top_tb.dut.main_1.wb_cdc_1.slave_i.adr[8] top.wb_test_top_tb.dut.main_1.wb_cdc_1.slave_i.adr[7] top.wb_test_top_tb.dut.main_1.wb_cdc_1.slave_i.adr[6] top.wb_test_top_tb.dut.main_1.wb_cdc_1.slave_i.adr[5] top.wb_test_top_tb.dut.main_1.wb_cdc_1.slave_i.adr[4] top.wb_test_top_tb.dut.main_1.wb_cdc_1.slave_i.adr[3] top.wb_test_top_tb.dut.main_1.wb_cdc_1.slave_i.adr[2] top.wb_test_top_tb.dut.main_1.wb_cdc_1.slave_i.adr[1] top.wb_test_top_tb.dut.main_1.wb_cdc_1.slave_i.adr[0]
+@28
+top.wb_test_top_tb.dut.main_1.wb_cdc_1.slave_i.cyc
+@22
+#{top.wb_test_top_tb.dut.main_1.wb_cdc_1.slave_i.dat[31:0]} top.wb_test_top_tb.dut.main_1.wb_cdc_1.slave_i.dat[31] top.wb_test_top_tb.dut.main_1.wb_cdc_1.slave_i.dat[30] top.wb_test_top_tb.dut.main_1.wb_cdc_1.slave_i.dat[29] top.wb_test_top_tb.dut.main_1.wb_cdc_1.slave_i.dat[28] top.wb_test_top_tb.dut.main_1.wb_cdc_1.slave_i.dat[27] top.wb_test_top_tb.dut.main_1.wb_cdc_1.slave_i.dat[26] top.wb_test_top_tb.dut.main_1.wb_cdc_1.slave_i.dat[25] top.wb_test_top_tb.dut.main_1.wb_cdc_1.slave_i.dat[24] top.wb_test_top_tb.dut.main_1.wb_cdc_1.slave_i.dat[23] top.wb_test_top_tb.dut.main_1.wb_cdc_1.slave_i.dat[22] top.wb_test_top_tb.dut.main_1.wb_cdc_1.slave_i.dat[21] top.wb_test_top_tb.dut.main_1.wb_cdc_1.slave_i.dat[20] top.wb_test_top_tb.dut.main_1.wb_cdc_1.slave_i.dat[19] top.wb_test_top_tb.dut.main_1.wb_cdc_1.slave_i.dat[18] top.wb_test_top_tb.dut.main_1.wb_cdc_1.slave_i.dat[17] top.wb_test_top_tb.dut.main_1.wb_cdc_1.slave_i.dat[16] top.wb_test_top_tb.dut.main_1.wb_cdc_1.slave_i.dat[15] top.wb_test_top_tb.dut.main_1.wb_cdc_1.slave_i.dat[14] top.wb_test_top_tb.dut.main_1.wb_cdc_1.slave_i.dat[13] top.wb_test_top_tb.dut.main_1.wb_cdc_1.slave_i.dat[12] top.wb_test_top_tb.dut.main_1.wb_cdc_1.slave_i.dat[11] top.wb_test_top_tb.dut.main_1.wb_cdc_1.slave_i.dat[10] top.wb_test_top_tb.dut.main_1.wb_cdc_1.slave_i.dat[9] top.wb_test_top_tb.dut.main_1.wb_cdc_1.slave_i.dat[8] top.wb_test_top_tb.dut.main_1.wb_cdc_1.slave_i.dat[7] top.wb_test_top_tb.dut.main_1.wb_cdc_1.slave_i.dat[6] top.wb_test_top_tb.dut.main_1.wb_cdc_1.slave_i.dat[5] top.wb_test_top_tb.dut.main_1.wb_cdc_1.slave_i.dat[4] top.wb_test_top_tb.dut.main_1.wb_cdc_1.slave_i.dat[3] top.wb_test_top_tb.dut.main_1.wb_cdc_1.slave_i.dat[2] top.wb_test_top_tb.dut.main_1.wb_cdc_1.slave_i.dat[1] top.wb_test_top_tb.dut.main_1.wb_cdc_1.slave_i.dat[0]
+#{top.wb_test_top_tb.dut.main_1.wb_cdc_1.slave_i.sel[3:0]} top.wb_test_top_tb.dut.main_1.wb_cdc_1.slave_i.sel[3] top.wb_test_top_tb.dut.main_1.wb_cdc_1.slave_i.sel[2] top.wb_test_top_tb.dut.main_1.wb_cdc_1.slave_i.sel[1] top.wb_test_top_tb.dut.main_1.wb_cdc_1.slave_i.sel[0]
+@28
+top.wb_test_top_tb.dut.main_1.wb_cdc_1.slave_i.stb
+top.wb_test_top_tb.dut.main_1.wb_cdc_1.slave_i.we
+top.wb_test_top_tb.dut.main_1.wb_cdc_1.slave_o.ack
+@22
+#{top.wb_test_top_tb.dut.main_1.wb_cdc_1.slave_o.dat[31:0]} top.wb_test_top_tb.dut.main_1.wb_cdc_1.slave_o.dat[31] top.wb_test_top_tb.dut.main_1.wb_cdc_1.slave_o.dat[30] top.wb_test_top_tb.dut.main_1.wb_cdc_1.slave_o.dat[29] top.wb_test_top_tb.dut.main_1.wb_cdc_1.slave_o.dat[28] top.wb_test_top_tb.dut.main_1.wb_cdc_1.slave_o.dat[27] top.wb_test_top_tb.dut.main_1.wb_cdc_1.slave_o.dat[26] top.wb_test_top_tb.dut.main_1.wb_cdc_1.slave_o.dat[25] top.wb_test_top_tb.dut.main_1.wb_cdc_1.slave_o.dat[24] top.wb_test_top_tb.dut.main_1.wb_cdc_1.slave_o.dat[23] top.wb_test_top_tb.dut.main_1.wb_cdc_1.slave_o.dat[22] top.wb_test_top_tb.dut.main_1.wb_cdc_1.slave_o.dat[21] top.wb_test_top_tb.dut.main_1.wb_cdc_1.slave_o.dat[20] top.wb_test_top_tb.dut.main_1.wb_cdc_1.slave_o.dat[19] top.wb_test_top_tb.dut.main_1.wb_cdc_1.slave_o.dat[18] top.wb_test_top_tb.dut.main_1.wb_cdc_1.slave_o.dat[17] top.wb_test_top_tb.dut.main_1.wb_cdc_1.slave_o.dat[16] top.wb_test_top_tb.dut.main_1.wb_cdc_1.slave_o.dat[15] top.wb_test_top_tb.dut.main_1.wb_cdc_1.slave_o.dat[14] top.wb_test_top_tb.dut.main_1.wb_cdc_1.slave_o.dat[13] top.wb_test_top_tb.dut.main_1.wb_cdc_1.slave_o.dat[12] top.wb_test_top_tb.dut.main_1.wb_cdc_1.slave_o.dat[11] top.wb_test_top_tb.dut.main_1.wb_cdc_1.slave_o.dat[10] top.wb_test_top_tb.dut.main_1.wb_cdc_1.slave_o.dat[9] top.wb_test_top_tb.dut.main_1.wb_cdc_1.slave_o.dat[8] top.wb_test_top_tb.dut.main_1.wb_cdc_1.slave_o.dat[7] top.wb_test_top_tb.dut.main_1.wb_cdc_1.slave_o.dat[6] top.wb_test_top_tb.dut.main_1.wb_cdc_1.slave_o.dat[5] top.wb_test_top_tb.dut.main_1.wb_cdc_1.slave_o.dat[4] top.wb_test_top_tb.dut.main_1.wb_cdc_1.slave_o.dat[3] top.wb_test_top_tb.dut.main_1.wb_cdc_1.slave_o.dat[2] top.wb_test_top_tb.dut.main_1.wb_cdc_1.slave_o.dat[1] top.wb_test_top_tb.dut.main_1.wb_cdc_1.slave_o.dat[0]
+@28
+top.wb_test_top_tb.dut.main_1.wb_cdc_1.slave_o.err
+top.wb_test_top_tb.dut.main_1.wb_cdc_1.slave_o.rty
+top.wb_test_top_tb.dut.main_1.wb_cdc_1.slave_o.stall
+top.wb_test_top_tb.dut.main_1.wb_cdc_1.slave_rst_n_i
 [pattern_trace] 1
 [pattern_trace] 0

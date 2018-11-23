@@ -3,7 +3,7 @@ STD=standard
 VSTD=93c
 ENTITY=wb_test_top_tb
 # --unbuffered option must be added in the new GHDL
-RUN_OPTIONS= --unbuffered --stop-time=3900ns --wave=${ENTITY}.ghw 
+RUN_OPTIONS= --unbuffered --stop-time=5000ns --wave=${ENTITY}.ghw 
 #RUN_OPTIONS+= --trace-signals
 #RUN_OPTIONS= --stop-time=290000ns 
 #RUN_OPTIONS=  --wave=${ENTITY}.ghw 
@@ -17,6 +17,7 @@ SOURCES = \
  gen/MAIN_pkg.vhd \
  gen/MAIN_wb.vhd \
  hdl/exttest.vhd \
+ hdl/wb_cdc.vhd \
  hdl/main.vhd \
  hdl/sim_wb_ctrl.vhd \
  hdl/wb_test_top.vhd \

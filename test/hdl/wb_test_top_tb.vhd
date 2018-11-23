@@ -6,7 +6,7 @@
 -- Author     : Wojciech Zabołotny  <wzab@wzab.nasz.dom>
 -- Company    : 
 -- Created    : 2018-11-11
--- Last update: 2018-11-11
+-- Last update: 2018-11-23
 -- Platform   : 
 -- Standard   : VHDL'93/02
 -------------------------------------------------------------------------------
@@ -38,7 +38,8 @@ architecture test of wb_test_top_tb is
 
   -- component ports
   signal rst_i     : std_logic := '1';
-  signal clk_sys_i : std_logic;
+  signal clk_io_i : std_logic := '0';
+  signal clk_sys_i : std_logic := '0';
 
   -- clock
   signal Clk : std_logic := '1';
@@ -53,10 +54,12 @@ begin  -- architecture test
       wrpipename => wrpipename)
     port map (
       rst_i     => rst_i,
+      clk_io_i => clk_io_i,
       clk_sys_i => clk_sys_i);
 
   -- clock generation
   Clk <= not Clk after 10 ns;
+  Clk_io_i <= not Clk_io_i after 5.12 ns;
 
   -- waveform generation
   WaveGen_Proc: process
