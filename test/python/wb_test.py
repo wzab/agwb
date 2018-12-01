@@ -35,6 +35,9 @@ nodes['EXTERN.REG1'].write(0x5)
 print("EXTERN REG1 read:"+hex(nodes['EXTERN.REG1'].read()))
 nodes['EXTERN.REG0'].write(0x76)
 print("EXTERN REG2 read:"+hex(nodes['EXTERN.REG2'].read()))
+print("And again we read the LINKS1 ID and version")
+print("LINKS1 ID read:"+hex(nodes['LINKS[0].ID'].read()))
+print("LINKS1 VER read:"+hex(nodes['LINKS[0].VER'].read()))
 cbus.bus_delay(3000)
 
 

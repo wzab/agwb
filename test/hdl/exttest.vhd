@@ -47,7 +47,7 @@ begin  -- architecture rtl
             if ack = '0' then
               report "EXTERN " & integer'image(instance_number) &
                 " reading from address " & integer'image(to_integer(int_addr)) severity note;
-              wb_s_out.dat <= x"56781234";
+              wb_s_out.dat <= x"5678" & wb_s_in.adr(15 downto 0);
             end if;
           end if;
           ack <= '1';

@@ -6,7 +6,7 @@
 -- Author     : Wojciech Zabolotny  <wzab01@gmail.com> or <wzab@ise.pw.edu.pl>
 -- Company    : 
 -- Created    : 2018-03-11
--- Last update: 2018-11-23
+-- Last update: 2018-12-01
 -- Platform   :
 -- Standard   : VHDL'93/02
 -- License    : PUBLIC DOMAIN or Creative Commons CC0
@@ -109,9 +109,10 @@ begin  -- architecture rtl
         -- Initiation of the cycle
         if (slave_i.cyc = '1') and (slave_i.stb = '1') and (resp = req) then
           req <= not req;
-        end if;
-        -- Termination of the cycle
-        if (slave_i.cyc = '1') and (slave_i.stb = '1') and (new_resp = req) then
+        -- Termination of the cycle (Should not be executed when the new cycle is started!)
+        -- In such situation new_resp is still equal to req! The cycle would
+        -- end immediately!
+        elsif (slave_i.cyc = '1') and (slave_i.stb = '1') and (new_resp = req) then
           slave_o.dat <= dat_m;
           slave_o.ack <= ack_m;
           slave_o.err <= err_m;
@@ -154,6 +155,10 @@ begin  -- architecture rtl
           -- Start the access
           master_o.cyc <= '1';
           master_o.stb <= '1';
+          -- Clear the old statuses
+          err_m        <= '0';
+          ack_m        <= '0';
+          rty_m        <= '0';          
         end if;
         -- Handle ACK
         if (master_i.ack = '1') or (master_i.err = '1') or (master_i.rty = '1') then
