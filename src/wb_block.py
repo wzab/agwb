@@ -571,8 +571,8 @@ class wb_block(object):
             #Registers area
             #Add two standard registers - ID and VER
             adr = ar.adr
-            res+="  <node id=\"ID\" address=\""+format(adr,"08x")+"\" permission=\"r\"/>\n"
-            res+="  <node id=\"VER\" address=\""+format(adr+1,"08x")+"\" permission=\"r\"/>\n"
+            res+="  <node id=\"ID\" address=\"0x"+format(adr,"08x")+"\" permission=\"r\"/>\n"
+            res+="  <node id=\"VER\" address=\"0x"+format(adr+1,"08x")+"\" permission=\"r\"/>\n"
             #Now add other registers in a loop
             for reg in self.regs:
                res += reg.gen_ipbus_xml(adr)
