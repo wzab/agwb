@@ -6,7 +6,7 @@
 -- Author     : Wojciech Zabolotny  <wzab01@gmail.com> or <wzab@ise.pw.edu.pl>
 -- Company    : 
 -- Created    : 2018-03-11
--- Last update: 2018-12-01
+-- Last update: 2018-12-02
 -- Platform   :
 -- Standard   : VHDL'93/02
 -- License    : PUBLIC DOMAIN or Creative Commons CC0
@@ -55,19 +55,8 @@ end entity wb_cdc;
 
 architecture rtl of wb_cdc is
 
-  attribute mark_debug : string;
-  attribute keep       : string;
-
-
   signal req, req_m0, req_m1, req_m               : std_logic := '0';
-  signal resp, new_resp, resp_s0, resp_s1, resp_m : std_logic := '0';
-
-  attribute mark_debug of req      : signal is "true";
-  attribute keep of req            : signal is "true";
-  attribute mark_debug of resp     : signal is "true";
-  attribute keep of resp           : signal is "true";
-  attribute mark_debug of new_resp : signal is "true";
-  attribute keep of new_resp       : signal is "true";
+  signal resp, resp_s0, resp_s1, resp_m : std_logic := '0';
 
   signal rst_sl_0, rst_sl_p, rst_ms_0, rst_ms_p : std_logic                          := '1';
   signal dat_m                                  : std_logic_vector(width-1 downto 0) := (others => '0');
@@ -112,7 +101,6 @@ begin  -- architecture rtl
       if rst_ms_p = '1' then            -- synchronous reset (active high)
         req         <= '0';
         resp        <= '0';
-        new_resp    <= '0';
         resp_s1     <= '0';
         resp_s0     <= '0';
         slave_o.ack <= '0';
