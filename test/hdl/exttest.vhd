@@ -35,6 +35,7 @@ begin  -- architecture rtl
         wb_s_out.rty <= '0';
         ack          <= '0';
         wb_s_out.err <= '0';
+        wb_s_out.dat <= x"a5a5a5a5";
         if (wb_s_in.cyc = '1') and (wb_s_in.stb = '1') then
           int_addr := unsigned(wb_s_in.adr(addr_size-1 downto 0));
           if wb_s_in.we = '1' then

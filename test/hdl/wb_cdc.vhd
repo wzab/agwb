@@ -55,11 +55,26 @@ end entity wb_cdc;
 
 architecture rtl of wb_cdc is
 
-  signal req, req_m0, req_m1, req_m               : std_logic                          := '0';
-  signal resp, new_resp, resp_s0, resp_s1, resp_m : std_logic                          := '0';
-  signal rst_sl_0, rst_sl_p, rst_ms_0, rst_ms_p   : std_logic                          := '1';
-  signal dat_m                                    : std_logic_vector(width-1 downto 0) := (others => '0');
-  signal ack_m, rty_m, err_m                      : std_logic                          := '0';
+  attribute mark_debug : string;
+  attribute keep       : string;
+
+
+  signal req, req_m0, req_m1, req_m               : std_logic := '0';
+  signal resp, new_resp, resp_s0, resp_s1, resp_m : std_logic := '0';
+
+  attribute mark_debug of req      : signal is "true";
+  attribute keep of req            : signal is "true";
+  attribute mark_debug of resp     : signal is "true";
+  attribute keep of resp           : signal is "true";
+  attribute mark_debug of new_resp : signal is "true";
+  attribute keep of new_resp       : signal is "true";
+
+  signal rst_sl_0, rst_sl_p, rst_ms_0, rst_ms_p : std_logic                          := '1';
+  signal dat_m                                  : std_logic_vector(width-1 downto 0) := (others => '0');
+  signal ack_m, rty_m, err_m                    : std_logic                          := '0';
+
+  type t_ms_state is (ST_IDLE, ST_CYCLE, ST_TERM);
+  signal ms_state : t_ms_state := ST_IDLE;
 
 begin  -- architecture rtl
 
@@ -101,28 +116,33 @@ begin  -- architecture rtl
         resp_s1     <= '0';
         resp_s0     <= '0';
         slave_o.ack <= '0';
+        ms_state    <= ST_IDLE;
       else
         -- defaults
         slave_o.ack <= '0';
         slave_o.err <= '0';
         slave_o.rty <= '0';
-        -- Initiation of the cycle
-        if (slave_i.cyc = '1') and (slave_i.stb = '1') and (resp = req) then
-          req <= not req;
-        -- Termination of the cycle (Should not be executed when the new cycle is started!)
-        -- In such situation new_resp is still equal to req! The cycle would
-        -- end immediately!
-        elsif (slave_i.cyc = '1') and (slave_i.stb = '1') and (new_resp = req) then
-          slave_o.dat <= dat_m;
-          slave_o.ack <= ack_m;
-          slave_o.err <= err_m;
-          slave_o.rty <= rty_m;
-        end if;
+        case ms_state is
+          when ST_IDLE =>
+            if (slave_i.cyc = '1') and (slave_i.stb = '1') then
+              ms_state <= ST_CYCLE;
+              req      <= not req;
+            end if;
+          when ST_CYCLE =>
+            if (slave_i.cyc = '1') and (slave_i.stb = '1') and (resp = req) then
+              slave_o.dat <= dat_m;
+              slave_o.ack <= ack_m;
+              slave_o.err <= err_m;
+              slave_o.rty <= rty_m;
+              ms_state    <= ST_TERM;
+            end if;
+          when ST_TERM =>
+            ms_state <= ST_IDLE;
+        end case;
         -- Propagation of signals from master
-        resp     <= new_resp;
-        new_resp <= resp_s1;
-        resp_s1  <= resp_s0;
-        resp_s0  <= resp_m;
+        resp    <= resp_s1;
+        resp_s1 <= resp_s0;
+        resp_s0 <= resp_m;
       end if;
     end if;
   end process sync_s1;
@@ -158,7 +178,7 @@ begin  -- architecture rtl
           -- Clear the old statuses
           err_m        <= '0';
           ack_m        <= '0';
-          rty_m        <= '0';          
+          rty_m        <= '0';
         end if;
         -- Handle ACK
         if (master_i.ack = '1') or (master_i.err = '1') or (master_i.rty = '1') then
