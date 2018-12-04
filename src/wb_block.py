@@ -350,7 +350,9 @@ class wb_blackbox(object):
       #We do not store "reps" in the instance, as it may depend on the instance!
    
 class wb_block(object):
-   def __init__(self,el):
+   def __init__(self,el, vhdl_path, ipbus_path):
+     self.vhdl_path = vhdl_path
+     self.ipbus_path = ipbus_path
      """
      The constructor takes an XML node that describes the block
      It also calculates the number of registers, and creates
@@ -555,9 +557,9 @@ class wb_block(object):
        self.add_templ('p_entity',self.name+"_wb",0)
        # All template is filled, so we can now generate the files
        print(self.templ_dict)
-       with open(self.name+"_wb.vhd","w") as fo:
+       with open(self.vhdl_path+self.name+"_wb.vhd","w") as fo:
           fo.write(templ_wb.format(**self.templ_dict))
-       with open(self.name+"_pkg.vhd","w") as fo:
+       with open(self.vhdl_path+self.name+"_pkg.vhd","w") as fo:
           fo.write(templ_pkg.format(**self.templ_dict))
 
    def gen_ipbus_xml(self,ver_id):
@@ -590,5 +592,5 @@ class wb_block(object):
                          " address=\"0x"+format(ar.adr+nb*ar.obj.addr_size,"08x")+"\""+\
                          " module=\"file://"+ar.obj.name+"_address.xml\"/>\n"
       res+="</node>\n"
-      with open(self.name+"_address.xml","w") as fo:
+      with open(self.ipbus_path+self.name+"_address.xml","w") as fo:
          fo.write(res)
