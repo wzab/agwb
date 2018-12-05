@@ -58,10 +58,6 @@ if nargs>4:
     print("Too many arguments!")
     print_usage()
 
-print(infilename)
-print(ipbus_path)
-print(vhdl_path)
-
 sysdef=et.ElementTree(file=infilename)
 # We get the root element, and find the corresponding block
 er=sysdef.getroot()
