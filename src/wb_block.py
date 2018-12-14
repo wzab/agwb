@@ -328,6 +328,17 @@ class wb_reg(object):
             
       return res
 
+   def gen_forth(self,reg_base,parrent):
+      # Please note, that currently we do not support bitfields (yet)
+      cdef=""
+      mdef=""
+      cdef += "  method %"+self.name+"\n"
+      if self.size == 1:
+         mdef += ":noname drop $"+format(reg_base+self.base,'x')+" ; " + parrent +" defines %"+self.name+"\n"
+      else:
+         mdef += ":noname drop + $"+format(reg_base+self.base,'x')+" + ; " + parrent +" defines %"+self.name+"\n"
+      return (cdef,mdef)
+
 class wb_area(object):
     """ The class representing the address area
     """
@@ -348,6 +359,11 @@ class wb_blackbox(object):
       self.adr_bits = int(el.attrib['addrbits'])
       self.addr_size = 1<<self.adr_bits
       #We do not store "reps" in the instance, as it may depend on the instance!
+
+   def gen_forth(self,ver_id):
+      res = "$"+format(self.addr_size,'x')+" constant %size%"+self.name+"\n"
+      res += ": %I%"+self.name+" ;\n" #Empty definition!
+      return res
    
 class wb_block(object):
    def __init__(self,el, vhdl_path, ipbus_path):
@@ -594,3 +610,44 @@ class wb_block(object):
       res+="</node>\n"
       with open(self.ipbus_path+self.name+"_address.xml","w") as fo:
          fo.write(res)
+
+   def gen_forth(self,ver_id):
+      """ This function generates the address map in the Forth format
+
+      """
+      mcdefs=""
+      cdef="object class\n" #Satrt of class definition
+      mdef="" #Method definition
+      idef="" #Instance definition
+      res="<node id=\""+self.name+"\">\n"
+      # Iterate the areas, generating the addresses
+      for ar in self.areas:
+         if ar.obj == None:
+            #Registers area
+            #Add two standard registers - ID and VER
+            adr = ar.adr
+            cdef += "  method %ID\n"
+            cdef += "  method %VER\n"
+            mdef += ":noname drop $"+format(adr,'x')+" + ; %C%"+self.name+" defines %ID\n"
+            mdef += ":noname drop $"+format(adr+1,'x')+" + ; %C%"+self.name+" defines %VER\n"
+            #Now add other registers in a loop
+            for reg in self.regs:
+               (cdn,mdn) = reg.gen_forth(adr,"%C%"+self.name)
+               cdef += cdn
+               mdef += mdn
+         else:
+            #Subblock or vector of subblocks            
+            cdef += "  method %"+ar.name+"\n"
+            if ar.reps==1:
+               #Single subblock
+               mdef += ":noname %I%"+ ar.obj.name +" ; %C%"+self.name+" defines %"+ar.name+"\n"
+            else:
+               #Vector of subblocks
+               mdef += ":noname drop %size%"+ar.obj.name+" * + %I%"+ar.obj.name+" ; %C%"+self.name+" defines %"+ar.name+"\n"
+            mcdefs += ar.obj.gen_forth(ver_id)
+      cdef += "end-class %C%"+self.name+"\n\n"
+      cdef += "%C%"+self.name+" anew constant %I%"+self.name+"\n"
+      cdef += "$"+format(self.addr_size)+" constant %size%"+self.name+"\n"
+      mcdefs += cdef + "\n" + mdef+"\n"
+      return mcdefs
+

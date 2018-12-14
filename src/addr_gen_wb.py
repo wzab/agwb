@@ -90,6 +90,10 @@ for key,bl in wb.blocks.items():
    if bl.used:
      bl.gen_ipbus_xml(ver_id)
 
+# Generate the Forth address table
+bl=wb.blocks[top_name]
+with open("wb_addr.fs","w") as fo:
+   fo.write(bl.gen_forth(ver_id))
 
 
    
