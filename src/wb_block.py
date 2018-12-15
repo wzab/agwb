@@ -334,7 +334,7 @@ class wb_reg(object):
       mdef=""
       cdef += "  method %"+self.name+"\n"
       if self.size == 1:
-         mdef += ":noname drop $"+format(reg_base+self.base,'x')+" ; " + parrent +" defines %"+self.name+"\n"
+         mdef += ":noname drop $"+format(reg_base+self.base,'x')+" + ; " + parrent +" defines %"+self.name+"\n"
       else:
          mdef += ":noname drop + $"+format(reg_base+self.base,'x')+" + ; " + parrent +" defines %"+self.name+"\n"
       return (cdef,mdef)
@@ -640,14 +640,14 @@ class wb_block(object):
             cdef += "  method %"+ar.name+"\n"
             if ar.reps==1:
                #Single subblock
-               mdef += ":noname %I%"+ ar.obj.name +" ; %C%"+self.name+" defines %"+ar.name+"\n"
+               mdef += ":noname drop $"+format(ar.adr,'x')+" + %I%"+ ar.obj.name +" ; %C%"+self.name+" defines %"+ar.name+"\n"
             else:
                #Vector of subblocks
-               mdef += ":noname drop %size%"+ar.obj.name+" * + %I%"+ar.obj.name+" ; %C%"+self.name+" defines %"+ar.name+"\n"
+               mdef += ":noname drop %size%"+ar.obj.name+" * + $"+format(ar.adr,'x')+" + %I%"+ar.obj.name+" ; %C%"+self.name+" defines %"+ar.name+"\n"
             mcdefs += ar.obj.gen_forth(ver_id)
       cdef += "end-class %C%"+self.name+"\n\n"
-      cdef += "%C%"+self.name+" anew constant %I%"+self.name+"\n"
-      cdef += "$"+format(self.addr_size)+" constant %size%"+self.name+"\n"
+      mdef += "%C%"+self.name+" anew constant %I%"+self.name+"\n"
+      mdef += "$"+format(self.addr_size,'x')+" constant %size%"+self.name+"\n"
       mcdefs += cdef + "\n" + mdef+"\n"
       return mcdefs
 
