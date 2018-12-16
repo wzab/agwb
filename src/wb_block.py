@@ -335,8 +335,20 @@ class wb_reg(object):
       cdef += "  method %"+self.name+"\n"
       if self.size == 1:
          mdef += ":noname drop $"+format(reg_base+self.base,'x')+" ; " + parrent +" defines %"+self.name+"\n"
+
       else:
          mdef += ":noname drop + $"+format(reg_base+self.base,'x')+" + ; " + parrent +" defines %"+self.name+"\n"
+      # Now we add handling of bitfields
+      if len(self.fields) != 0:
+         for bf in self.fields:
+            maskval=((1<<(bf.msb+1))-1) ^ ((1<<bf.lsb)-1)
+            mask = "$"+format(maskval,'x')
+            clrmask = "$"+format(0xffffffff-maskval,'x')            
+            shift = "$"+format(bf.lsb,'x')
+            cdef += "  method %"+self.name+"."+bf.name+"!\n"
+            cdef += "  method %"+self.name+"."+bf.name+"@\n"
+            mdef += ":noname drop $"+format(reg_base+self.base,'x')+" + wb@ " + clrmask +" and rot " + shift +" lshift " + mask + " and or wb! ; " + parrent +" defines %"+self.name+"."+bf.name+"!\n"
+            mdef += ":noname drop $"+format(reg_base+self.base,'x')+" + wb@ "+ mask+" and "+shift+" rshift ; " + parrent +" defines %"+self.name+"."+bf.name+"@\n"            
       return (cdef,mdef)
 
 class wb_area(object):
@@ -618,16 +630,17 @@ class wb_block(object):
       mcdefs=""
       cdef="object class\n" #Satrt of class definition
       mdef="" #Method definition
+      # Due to limitation in mini-oof, we must put ID and VER methods at the begining!
+      cdef += "  method %ID\n"
+      cdef += "  method %VER\n"
       idef="" #Instance definition
       res="<node id=\""+self.name+"\">\n"
       # Iterate the areas, generating the addresses
       for ar in self.areas:
          if ar.obj == None:
             #Registers area
-            #Add two standard registers - ID and VER
+            #Add two standard registers - ID and VER (methods are defined earlier)
             adr = ar.adr
-            cdef += "  method %ID\n"
-            cdef += "  method %VER\n"
             mdef += ":noname drop $"+format(adr,'x')+" + ; %C%"+self.name+" defines %ID\n"
             mdef += ":noname drop $"+format(adr+1,'x')+" + ; %C%"+self.name+" defines %VER\n"
             #Now add other registers in a loop
@@ -640,10 +653,10 @@ class wb_block(object):
             cdef += "  method %"+ar.name+"\n"
             if ar.reps==1:
                #Single subblock
-               mdef += ":noname %I%"+ ar.obj.name +" ; %C%"+self.name+" defines %"+ar.name+"\n"
+               mdef += ":noname drop $"+format(ar.adr,'x')+" + %I%"+ ar.obj.name +" ; %C%"+self.name+" defines %"+ar.name+"\n"
             else:
                #Vector of subblocks
-               mdef += ":noname drop %size%"+ar.obj.name+" * + %I%"+ar.obj.name+" ; %C%"+self.name+" defines %"+ar.name+"\n"
+               mdef += ":noname drop $"+format(ar.adr,'x')+" + %size%"+ar.obj.name+" * + %I%"+ar.obj.name+" ; %C%"+self.name+" defines %"+ar.name+"\n"
             mcdefs += ar.obj.gen_forth(ver_id)
       cdef += "end-class %C%"+self.name+"\n\n"
       cdef += "%C%"+self.name+" anew constant %I%"+self.name+"\n"
