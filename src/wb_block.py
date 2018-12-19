@@ -334,12 +334,8 @@ class wb_reg(object):
       adr = reg_base+self.base
       # The name format depends whether its a single register or an item in a vector
       if self.size == 1:
-<<<<<<< HEAD
          node = parent+"_"+self.name
          cdefs += ": "+node+" $"+format(adr,'x')+" + " + parent + " ;\n"
-=======
-         mdef += ":noname drop $"+format(reg_base+self.base,'x')+" + ; " + parrent +" defines %"+self.name+"\n"
->>>>>>> 747109735e675347e84a16c4f9ce6d748f4478a8
       else:
          node = parent+"#"+self.name
          cdefs += ": "+node+" + $"+format(adr,'x')+" + "+ parent + " ;\n"
