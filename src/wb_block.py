@@ -367,9 +367,8 @@ class wb_blackbox(object):
       #We do not store "reps" in the instance, as it may depend on the instance!
 
    def gen_forth(self,ver_id,parent):
-      res = "$"+format(self.addr_size,'x')+" constant %size%"+self.name+"\n"
-      res += ": %I%"+self.name+" ;\n" #Empty definition!
-      return res
+      #We do not need to generate any special words for blackboxes
+      return ""
    
 class wb_block(object):
    def __init__(self,el, vhdl_path, ipbus_path):
@@ -629,7 +628,6 @@ class wb_block(object):
             #Add two standard registers - ID and VER
             adr = ar.adr
             #res+=": "+parent+<node id=\"ID\" address=\"0x"+format(adr,"08x")+"\" permission=\"r\"/>\n"
-
             #res+=":  <node id=\"VER\" address=\"0x"+format(adr+1,"08x")+"\" permission=\"r\"/>\n"
             #Now add other registers in a loop
             for reg in self.regs:

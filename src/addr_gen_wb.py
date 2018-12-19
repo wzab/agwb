@@ -93,7 +93,10 @@ for key,bl in wb.blocks.items():
 # Generate the Forth address table
 bl=wb.blocks[top_name]
 with open("wb_addr.fs","w") as fo:
-   fo.write(bl.gen_forth(ver_id,'%/'))
+   root_word='%/'
+   #Add empty definition for root_word
+   fo.write(": "+root_word+" ;\n") 
+   fo.write(bl.gen_forth(ver_id,root_word))
 
 
    

@@ -8,7 +8,7 @@
 
 <block name="MAIN">
   <subblock name="LINKS" type="SYS1" reps="5"/>
-  <blackbox name="EXTERN" type="EXTTEST" addrbits="10" reps="1" />
+  <blackbox name="EXTERN" type="EXTTEST" addrbits="10" reps="3" />
   <creg name="CTRL" desc="Control register in a subblock" >
     <field name="CLK_ENABLE" width="1"/>
     <field name="CLK_FREQ" width="4"/>
