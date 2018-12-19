@@ -328,28 +328,22 @@ class wb_reg(object):
             
       return res
 
-   def gen_forth(self,reg_base,parrent):
-      # Please note, that currently we do not support bitfields (yet)
-      cdef=""
-      mdef=""
-      cdef += "  method %"+self.name+"\n"
+   def gen_forth(self,reg_base,parent):
+      # The generated code depends on the fact it is a single register or the vector of registers
+      cdefs=""
+      adr = reg_base+self.base
+      # The name format depends whether its a single register or an item in a vector
       if self.size == 1:
-         mdef += ":noname drop $"+format(reg_base+self.base,'x')+" ; " + parrent +" defines %"+self.name+"\n"
-
+         node = parent+"_"+self.name
+         cdefs += ": "+node+" $"+format(adr,'x')+" + " + parent + " ;\n"
       else:
-         mdef += ":noname drop + $"+format(reg_base+self.base,'x')+" + ; " + parrent +" defines %"+self.name+"\n"
-      # Now we add handling of bitfields
+         node = parent+"#"+self.name
+         cdefs += ": "+node+" + $"+format(adr,'x')+" + "+ parent + " ;\n"
       if len(self.fields) != 0:
          for bf in self.fields:
             maskval=((1<<(bf.msb+1))-1) ^ ((1<<bf.lsb)-1)
-            mask = "$"+format(maskval,'x')
-            clrmask = "$"+format(0xffffffff-maskval,'x')            
-            shift = "$"+format(bf.lsb,'x')
-            cdef += "  method %"+self.name+"."+bf.name+"!\n"
-            cdef += "  method %"+self.name+"."+bf.name+"@\n"
-            mdef += ":noname drop $"+format(reg_base+self.base,'x')+" + wb@ " + clrmask +" and rot " + shift +" lshift " + mask + " and or wb! ; " + parrent +" defines %"+self.name+"."+bf.name+"!\n"
-            mdef += ":noname drop $"+format(reg_base+self.base,'x')+" + wb@ "+ mask+" and "+shift+" rshift ; " + parrent +" defines %"+self.name+"."+bf.name+"@\n"            
-      return (cdef,mdef)
+            cdefs += ": "+node+"."+bf.name+" $"+format(maskval,'x')+" $"+format(bf.lsb,'x')+" ;\n"                     
+      return cdefs
 
 class wb_area(object):
     """ The class representing the address area
@@ -372,7 +366,7 @@ class wb_blackbox(object):
       self.addr_size = 1<<self.adr_bits
       #We do not store "reps" in the instance, as it may depend on the instance!
 
-   def gen_forth(self,ver_id):
+   def gen_forth(self,ver_id,parent):
       res = "$"+format(self.addr_size,'x')+" constant %size%"+self.name+"\n"
       res += ": %I%"+self.name+" ;\n" #Empty definition!
       return res
@@ -623,44 +617,35 @@ class wb_block(object):
       with open(self.ipbus_path+self.name+"_address.xml","w") as fo:
          fo.write(res)
 
-   def gen_forth(self,ver_id):
+   def gen_forth(self,ver_id,parent):
       """ This function generates the address map in the Forth format
-
+          The "path" argument informs how the object should be named in the Forth access words
       """
-      mcdefs=""
-      cdef="object class\n" #Satrt of class definition
-      mdef="" #Method definition
-      # Due to limitation in mini-oof, we must put ID and VER methods at the begining!
-      cdef += "  method %ID\n"
-      cdef += "  method %VER\n"
-      idef="" #Instance definition
-      res="<node id=\""+self.name+"\">\n"
       # Iterate the areas, generating the addresses
+      cdefs=""
       for ar in self.areas:
          if ar.obj == None:
             #Registers area
-            #Add two standard registers - ID and VER (methods are defined earlier)
+            #Add two standard registers - ID and VER
             adr = ar.adr
-            mdef += ":noname drop $"+format(adr,'x')+" + ; %C%"+self.name+" defines %ID\n"
-            mdef += ":noname drop $"+format(adr+1,'x')+" + ; %C%"+self.name+" defines %VER\n"
+            #res+=": "+parent+<node id=\"ID\" address=\"0x"+format(adr,"08x")+"\" permission=\"r\"/>\n"
+
+            #res+=":  <node id=\"VER\" address=\"0x"+format(adr+1,"08x")+"\" permission=\"r\"/>\n"
             #Now add other registers in a loop
             for reg in self.regs:
-               (cdn,mdn) = reg.gen_forth(adr,"%C%"+self.name)
-               cdef += cdn
-               mdef += mdn
+               cdefs += reg.gen_forth(adr,parent)
          else:
             #Subblock or vector of subblocks            
-            cdef += "  method %"+ar.name+"\n"
             if ar.reps==1:
+               node = parent+"_"+ar.name
                #Single subblock
-               mdef += ":noname drop $"+format(ar.adr,'x')+" + %I%"+ ar.obj.name +" ; %C%"+self.name+" defines %"+ar.name+"\n"
+               cdefs += ": "+node+" $"+format(ar.adr,'x')+" + "+parent+" ;\n"
+               cdefs += ar.obj.gen_forth(ver_id,node)
             else:
                #Vector of subblocks
-               mdef += ":noname drop $"+format(ar.adr,'x')+" + %size%"+ar.obj.name+" * + %I%"+ar.obj.name+" ; %C%"+self.name+" defines %"+ar.name+"\n"
-            mcdefs += ar.obj.gen_forth(ver_id)
-      cdef += "end-class %C%"+self.name+"\n\n"
-      cdef += "%C%"+self.name+" anew constant %I%"+self.name+"\n"
-      cdef += "$"+format(self.addr_size)+" constant %size%"+self.name+"\n"
-      mcdefs += cdef + "\n" + mdef+"\n"
-      return mcdefs
+               node = parent+"#"+ar.name
+               #Single subblock
+               cdefs += ": "+node+" $"+format(ar.adr,'x')+" + swap $"+format(ar.obj.addr_size,'x')+" * + "+parent+" ;\n" 
+               cdefs += ar.obj.gen_forth(ver_id,node)
+      return cdefs
 
