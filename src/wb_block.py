@@ -46,8 +46,8 @@ use work.{p_entity}_pkg.all;
 
 entity {p_entity} is
   port (
-    slave_i : in t_wishbone_slave_in;
-    slave_o : out t_wishbone_slave_out;
+    slave_i : in t_wishbone_slave_in_array({nof_masters}-1 downto 0);
+    slave_o : out t_wishbone_slave_out_array({nof_masters}-1 downto 0);
 {subblk_busses}
 {signal_ports}
     rst_n_i : in std_logic;
@@ -72,14 +72,12 @@ architecture gener of {p_entity} is
   constant c_mask : t_wishbone_address_array(0 to {nof_subblks}-1) := {p_masks};
 
 begin
-  wb_up_i(0) <= slave_i;
-  slave_o <= wb_up_o(0);
   int_addr <= int_regs_wb_m_o.adr({reg_adr_bits}-1 downto 0);
 
 -- Main crossbar 
   xwb_crossbar_1: entity work.xwb_crossbar
   generic map (
-     g_num_masters => 1,
+     g_num_masters => {nof_masters},
      g_num_slaves  => {nof_subblks},
      g_registered  => {p_registered},
      g_address     => c_address,
@@ -87,8 +85,8 @@ begin
   port map (
      clk_sys_i => clk_sys_i,
      rst_n_i   => rst_n_i,
-     slave_i   => wb_up_i,
-     slave_o   => wb_up_o,
+     slave_i   => slave_i,
+     slave_o   => slave_o,
      master_i  => wb_m_i,
      master_o  => wb_m_o,
     sdb_sel_o => open);
@@ -389,6 +387,7 @@ class wb_block(object):
      self.free_reg_addr=2 # The first free address after ID & VER
      # Prepare the list of subblocks
      self.subblks=[]
+     self.n_masters=1
      for child in el.findall("*"):
          # Now for registers we allocate addresses in order
          # We don't to alignment (yet)
@@ -575,6 +574,7 @@ class wb_block(object):
        self.add_templ('p_masks',masks,0)
        self.add_templ('p_registered','false',0)
        self.add_templ('nof_subblks',str(n_ports),0)
+       self.add_templ('nof_masters',str(self.n_masters),0)
        self.add_templ('p_entity',self.name+"_wb",0)
        # All template is filled, so we can now generate the files
        print(self.templ_dict)

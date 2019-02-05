@@ -62,6 +62,7 @@ sysdef=et.ElementTree(file=infilename)
 # We get the root element, and find the corresponding block
 er=sysdef.getroot()
 top_name=er.attrib["top"]
+n_masters=er.attrib["masters"]
 # Now we find the top block definition
 
 # We should evaluate the address space requirements in each block
@@ -81,6 +82,8 @@ for el in er.findall("block"):
    wb.blocks[bn] = bl
 # Here we have everything, we could get from the first scan.
 bl=wb.blocks[top_name]
+#overwite the number of master ports in the top module
+bl.n_masters=n_masters
 bl.analyze()
 for key,bl in wb.blocks.items():
    if bl.used:
