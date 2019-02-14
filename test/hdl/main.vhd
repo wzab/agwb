@@ -55,7 +55,7 @@ gl0: for i in 0 to 2 generate
 
   ext_1 : entity work.exttest
     generic map (
-      instance_number => 1,
+      instance_number => i,
       addr_size       => 10
       )
     port map (
