@@ -62,7 +62,11 @@ sysdef=et.ElementTree(file=infilename)
 # We get the root element, and find the corresponding block
 er=sysdef.getroot()
 top_name=er.attrib["top"]
-n_masters=er.attrib["masters"]
+if "masters" in er.attrib:
+  n_masters=er.attrib["masters"]
+else:
+  n_masters=1
+
 # Now we find the top block definition
 
 # We should evaluate the address space requirements in each block
