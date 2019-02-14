@@ -13,50 +13,24 @@ import wb_block as wb
 import time
 import sys
 import os.path
-# import Path
 
-def print_usage():
-  print("Usage: %s [infile.xml] [ipbus_directory] [vhdl_directory]", sys.argv[0])
-  sys.exit()
+import argparse
+parser = argparse.ArgumentParser()
+parser.add_argument("--infile", help="Input file path", default='../example1.xml')
+parser.add_argument("--hdl", help="VHDL outputs destination", default='')
+parser.add_argument("--ipbus", help="IPbus outputs destination", default='')
+parser.add_argument("--fs", help="Forth outputs destination", default='.')
+args = parser.parse_args()
 
-infilename = "../example1.xml"
-ipbus_path  = ""
-vhdl_path  = ""
+infilename=args.infile
+ipbus_path=args.ipbus+"/"
+vhdl_path=args.hdl+"/"
+forth_path=args.fs+"/"
 
-# As the version for generated code (HDL and SW)
-# we take the 32-bit of the system time.
+print(ipbus_path)
+print(vhdl_path)
+
 ver_id = int(time.time()) & 0xFFFFffff
-
-nargs = len(sys.argv)
-
-if nargs>=2:
-  infilename = sys.argv[1]
-
-  if not os.path.isfile(infilename):
-    print("Invalid path for input file!")
-    print_usage()
-
-if nargs>=3:
-  ipbus_path = sys.argv[2]
-
-  if (not os.path.exists(ipbus_path)) or os.path.isfile(ipbus_path):
-    print("Invalid ipbus directory!")
-    print_usage()
-
-  ipbus_path=ipbus_path+"/"
-
-if nargs>=4:
-  vhdl_path = sys.argv[3]
-
-  if (not os.path.exists(vhdl_path)) or os.path.isfile(vhdl_path):
-    print("Invalid vhdl directory!")
-    print_usage()
-
-  vhdl_path=vhdl_path+"/"
-
-if nargs>4:
-    print("Too many arguments!")
-    print_usage()
 
 sysdef=et.ElementTree(file=infilename)
 # We get the root element, and find the corresponding block
@@ -99,7 +73,7 @@ for key,bl in wb.blocks.items():
 
 # Generate the Forth address table
 bl=wb.blocks[top_name]
-with open("wb_addr.fs","w") as fo:
+with open(forth_path+"/"+top_name+".fs","w") as fo:
    root_word='%/'
    #Add empty definition for root_word
    fo.write(": "+root_word+" ;\n") 

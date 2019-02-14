@@ -370,8 +370,8 @@ class wb_blackbox(object):
    
 class wb_block(object):
    def __init__(self,el, vhdl_path, ipbus_path):
-     self.vhdl_path = vhdl_path
-     self.ipbus_path = ipbus_path
+     self.vhdl_path=vhdl_path
+     self.ipbus_path=ipbus_path
      """
      The constructor takes an XML node that describes the block
      It also calculates the number of registers, and creates
