@@ -47,7 +47,7 @@ use work.{p_entity}_pkg.all;
 entity {p_entity} is
   port (
     slave_i : in t_wishbone_slave_in_array(0 to {nof_masters}-1);
-    slave_o : out t_wishbone_slave_out_array(0 to {nof_masters});
+    slave_o : out t_wishbone_slave_out_array(0 to {nof_masters}-1);
 {subblk_busses}
 {signal_ports}
     rst_n_i : in std_logic;
