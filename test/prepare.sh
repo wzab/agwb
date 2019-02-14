@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 (
-  git clone git://ohwr.org/hdl-core-lib/general-cores.git
+  git clone https://ohwr.org/project/general-cores.git
   cd general-cores
   # I have done simply:
   # git checkout propose_master

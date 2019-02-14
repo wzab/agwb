@@ -1,7 +1,10 @@
 <sysdef top="MAIN">
 
 <block name="SYS1">
-  <creg name="CTRL" desc="Control register" stb="1" />
+  <creg name="CTRL" desc="Control register" stb="1">
+    <field name="START" width="1"/>
+    <field name="STOP" width="1"/>    
+  </creg>
   <sreg name="STATUS" desc="Status register" ack="1" />
   <creg name="ENABLEs" desc="Link enable registers" reps="10"/>
 </block>
@@ -9,7 +12,7 @@
 <block name="MAIN">
   <subblock name="LINKS" type="SYS1" reps="5"/>
   <blackbox name="EXTERN" type="EXTTEST" addrbits="10" reps="3" />
-  <creg name="CTRL" desc="Control register in a subblock" >
+  <creg name="CTRL" desc="Control register in the main block" >
     <field name="CLK_ENABLE" width="1"/>
     <field name="CLK_FREQ" width="4"/>
     <field name="PLL_RESET" width="1"/>

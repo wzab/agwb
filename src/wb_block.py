@@ -340,7 +340,7 @@ class wb_reg(object):
       if len(self.fields) != 0:
          for bf in self.fields:
             maskval=((1<<(bf.msb+1))-1) ^ ((1<<bf.lsb)-1)
-            cdefs += ": "+node+"."+bf.name+" $"+format(maskval,'x')+" $"+format(bf.lsb,'x')+" ;\n"                     
+            cdefs += ": "+node+"."+bf.name+" "+node+" $"+format(maskval,'x')+" $"+format(bf.lsb,'x')+" ;\n"                     
       return cdefs
 
 class wb_area(object):
