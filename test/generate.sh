@@ -1,3 +1,5 @@
 #!/bin/bash
 set -e
-( cd gen ; ../../src/addr_gen_wb.py )
+../src/addr_gen_wb.py --infile example1.xml --fs ./gen --hdl ./gen --ipbus ./gen
+
+
