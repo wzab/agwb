@@ -37,7 +37,7 @@ sysdef=et.ElementTree(file=infilename)
 er=sysdef.getroot()
 top_name=er.attrib["top"]
 if "masters" in er.attrib:
-  n_masters=er.attrib["masters"]
+  n_masters=int(er.attrib["masters"])
 else:
   n_masters=1
 
