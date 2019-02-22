@@ -335,10 +335,16 @@ class wb_reg(object):
       # The name format depends whether its a single register or an item in a vector
       if self.size == 1:
          node = parent+"_"+self.name
-         cdefs += ": "+node+" $"+format(adr,'x')+" + " + parent + " ;\n"
+         if parent=="%/":
+            cdefs += ": "+node+" $"+format(adr,'x')+" ;\n"
+         else:
+            cdefs += ": "+node+" "+parent+" $"+format(adr,'x')+" + ;\n"
       else:
          node = parent+"#"+self.name
-         cdefs += ": "+node+" + $"+format(adr,'x')+" + "+ parent + " ;\n"
+         if parent=="%/":
+            cdefs += ": "+node+" + $"+format(adr,'x')+" ;\n"
+         else:
+            cdefs += ": "+node+" "+parent+" + $"+format(adr,'x')+" + ;\n"
       if len(self.fields) != 0:
          for bf in self.fields:
             maskval=((1<<(bf.msb+1))-1) ^ ((1<<bf.lsb)-1)
@@ -627,8 +633,12 @@ class wb_block(object):
             #Registers area
             #Add two standard registers - ID and VER
             adr = ar.adr
-            #res+=": "+parent+<node id=\"ID\" address=\"0x"+format(adr,"08x")+"\" permission=\"r\"/>\n"
-            #res+=":  <node id=\"VER\" address=\"0x"+format(adr+1,"08x")+"\" permission=\"r\"/>\n"
+            if parent=="%/":
+               cdefs+=": "+parent+"_ID $"+format(adr,"x")+" ;\n"
+               cdefs+=": "+parent+"_VER $"+format(adr+1,"x")+" ;\n"
+            else:
+               cdefs+=": "+parent+"_ID "+parent+" $"+format(adr,"x")+" + ;\n"
+               cdefs+=": "+parent+"_VER "+parent+" $"+format(adr+1,"x")+" + ;\n"
             #Now add other registers in a loop
             for reg in self.regs:
                cdefs += reg.gen_forth(adr,parent)
@@ -637,13 +647,19 @@ class wb_block(object):
             if ar.reps==1:
                node = parent+"_"+ar.name
                #Single subblock
-               cdefs += ": "+node+" $"+format(ar.adr,'x')+" + "+parent+" ;\n"
+               if parent=="%/":
+                  cdefs += ": "+node+" $"+format(ar.adr,'x')+" ;\n"
+               else:
+                  cdefs += ": "+node+" "+parent+" $"+format(ar.adr,'x')+" + ;\n"
                cdefs += ar.obj.gen_forth(ver_id,node)
             else:
                #Vector of subblocks
                node = parent+"#"+ar.name
                #Single subblock
-               cdefs += ": "+node+" $"+format(ar.adr,'x')+" + swap $"+format(ar.obj.addr_size,'x')+" * + "+parent+" ;\n" 
+               if parent=="%/":
+                  cdefs += ": "+node+" $"+format(ar.adr,'x')+" swap $"+format(ar.obj.addr_size,'x')+" * + ;\n"
+               else:
+                  cdefs += ": "+node+" "+parent+" $"+format(ar.adr,'x')+" swap $"+format(ar.obj.addr_size,'x')+" * + ;\n"
                cdefs += ar.obj.gen_forth(ver_id,node)
       return cdefs
 
