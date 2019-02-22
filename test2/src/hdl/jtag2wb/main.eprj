@@ -1,0 +1,4 @@
+vhdl work jtag2wb.vhd
+xdc jtag2wb.tcl
+prop "file_type" "TCL"
+prop "scoped_to_ref" "jtag2wb"

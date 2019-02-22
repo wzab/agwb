@@ -1,0 +1,5 @@
+vhdl work main.vhd
+vhdl work exttest.vhd
+vhdl work sys1.vhd
+include jtag2wb
+include wb_cdc

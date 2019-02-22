@@ -1,0 +1,6 @@
+# It seems that constr must be included first
+# Otherwise the clocks are not created when
+# the scoped_to_ref tcls are evaluated
+include constr
+include hdl
+include created
