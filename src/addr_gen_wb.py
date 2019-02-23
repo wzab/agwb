@@ -76,7 +76,7 @@ bl=wb.blocks[top_name]
 with open(forth_path+"/"+top_name+".fs","w") as fo:
    root_word='%/'
    #Add empty definition for root_word
-   fo.write(": "+root_word+" ;\n") 
+   fo.write(": "+root_word+" $0 ;\n") 
    fo.write(bl.gen_forth(ver_id,root_word))
 
 
