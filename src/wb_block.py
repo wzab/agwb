@@ -127,6 +127,7 @@ begin
       if rst_n_i = '0' then
         -- Reset of the core
         int_regs_wb_m_i <= c_DUMMY_WB_MASTER_IN;
+{control_registers_reset}
       else
         -- Normal operation
         int_regs_wb_m_i.rty <= '0';
@@ -171,7 +172,7 @@ class wb_field(object):
       self.msb = lsb + self.size - 1
       self.type = fl.get('type','std_logic_vector')
      
-          
+
 
 class wb_reg(object):
    """ The class wb_reg describes a single register
@@ -197,7 +198,26 @@ class wb_reg(object):
            if self.free_bit > 32:
               raise Exception("Total width of fields in register " +self.name+ " is above 32-bits")
            self.fields.append(fdef)
-       
+       if self.free_bit == 0:
+           self.free_bit = 32
+       self.default_hex = el.get('default')
+       if self.default_hex is not None:
+           if int(self.default_hex, 16) > 2**self.free_bit - 1:
+              raise Exception("Default value for " + self.name + " register is too big.")
+           if self.size != 1:
+               self.default = "(others => "
+           else:
+               self.default = ""
+           if len(self.fields) != 0:
+               self.default += "stlv2t_"+self.name+"("
+           self.default += "std_logic_vector(to_unsigned(" + str(int(self.default_hex, 16)) + "," + str(self.free_bit) + "))"
+           if len(self.fields) != 0:
+               self.default += ")"
+           if self.size != 1:
+               self.default += ")"
+       else:
+           self.default = None
+
 
    def gen_vhdl(self,parent):
        """
@@ -279,12 +299,23 @@ class wb_reg(object):
        if self.regtype == 'creg':
           #Create the intermediate readable signal
           if self.size == 1:
-            dt = "signal int_"+self.name+sfx+" : "+tname+";\n"
-          else:  
-            dt = "signal int_"+self.name+sfx+" : "+tname+"_array;\n"
+              dt = "signal int_"+self.name+sfx+" : "+tname
+          else:
+              dt = "signal int_"+self.name+sfx+" : "+tname+"_array"
+          if self.default is not None:
+              dt += " := "+self.default
+          dt += ";"
+          if self.default is not None:
+              dt += " -- Hex value: " + self.default_hex
+          dt += "\n"
           dt2 = self.name+sfx+" <= int_"+self.name+sfx+";\n"
           parent.add_templ('signal_decls',dt,4)
-          parent.add_templ('cont_assigns',dt2,2)          
+          parent.add_templ('cont_assigns',dt2,2)
+       # Reset control registers
+       if self.regtype == 'creg':
+          if self.default is not None:
+              rt = "int_"+self.name+sfx+" <= "+self.default+"; -- Hex value: " + self.default_hex + "\n"
+              parent.add_templ('control_registers_reset', rt, 10)
        # Generate the signal assignment in the process
        for i in range(0,self.size):
           # We prepare the index string used in case if this is a vector of registers
@@ -535,6 +566,7 @@ class wb_block(object):
        self.add_templ('p_package','',0)
        self.add_templ('p_package_body','',0)
        self.add_templ('signal_decls','',0)
+       self.add_templ('control_registers_reset','',0)
        self.add_templ('register_access','',0)
        self.add_templ('subblk_busses','',0)
        for reg in self.regs:
@@ -677,4 +709,3 @@ class wb_block(object):
                cdefs += ": "+node+" "+parent+" $"+format(ar.adr,'x')+" + swap $"+format(ar.obj.addr_size,'x')+" * + ;\n"
                cdefs += ar.obj.gen_forth(ver_id,node)
       return cdefs
-
