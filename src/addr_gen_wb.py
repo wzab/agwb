@@ -17,8 +17,8 @@ import os.path
 import argparse
 parser = argparse.ArgumentParser()
 parser.add_argument("--infile", help="Input file path", default='../example1.xml')
-parser.add_argument("--hdl", help="VHDL outputs destination", default='')
-parser.add_argument("--ipbus", help="IPbus outputs destination", default='')
+parser.add_argument("--hdl", help="VHDL outputs destination", default='.')
+parser.add_argument("--ipbus", help="IPbus outputs destination", default='.')
 parser.add_argument("--fs", help="Forth outputs destination", default='.')
 args = parser.parse_args()
 
