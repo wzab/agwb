@@ -643,7 +643,7 @@ class wb_block(object):
        print(self.templ_dict)
        with open(self.vhdl_path+self.name+"_wb.vhd","w") as fo:
           fo.write(templ_wb(self.n_masters).format(**self.templ_dict))
-       with open(self.vhdl_path+self.name+"_pkg.vhd","w") as fo:
+       with open(self.vhdl_path+self.name+"_wb_pkg.vhd","w") as fo:
           fo.write(templ_pkg.format(**self.templ_dict))
 
    def gen_ipbus_xml(self,ver_id):
