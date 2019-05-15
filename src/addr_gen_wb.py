@@ -13,7 +13,8 @@ import wb_block as wb
 import time
 import sys
 import os.path
-
+import include
+import zlib
 import argparse
 parser = argparse.ArgumentParser()
 parser.add_argument("--infile", help="Input file path", default='../example1.xml')
@@ -30,11 +31,14 @@ forth_path=args.fs+"/"
 print(ipbus_path)
 print(vhdl_path)
 
-ver_id = int(time.time()) & 0xFFFFffff
 
-sysdef=et.ElementTree(file=infilename)
+final_xml = include.handle_includes(infilename)
+# The version ID is calculated as a hash of the XML defining the interface
+# it is encoded in UTF-8, to avoid problems with different locales
+ver_id = zlib.crc32(bytes(final_xml.encode('utf-8')))
+
 # We get the root element, and find the corresponding block
-er=sysdef.getroot()
+er=et.fromstring(final_xml)
 top_name=er.attrib["top"]
 if "masters" in er.attrib:
   n_masters=int(er.attrib["masters"])
