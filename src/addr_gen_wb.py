@@ -31,8 +31,11 @@ forth_path=args.fs+"/"
 print(ipbus_path)
 print(vhdl_path)
 
+# The line below reads the XML and recursively inserts included XMLs
+# it also generates the list of objects describing the origin of each line
+# in the final XML (to facilitate future error detection)
+final_xml, lines_origin = include.handle_includes(infilename)
 
-final_xml = include.handle_includes(infilename)
 # The version ID is calculated as a hash of the XML defining the interface
 # it is encoded in UTF-8, to avoid problems with different locales
 ver_id = zlib.crc32(bytes(final_xml.encode('utf-8')))
