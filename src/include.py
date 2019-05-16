@@ -17,18 +17,20 @@ class LineLocation(object):
     block of source code lines.
     "start" is the location of the first line of the block
     "end" is the location of the last line of the block
+    "offset" is the position of the first line of the blok in the original file
     "fpath" is the path to the file from where the lines were
     read.
     """
-    def __init__(self, start, end, fpath):
+    def __init__(self, start, end, offset, fpath):
         self.start = start
         self.end = end
+        self.offset = offset
         self.fpath = fpath
     def adjust(self, shift):
         self.start += shift
         self.end += shift
     def tostr(self):
-        return str(self.start)+","+str(self.end)+":"+self.fpath
+        return str(self.start)+"-"+str(self.end)+"->"+str(self.offset)+":"+self.fpath
 
 def handle_includes(file_path, base_dir="./"):
     """ Function handle_includes replaces the include directives:
@@ -55,6 +57,8 @@ def handle_includes(file_path, base_dir="./"):
     start_pos = 0
     # Current number of lines
     start_line = 0
+    # Offset in lines from the beginning of the file
+    offset_line = 0
     # List of the parts of the string
     chunks = []
     lines = []
@@ -66,8 +70,10 @@ def handle_includes(file_path, base_dir="./"):
         part = contents[start_pos:include_span[0]]
         chunks.append(part)
         # Find the number of the end line
-        end_line = start_line + len(part.split('\n'))-1
-        lines.append(LineLocation(start_line,end_line,file_path))
+        n_of_lines = len(part.split('\n'))-1
+        end_line = start_line + n_of_lines
+        lines.append(LineLocation(start_line,end_line,offset_line,file_path))
+        offset_line += n_of_lines
         start_line = end_line
         # Read the included file and handle nested includes
         replacement, rlines = handle_includes(incl_instance.groups()[0], next_base_dir)
@@ -86,8 +92,10 @@ def handle_includes(file_path, base_dir="./"):
     if len(part) > 0:
         chunks.append(part)
         # And add the final part line positions
-        end_line = start_line + len(part.split('\n'))-1
-        lines.append(LineLocation(start_line, end_line, file_path))
+        n_of_lines = len(part.split('\n'))-1
+        end_line = start_line + n_of_lines
+        lines.append(LineLocation(start_line, end_line, offset_line, file_path))
+        offset_line += n_of_lines
     # Now create and return the content with resolved includes
     res = ''.join(chunks)
     return res, lines
