@@ -31,6 +31,10 @@ forth_path=args.fs+"/"
 print(ipbus_path)
 print(vhdl_path)
 
+# The module expressions accepts definitions of constants (function addval)
+# and evaluates the expressions (function exprval)
+import expressions as ex
+
 # The line below reads the XML and recursively inserts included XMLs
 # it also generates the list of objects describing the origin of each line
 # in the final XML (to facilitate future error detection)
@@ -44,10 +48,13 @@ ver_id = zlib.crc32(bytes(final_xml.encode('utf-8')))
 er=et.fromstring(final_xml)
 top_name=er.attrib["top"]
 if "masters" in er.attrib:
-  n_masters=int(er.attrib["masters"])
+  n_masters=ex.exprval(er.attrib["masters"])
 else:
   n_masters=1
-
+# Find constants and feed them into the expressions module
+for el in er.findall("constant"):
+    ex.addval(el.attrib['name'],el.attrib['val'])
+    
 # Now we find the top block definition
 
 # We should evaluate the address space requirements in each block

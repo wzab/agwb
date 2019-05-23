@@ -1,4 +1,5 @@
 <sysdef top="MAIN">
+<constant name="NEXTERNS" val="3"/>
 
 <block name="SYS1">
   <creg name="CTRL" desc="Control register" stb="1">
@@ -11,7 +12,7 @@
 
 <block name="MAIN">
   <subblock name="LINKS" type="SYS1" reps="5"/>
-  <blackbox name="EXTERN" type="EXTTEST" addrbits="10" reps="3" />
+  <blackbox name="EXTERN" type="EXTTEST" addrbits="10" reps="NEXTERNS" />
   <creg name="CTRL" desc="Control register in the main block" default="0x11">
     <field name="CLK_ENABLE" width="1"/>
     <field name="CLK_FREQ" width="4"/>

@@ -11,6 +11,7 @@ This file implements the class handling a Wishbone connected block
 """
 import re
 import zlib
+import expressions as ex
 
 # Template for generation of the VHDL package
 templ_pkg = """\
@@ -168,7 +169,7 @@ class wb_field(object):
    def __init__(self,fl,lsb):
       self.name = fl.attrib['name']
       self.lsb = lsb
-      self.size = int(fl.attrib['width'])
+      self.size = ex.exprval(fl.attrib['width'])
       self.msb = lsb + self.size - 1
       self.type = fl.get('type','std_logic_vector')
      
@@ -181,14 +182,14 @@ class wb_reg(object):
        """
        The constructor gets the XML node defining the register
        """
-       nregs=int(el.get('reps',1))
+       nregs=ex.exprval(el.get('reps','1'))
        self.regtype = el.tag
        self.type = el.get('type','std_logic_vector')
        self.base = adr
        self.size = nregs
        self.name = el.attrib['name']
-       self.ack = int(el.get('ack',0))
-       self.stb = int(el.get('stb',0))
+       self.ack = ex.exprval(el.get('ack','0'))
+       self.stb = ex.exprval(el.get('stb','0'))
        # Read list of fields
        self.fields=[]
        self.free_bit=0
@@ -200,9 +201,10 @@ class wb_reg(object):
            self.fields.append(fdef)
        if self.free_bit == 0:
            self.free_bit = 32
-       self.default_hex = el.get('default')
-       if self.default_hex is not None:
-           if int(self.default_hex, 16) > 2**self.free_bit - 1:
+       self.default_val = el.get('default')
+       if self.default_val is not None:
+           self.default_val = ex.exprval(self.default_val)
+           if self.default_val > 2**self.free_bit - 1:
               raise Exception("Default value for " + self.name + " register is too big.")
            if self.size != 1:
                self.default = "(others => "
@@ -211,11 +213,11 @@ class wb_reg(object):
            if len(self.fields) != 0:
                self.default += "stlv2t_"+self.name+"("
            if self.type == "unsigned":
-               self.default += "to_unsigned(" + str(int(self.default_hex, 16)) + "," + str(self.free_bit) + ")"
+               self.default += "to_unsigned(" + str(self.default_val) + "," + str(self.free_bit) + ")"
            elif self.type == "signed":
-               self.default += "to_signed(" + str(int(self.default_hex, 16)) + "," + str(self.free_bit) + ")"
+               self.default += "to_signed(" + str(self.default_val) + "," + str(self.free_bit) + ")"
            else:
-               self.default += "std_logic_vector(to_unsigned(" + str(int(self.default_hex, 16)) + "," + str(self.free_bit) + "))"
+               self.default += "std_logic_vector(to_unsigned(" + str(self.default_val) + "," + str(self.free_bit) + "))"
            if len(self.fields) != 0:
                self.default += ")"
            if self.size != 1:
@@ -311,7 +313,7 @@ class wb_reg(object):
               dt += " := "+self.default
           dt += ";"
           if self.default is not None:
-              dt += " -- Hex value: " + self.default_hex
+              dt += " -- Hex value: " + hex(self.default_val)
           dt += "\n"
           dt2 = self.name+sfx+" <= int_"+self.name+sfx+";\n"
           parent.add_templ('signal_decls',dt,4)
@@ -319,7 +321,7 @@ class wb_reg(object):
        # Reset control registers
        if self.regtype == 'creg':
           if self.default is not None:
-              rt = "int_"+self.name+sfx+" <= "+self.default+"; -- Hex value: " + self.default_hex + "\n"
+              rt = "int_"+self.name+sfx+" <= "+self.default+"; -- Hex value: " + hex(self.default_val) + "\n"
               parent.add_templ('control_registers_reset', rt, 10)
        # Generate the signal assignment in the process
        for i in range(0,self.size):
@@ -427,7 +429,7 @@ class wb_area(object):
 class wb_blackbox(object):     
    def __init__(self,el):
       self.name = el.attrib['name']
-      self.adr_bits = int(el.attrib['addrbits'])
+      self.adr_bits = ex.exprval(el.attrib['addrbits'])
       self.addr_size = 1<<self.adr_bits
       #We do not store "reps" in the instance, as it may depend on the instance!
 
@@ -499,7 +501,7 @@ class wb_block(object):
                # Now we can be sure, that it is analyzed, so we can 
                # add its address space to ours.
            # Check if this is a vector of subblocks
-           reps = int(sblk.get('reps',1))
+           reps = ex.exprval(sblk.get('reps',1))
            print("reps:"+str(reps))
            # Now recalculate the size of the area, considering possible
            # block repetitions
@@ -511,7 +513,7 @@ class wb_block(object):
            if not sblk.attrib['type'] in blackboxes:
               blackboxes[sblk.attrib['type']] = wb_blackbox(sblk)
            bl = blackboxes[sblk.attrib['type']]
-           reps = int(sblk.get('reps',1))
+           reps = ex.exprval(sblk.get('reps',1))
            print("reps:"+str(reps))
            addr_size = bl.addr_size * reps
            self.areas.append(wb_area(addr_size,sblk.get('name'),bl,reps))
