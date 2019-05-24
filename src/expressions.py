@@ -6,7 +6,7 @@ import ast, math
 
 locals =  {key: value for (key,value) in vars(math).items() if key[0] != '_'}
 locals.update({"abs": abs, "complex": complex, "min": min, "max": max, "pow": pow, "round": round})
-# Additionally, we keep the list of our own constants, that should be put 
+# Additionally, we keep the list of our own constants, that should be put
 # to packages or header files
 defines ={}
 # In the next dictionary we keep the original expressions (to be put to comments)
@@ -20,9 +20,9 @@ def addval(valname,valstr):
 
 class Visitor(ast.NodeVisitor):
     def visit(self, node):
-       if not isinstance(node, self.whitelist):
-           raise ValueError(node)
-       return super().visit(node)
+        if not isinstance(node, self.whitelist):
+            raise ValueError(node)
+        return super().visit(node)
 
     whitelist = (ast.Module, ast.Expr, ast.Load, ast.Expression, ast.Add, ast.Sub, ast.UnaryOp, ast.Num, ast.BinOp,
             ast.Mult, ast.Div, ast.Pow, ast.BitOr, ast.BitAnd, ast.BitXor, ast.USub, ast.UAdd, ast.FloorDiv, ast.Mod,
@@ -36,5 +36,3 @@ def exprval(expr):
         Visitor().visit(node)
         return eval(compile(node, "<string>", "eval"), {'__builtins__': None}, locals)
     except Exception: raise ValueError(expr)
-
-
