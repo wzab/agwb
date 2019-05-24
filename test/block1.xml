@@ -1,6 +1,7 @@
 <block name="SYS1">
   <creg name="CTRL" desc="Control register" stb="1">
     <field name="START" width="1"/>
+    <field name="SPEED" width="4" default="-1" type="signed" />
     <field name="STOP" width="1"/>
   </creg>
   <sreg name="STATUS" desc="Status register" ack="1" />

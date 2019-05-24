@@ -183,12 +183,33 @@ class wb_field(object):
 	        # If there was no default value in the parent, set it to 0
             parent_reg.default_val = 0
          # Now we must set the bits belonging to the bitfield.
-         # However we must consider the type of the bitfield.
-         # We ignore the type of the whole register, as it makes no sense
-         # to set its type to signed od unsigned if it contains bitfields!
-         #
-         # To be done yet!
-
+         # Create the mask for the bitfield
+         or_mask = ((1<<self.size)-1) << self.lsb
+         and_mask = ((1<<32)-1) ^ or_mask
+         # Check if the default value is not out of limits
+         val = self.default_val
+         if self.type == 'signed':
+             if (val < -(1<<(self.size-1))) or \
+               (val >= (1<<(self.size-1))):
+                raise Exception("In register "+parent_reg.name+\
+                " signed field "+self.name+" with size "+\
+                str(self.size)+" bits can't have default value "+\
+                str(val))
+             if val < 0:
+                 val += (1<<self.size)
+         else:
+             if (val < 0) or (val >= (1<<self.size)):
+                raise Exception("In register "+parent_reg.name+\
+                " field "+self.name+" of type "+self.type+\
+                " with size "+str(self.size)+\
+                " bits can't have default value "+\
+                str(self.default_val))
+         # Shift the corrected value to the right bits
+         val <<= self.lsb
+         # Set the related bits in the parent register accordingly
+         parent_reg.default_val &= and_mask
+         parent_reg.default_val |= (or_mask & val)
+ 
 class wb_reg(object):
    """ The class wb_reg describes a single register
    """
