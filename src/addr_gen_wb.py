@@ -83,6 +83,9 @@ library work;
         str(ex.defines[cnst])+"; -- "+\
         ex.comments[cnst]+"\n")
     fo.write("end "+top_name+"_const_pkg;\n")
+# Generation of constants for Forth is added to the generation of
+# the access words    
+    
 # Now we find the top block definition
 
 # We should evaluate the address space requirements in each block
@@ -115,6 +118,11 @@ for key,bl in wb.blocks.items():
 # Generate the Forth address table
 bl=wb.blocks[top_name]
 with open(forth_path+"/"+top_name+".fs","w") as fo:
+   #First generate constants
+   for cnst in ex.defines:
+        fo.write(": %"+cnst+" $"+format(ex.defines[cnst],'x')+" ; \\ "+\
+        ex.comments[cnst]+"\n")
+   #Now generate the HW access words
    root_word='%/'
    #Add empty definition for root_word
    fo.write(": "+root_word+" $0 ;\n") 
