@@ -6,8 +6,17 @@ import ast, math
 
 locals =  {key: value for (key,value) in vars(math).items() if key[0] != '_'}
 locals.update({"abs": abs, "complex": complex, "min": min, "max": max, "pow": pow, "round": round})
+# Additionally, we keep the list of our own constants, that should be put 
+# to packages or header files
+defines ={}
+# In the next dictionary we keep the original expressions (to be put to comments)
+comments={}
+
 def addval(valname,valstr):
-    locals[valname]=exprval(valstr)
+    val=exprval(valstr)
+    locals[valname]=val
+    defines[valname]=val
+    comments[valname]=valstr
 
 class Visitor(ast.NodeVisitor):
     def visit(self, node):

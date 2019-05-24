@@ -1,20 +1,15 @@
 <sysdef top="MAIN">
-<constant name="NEXTERNS" val="3"/>
+<constant name="NEXTERNS" val="4" />
+<constant name="NSEL_BITS" val="3" />
+<constant name="NSEL_MAX" val="(1 &lt;&lt; NSEL_BITS)-1" />
 
-<block name="SYS1">
-  <creg name="CTRL" desc="Control register" stb="1">
-    <field name="START" width="1"/>
-    <field name="STOP" width="1"/>
-  </creg>
-  <sreg name="STATUS" desc="Status register" ack="1" />
-  <creg name="ENABLEs" desc="Link enable registers" reps="10" default="0x0"/>
-</block>
+<!-- include block1.xml -->
 
 <block name="MAIN">
-  <subblock name="LINKS" type="SYS1" reps="5"/>
+  <subblock name="LINKS" type="SYS1" reps="NSEL_MAX+1"/>
   <blackbox name="EXTERN" type="EXTTEST" addrbits="10" reps="NEXTERNS" />
   <creg name="CTRL" desc="Control register in the main block" default="0x11">
-    <field name="CLK_ENABLE" width="1"/>
+    <field name="CLK_ENABLE" width="NSEL_BITS"/>
     <field name="CLK_FREQ" width="4"/>
     <field name="PLL_RESET" width="1"/>
   </creg>

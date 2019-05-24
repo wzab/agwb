@@ -69,7 +69,20 @@ else:
 # Find constants and feed them into the expressions module
 for el in er.findall("constant"):
     ex.addval(el.attrib['name'],el.attrib['val'])
-    
+# We prepare the packages with constants for different backends
+# For VHDL
+with open(vhdl_path+"/"+top_name+"_const_pkg.vhd","w") as fo:
+    fo.write("""library ieee;
+use ieee.std_logic_1164.all;
+use ieee.numeric_std.all;
+library work;
+""")
+    fo.write("package "+top_name+"_const_pkg is\n")
+    for cnst in ex.defines:
+        fo.write("constant "+cnst+" : integer := "+\
+        str(ex.defines[cnst])+"; -- "+\
+        ex.comments[cnst]+"\n")
+    fo.write("end "+top_name+"_const_pkg;\n")
 # Now we find the top block definition
 
 # We should evaluate the address space requirements in each block
@@ -99,7 +112,6 @@ for key,bl in wb.blocks.items():
 for key,bl in wb.blocks.items():
    if bl.used:
      bl.gen_ipbus_xml(ver_id)
-
 # Generate the Forth address table
 bl=wb.blocks[top_name]
 with open(forth_path+"/"+top_name+".fs","w") as fo:

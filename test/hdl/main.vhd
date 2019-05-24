@@ -3,6 +3,7 @@ use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 library work;
 use work.wishbone_pkg.all;
+use work.MAIN_const_pkg.all;
 use work.MAIN_wb_pkg.all;
 
 entity main is
@@ -18,12 +19,12 @@ entity main is
 end entity main;
 
 architecture rtl of main is
-  signal LINKS_wb_m_o  : t_wishbone_master_out_array(0 to 4);
-  signal LINKS_wb_m_i  : t_wishbone_master_in_array(0 to 4);
-  signal EXTERN_wb_m_o : t_wishbone_master_out_array(0 to 2);
-  signal EXTERN_wb_m_i : t_wishbone_master_in_array(0 to 2);
-  signal CDC_wb_m_o    : t_wishbone_master_out_array(0 to 2);
-  signal CDC_wb_m_i    : t_wishbone_master_in_array(0 to 2);
+  signal LINKS_wb_m_o  : t_wishbone_master_out_array(0 to NSEL_MAX);
+  signal LINKS_wb_m_i  : t_wishbone_master_in_array(0 to NSEL_MAX);
+  signal EXTERN_wb_m_o : t_wishbone_master_out_array(0 to (NEXTERNS-1));
+  signal EXTERN_wb_m_i : t_wishbone_master_in_array(0 to (NEXTERNS-1));
+  signal CDC_wb_m_o    : t_wishbone_master_out_array(0 to (NEXTERNS-1));
+  signal CDC_wb_m_i    : t_wishbone_master_in_array(0 to (NEXTERNS-1));
   signal CTRL_o        : t_CTRL;
 begin  -- architecture rtl
 
@@ -39,7 +40,7 @@ begin  -- architecture rtl
       rst_n_i       => rst_n_i,
       clk_sys_i     => clk_sys_i);
 
-gl0: for i in 0 to 2 generate
+gl0: for i in 0 to NEXTERNS-1 generate
   wb_cdc_1 : entity work.wb_cdc
     generic map (
       width => 32)
@@ -66,7 +67,7 @@ gl0: for i in 0 to 2 generate
 
 end generate gl0;
 
-  gl1 : for i in 0 to 4 generate
+  gl1 : for i in 0 to NSEL_MAX generate
 
     sys1_1 : entity work.sys1
       port map (
