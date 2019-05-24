@@ -199,6 +199,8 @@ class wb_reg(object):
            if self.free_bit > 32:
               raise Exception("Total width of fields in register " +self.name+ " is above 32-bits")
            self.fields.append(fdef)
+       if len(self.fields)>0 and self.type != 'std_logic_vector':
+           raise Exception("Register "+self.name+" with bitfields can't have "+self.type+" type.") 
        if self.free_bit == 0:
            self.free_bit = 32
        self.default_val = el.get('default')
