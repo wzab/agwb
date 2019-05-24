@@ -618,6 +618,8 @@ class wb_block(object):
         self.add_templ('control_registers_reset','',0)
         self.add_templ('register_access','',0)
         self.add_templ('subblk_busses','',0)
+        self.add_templ('signal_ports','',0)
+        self.add_templ('signals_idle','',0)
         for reg in self.regs:
             #generate
             reg.gen_vhdl(self)
