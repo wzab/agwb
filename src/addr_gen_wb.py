@@ -83,8 +83,22 @@ library work;
         str(ex.defines[cnst])+"; -- "+\
         ex.comments[cnst]+"\n")
     fo.write("end "+top_name+"_const_pkg;\n")
+# For C
+with open(ipbus_path+"/"+top_name+"_const.h","w") as fo:
+    guard_name="_"+top_name+"_inc_H_"
+    fo.write("#ifndef "+guard_name+"\n")
+    fo.write("#define "+guard_name+"\n\n")
+    for cnst in ex.defines:
+        fo.write("#define "+cnst+" "+str(ex.defines[cnst])+\
+        " // "+ex.comments[cnst]+"\n")
+    fo.write("\n#endif\n")
+# For Python
+with open(ipbus_path+"/"+top_name+"_const.py","w") as fo:
+    for cnst in ex.defines:
+        fo.write(cnst+" = "+str(ex.defines[cnst])+\
+        " # "+ex.comments[cnst]+"\n")
 # Generation of constants for Forth is added to the generation of
-# the access words    
+# the access words
     
 # Now we find the top block definition
 
