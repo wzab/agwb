@@ -9,6 +9,7 @@ Written by Wojciech M. Zabolotny
 The code is published under LGPL V2 license
 """
 import xml.etree.ElementTree as et
+import xml.parsers.expat as pe
 import wb_block as wb
 import time
 import sys
@@ -45,7 +46,21 @@ final_xml, lines_origin = include.handle_includes(infilename)
 ver_id = zlib.crc32(bytes(final_xml.encode('utf-8')))
 
 # We get the root element, and find the corresponding block
-er=et.fromstring(final_xml)
+try:
+   er=et.fromstring(final_xml)
+except et.ParseError as perr:
+   # Handle the parsing error
+   row,col = perr.position
+   print("Parsing error "+str(perr.code)+"("+\
+     pe.ErrorString(perr.code)+") in column "+\
+     str(col)+" of the line "+str(row)+" of the concatenated XML:")
+   print(final_xml.split("\n")[row-1])
+   print(col*"-"+"|")
+   print("The erroneous line was produced from the following sources:")
+   err_src = include.find_error(lines_origin,row)
+   for src in err_src:
+      print("file: "+src[0]+", line:"+str(src[1]))
+   sys.exit(1) 
 top_name=er.attrib["top"]
 if "masters" in er.attrib:
   n_masters=ex.exprval(er.attrib["masters"])
