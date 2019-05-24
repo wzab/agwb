@@ -172,8 +172,22 @@ class wb_field(object):
       self.size = ex.exprval(fl.attrib['width'])
       self.msb = lsb + self.size - 1
       self.type = fl.get('type','std_logic_vector')
-     
-
+      self.default_val = fl.get('default')
+      if self.default_val is not None:
+         # Convert it to the numerical value
+         self.default_val = ex.exprval(self.default_val)
+		  
+   def def_adjust(self,parent_reg):
+      if self.default_val is not None:
+         if parent_reg.default_val is None:
+	        # If there was no default value in the parent, set it to 0
+            parent_reg.default_val = 0
+         # Now we must set the bits belonging to the bitfield.
+         # However we must consider the type of the bitfield.
+         # We ignore the type of the whole register, as it makes no sense
+         # to set its type to signed od unsigned if it contains bitfields!
+         #
+         # To be done yet!
 
 class wb_reg(object):
    """ The class wb_reg describes a single register
@@ -203,7 +217,12 @@ class wb_reg(object):
            self.free_bit = 32
        self.default_val = el.get('default')
        if self.default_val is not None:
+		   # Convert it to the numerical value
            self.default_val = ex.exprval(self.default_val)
+       # Default value may be also modified by default values from bitfields (that have higher priority)
+       for fl in self.fields:
+           fl.def_adjust(self)
+       if self.default_val is not None:
            if self.default_val > 2**self.free_bit - 1:
               raise Exception("Default value for " + self.name + " register is too big.")
            if self.size != 1:
