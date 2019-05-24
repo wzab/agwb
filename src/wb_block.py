@@ -543,7 +543,7 @@ class wb_block(object):
                     # Now we can be sure, that it is analyzed, so we can
                     # add its address space to ours.
                 # Check if this is a vector of subblocks
-                reps = ex.exprval(sblk.get('reps',1))
+                reps = ex.exprval(sblk.get('reps','1'))
                 print("reps:"+str(reps))
                 # Now recalculate the size of the area, considering possible
                 # block repetitions
@@ -555,7 +555,7 @@ class wb_block(object):
                 if not sblk.attrib['type'] in blackboxes:
                     blackboxes[sblk.attrib['type']] = wb_blackbox(sblk)
                 bl = blackboxes[sblk.attrib['type']]
-                reps = ex.exprval(sblk.get('reps',1))
+                reps = ex.exprval(sblk.get('reps','1'))
                 print("reps:"+str(reps))
                 addr_size = bl.addr_size * reps
                 self.areas.append(wb_area(addr_size,sblk.get('name'),bl,reps))
