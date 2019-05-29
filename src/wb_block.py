@@ -812,7 +812,7 @@ class wb_block(object):
         #
         print("Creating C header:"+self.name+"\n")
         head="#ifndef __"+self.name+"__INC_H\n"
-        head="#define __"+self.name+"__INC_H\n"
+        head+="#define __"+self.name+"__INC_H\n"
         # Iterate the areas, generating the addresses
         # We have to add fillers to ensure proper address allocation
         filler_nr = 1

@@ -21,6 +21,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument("--infile", help="Input file path", default='../example1.xml')
 parser.add_argument("--hdl", help="VHDL outputs destination", default='.')
 parser.add_argument("--ipbus", help="IPbus outputs destination", default='.')
+parser.add_argument("--header", help="C header outputs destination", default='.')
 parser.add_argument("--fs", help="Forth outputs destination", default='.')
 args = parser.parse_args()
 
@@ -28,6 +29,7 @@ infilename=args.infile
 ipbus_path=args.ipbus+"/"
 vhdl_path=args.hdl+"/"
 forth_path=args.fs+"/"
+c_header_path=args.header+"/"
 
 print(ipbus_path)
 print(vhdl_path)
@@ -115,7 +117,7 @@ for el in er.findall("block"):
     bn=el.attrib['name']
     if bn in wb.blocks:
         raise Exception("Duplicate definition of block: "+bn)
-    bl = wb.wb_block(el, vhdl_path, ipbus_path)
+    bl = wb.wb_block(el, vhdl_path, ipbus_path,c_header_path)
     wb.blocks[bn] = bl
 # Here we have everything, we could get from the first scan.
 bl=wb.blocks[top_name]
