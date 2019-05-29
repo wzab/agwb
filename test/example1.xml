@@ -6,7 +6,7 @@
 <!-- include block1.xml -->
 
 <block name="MAIN">
-  <subblock name="LINKS" type="SYS1" reps="NSEL_MAX+1"/>
+  <subblock name="LINKS" type="SYS1" reps="NSEL_MAX"/>
   <blackbox name="EXTERN" type="EXTTEST" addrbits="10" reps="NEXTERNS" />
   <creg name="CTRL" desc="Control register in the main block" default="0x11">
     <field name="CLK_ENABLE" width="NSEL_BITS"/>
