@@ -11,12 +11,12 @@ SOURCES = \
  general-cores/modules/genrams/genram_pkg.vhd \
  general-cores/modules/wishbone/wishbone_pkg.vhd \
  general-cores/modules/wishbone/wb_crossbar/xwb_crossbar.vhd \
- gen/MAIN_const_pkg.vhd \
- gen/SYS1_wb_pkg.vhd \
- gen/SYS1_wb.vhd \
+ gen/agwb_MAIN_const_pkg.vhd \
+ gen/agwb_SYS1_wb_pkg.vhd \
+ gen/agwb_SYS1_wb.vhd \
  hdl/sys1.vhd \
- gen/MAIN_wb_pkg.vhd \
- gen/MAIN_wb.vhd \
+ gen/agwb_MAIN_wb_pkg.vhd \
+ gen/agwb_MAIN_wb.vhd \
  hdl/exttest.vhd \
  hdl/wb_cdc.vhd \
  hdl/main.vhd \

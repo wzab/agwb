@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 import cbus
-nodes=cbus.cbus_read_nodes('gen','file://MAIN_address.xml')
+nodes=cbus.cbus_read_nodes('gen','file://agwb_MAIN_address.xml')
 cbus.bus_delay(100)
 print("Test the ID")
 print ("ID read:"+ hex(nodes['ID'].read()))

@@ -730,12 +730,12 @@ class wb_block(object):
         self.add_templ('p_registered','false',0)
         self.add_templ('nof_subblks',str(n_ports),0)
         self.add_templ('nof_masters',str(self.n_masters),0)
-        self.add_templ('p_entity',self.name+"_wb",0)
+        self.add_templ('p_entity',"agwb_"+self.name+"_wb",0)
         # All template is filled, so we can now generate the files
         print(self.templ_dict)
-        with open(self.vhdl_path+self.name+"_wb.vhd","w") as fo:
+        with open(self.vhdl_path+"agwb_"+self.name+"_wb.vhd","w") as fo:
             fo.write(templ_wb(self.n_masters).format(**self.templ_dict))
-        with open(self.vhdl_path+self.name+"_wb_pkg.vhd","w") as fo:
+        with open(self.vhdl_path+"agwb_"+self.name+"_wb_pkg.vhd","w") as fo:
             fo.write(templ_pkg.format(**self.templ_dict))
 
     def gen_ipbus_xml(self,ver_id):
@@ -756,19 +756,23 @@ class wb_block(object):
                     res += reg.gen_ipbus_xml(adr)
             else:
                 #Subblock or vector of subblocks
+                #If it is a subblock, prefix the name of the table with "agwb_"
+                xname = ar.obj.name
+                if isinstance(ar.obj,wb_block):
+                    xname = "agwb_"+xname
                 if ar.reps==1:
                     #Single subblock
                     res += "  <node id=\""+ar.name+"\""+\
                            " address=\"0x"+format(ar.adr,"08x")+"\""+\
-                           " module=\"file://"+ar.obj.name+"_address.xml\"/>\n"
+                           " module=\"file://"+xname+"_address.xml\"/>\n"
                 else:
                     #Vector of subblocks
                     for nb in range(0,ar.reps):
                         res += "  <node id=\""+ar.name+"["+str(nb)+"]\""+\
                                " address=\"0x"+format(ar.adr+nb*ar.obj.addr_size,"08x")+"\""+\
-                               " module=\"file://"+ar.obj.name+"_address.xml\"/>\n"
+                               " module=\"file://"+xname+"_address.xml\"/>\n"
         res+="</node>\n"
-        with open(self.ipbus_path+self.name+"_address.xml","w") as fo:
+        with open(self.ipbus_path+"agwb_"+self.name+"_address.xml","w") as fo:
             fo.write(res)
 
     def gen_forth(self,ver_id,parent):

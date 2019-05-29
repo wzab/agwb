@@ -73,21 +73,21 @@ for el in er.findall("constant"):
     ex.addval(el.attrib['name'],el.attrib['val'])
 # We prepare the packages with constants for different backends
 # For VHDL
-with open(vhdl_path+"/"+top_name+"_const_pkg.vhd","w") as fo:
+with open(vhdl_path+"/agwb_"+top_name+"_const_pkg.vhd","w") as fo:
     fo.write("""library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 library work;
 """)
-    fo.write("package "+top_name+"_const_pkg is\n")
+    fo.write("package agwb_"+top_name+"_const_pkg is\n")
     for cnst in ex.defines:
         fo.write("constant "+cnst+" : integer := "+\
         str(ex.defines[cnst])+"; -- "+\
         ex.comments[cnst]+"\n")
-    fo.write("end "+top_name+"_const_pkg;\n")
+    fo.write("end agwb_"+top_name+"_const_pkg;\n")
 # For C
-with open(ipbus_path+"/"+top_name+"_const.h","w") as fo:
-    guard_name="_"+top_name+"_inc_H_"
+with open(ipbus_path+"/agwb_"+top_name+"_const.h","w") as fo:
+    guard_name="_agwb_"+top_name+"_inc_H_"
     fo.write("#ifndef "+guard_name+"\n")
     fo.write("#define "+guard_name+"\n\n")
     for cnst in ex.defines:
@@ -95,7 +95,7 @@ with open(ipbus_path+"/"+top_name+"_const.h","w") as fo:
         " // "+ex.comments[cnst]+"\n")
     fo.write("\n#endif\n")
 # For Python
-with open(ipbus_path+"/"+top_name+"_const.py","w") as fo:
+with open(ipbus_path+"/agwb_"+top_name+"_const.py","w") as fo:
     for cnst in ex.defines:
         fo.write(cnst+" = "+str(ex.defines[cnst])+\
         " # "+ex.comments[cnst]+"\n")
@@ -139,7 +139,7 @@ for key,bl in wb.blocks.items():
         bl.gen_C_header(ver_id)
 # Generate the Forth address table
 bl=wb.blocks[top_name]
-with open(forth_path+"/"+top_name+".fs","w") as fo:
+with open(forth_path+"/agwb_"+top_name+".fs","w") as fo:
     #First generate constants
     for cnst in ex.defines:
         fo.write(": %"+cnst+" $"+format(ex.defines[cnst],'x')+" ; \\ "+\
