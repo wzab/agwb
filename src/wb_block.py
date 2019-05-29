@@ -494,8 +494,9 @@ class wb_area(object):
         return self.size
 
 class wb_blackbox(object):
-    def __init__(self,el):
+    def __init__(self,el,c_header_path):
         self.name = el.attrib['name']
+        self.c_header_path = c_header_path
         self.adr_bits = ex.exprval(el.attrib['addrbits'])
         self.addr_size = 1<<self.adr_bits
         #We do not store "reps" in the instance, as it may depend on the instance!
@@ -506,12 +507,24 @@ class wb_blackbox(object):
     def gen_C_header(self,ver_id):
         #Here we need to create a dummy header, that just fills the generated structure
         # To be done
-        raise Exception("not implemented yet!")
+        print("Creating C header:"+self.name+"\n")
+        res="#ifndef __"+self.name+"__INC_H\n"
+        res+="#define __"+self.name+"__INC_H\n"
+        res+="typedef struct {\n"
+        res+="  volatile uint32_t filler["+str(self.addr_size)+"];\n"
+        res+="} "+"agwb_"+self.name+";\n"
+        res+="#endif\n"
+        with open(self.c_header_path+"agwb_"+self.name+".h","w") as fo:
+            fo.write(res)
 
 class wb_block(object):
-    def __init__(self,el, vhdl_path, ipbus_path):
+    def __init__(self,el, vhdl_path, ipbus_path,c_header_path=None):
         self.vhdl_path=vhdl_path
         self.ipbus_path=ipbus_path
+        if c_header_path is None:
+           self.c_header_path = ipbus_path
+        else:
+           self.c_header_path=c_header_path
         """
         The constructor takes an XML node that describes the block
         It also calculates the number of registers, and creates
@@ -582,7 +595,7 @@ class wb_block(object):
                 # We don't need to analyze the blackbox. We allready have its
                 # address area size.
                 if not sblk.attrib['type'] in blackboxes:
-                    blackboxes[sblk.attrib['type']] = wb_blackbox(sblk)
+                    blackboxes[sblk.attrib['type']] = wb_blackbox(sblk,self.c_header_path)
                 bl = blackboxes[sblk.attrib['type']]
                 reps = ex.exprval(sblk.get('reps','1'))
                 print("reps:"+str(reps))
@@ -798,12 +811,13 @@ class wb_block(object):
         # fills it's address space.
         #
         print("Creating C header:"+self.name+"\n")
-        res="#ifndef __"+self.name+"__INC_H\n"
+        head="#ifndef __"+self.name+"__INC_H\n"
+        head="#define __"+self.name+"__INC_H\n"
         # Iterate the areas, generating the addresses
         # We have to add fillers to ensure proper address allocation
         filler_nr = 1
         cur_addr = 0
-        res += "typedef struct {\n"
+        res = "typedef struct {\n"
         # The areas must be sorted by increasing address
         self.areas.sort(key=wb_area.sort_adr)
         for ar in self.areas:
@@ -829,6 +843,8 @@ class wb_block(object):
                     cur_addr += reg.size
             else:
                 #Subblock or vector of subblocks
+                #Add the related header
+                head += "#include <agwb_"+ar.obj.name+".h>\n"
                 if ar.reps==1:
                     #Single subblock
                     res += "  agwb_" + ar.obj.name + " " + ar.name+";\n"
@@ -843,6 +859,8 @@ class wb_block(object):
             filler_nr += 1
         cur_addr = self.addr_size
         res += "} agwb_"+self.name+";\n"
+        res += "#endif\n"
         print ("block: "+self.name+" cur_addr="+str(cur_addr))
-        with open(self.ipbus_path+self.name+".h","w") as fo:
+        with open(self.c_header_path+"agwb_"+self.name+".h","w") as fo:
+            fo.write(head)
             fo.write(res)

@@ -130,6 +130,8 @@ for key,bl in wb.blocks.items():
     if bl.used:
         bl.gen_ipbus_xml(ver_id)
 # Now we generate the C address tables
+for key,bl in wb.blackboxes.items():
+	bl.gen_C_header(ver_id)
 for key,bl in wb.blocks.items():
     if bl.used:
         bl.gen_C_header(ver_id)
