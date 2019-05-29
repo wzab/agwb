@@ -511,7 +511,7 @@ class wb_blackbox(object):
         res+="#define __"+self.name+"__INC_H\n"
         res+="typedef struct {\n"
         res+="  volatile uint32_t filler["+str(self.addr_size)+"];\n"
-        res+="} "+"agwb_"+self.name+";\n"
+        res+="}  __attribute__((packed)) "+"agwb_"+self.name+";\n"
         res+="#endif\n"
         with open(self.c_header_path+"agwb_"+self.name+".h","w") as fo:
             fo.write(res)
@@ -856,7 +856,7 @@ class wb_block(object):
             res += "  volatile uint32_t filler"+str(filler_nr)+"["+str(self.addr_size-cur_addr)+"];\n"
             filler_nr += 1
         cur_addr = self.addr_size
-        res += "} agwb_"+self.name+";\n"
+        res += "} __attribute__((packed)) agwb_"+self.name+" ;\n"
         res += "#endif\n"
         print ("block: "+self.name+" cur_addr="+str(cur_addr))
         with open(self.c_header_path+"agwb_"+self.name+".h","w") as fo:
