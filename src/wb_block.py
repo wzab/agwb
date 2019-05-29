@@ -544,25 +544,25 @@ class wb_block(object):
             # Now for registers we allocate addresses in order
             # We don't do alignment (yet)
             if child.tag == 'creg':
-            # This is a control register
+                # This is a control register
                 reg = wb_reg(child,self.free_reg_addr)
                 self.free_reg_addr += reg.size
                 self.regs.append(reg)
             elif child.tag == 'sreg':
-            # This is a status register
+                # This is a status register
                 reg = wb_reg(child,self.free_reg_addr)
                 self.free_reg_addr += reg.size
                 self.regs.append(reg)
             elif child.tag == 'subblock':
-            # This is a subblock definition
-            # We only add it to the list, the addresses can't be allocated yet
+                # This is a subblock definition
+                # We only add it to the list, the addresses can't be allocated yet
                 self.subblks.append(child)
             elif child.tag == 'blackbox':
-            # This is a blackbox subblock definition
-            # We only add it to the list, the addresses can't be allocated yet
+                # This is a blackbox subblock definition
+                # We only add it to the list, the addresses can't be allocated yet
                 self.subblks.append(child)
             else:
-            # Unknown child
+                # Unknown child
                 raise Exception("Unknown node in block: "+el.name)
         # After that procedure, the field free_reg_addr contains
         # the length of the block of internal registers
@@ -746,8 +746,8 @@ class wb_block(object):
         # Iterate the areas, generating the addresses
         for ar in self.areas:
             if ar.obj == None:
-            #Registers area
-            #Add two standard registers - ID and VER
+                #Registers area
+                #Add two standard registers - ID and VER
                 adr = ar.adr
                 res+="  <node id=\"ID\" address=\"0x"+format(adr,"08x")+"\" permission=\"r\"/>\n"
                 res+="  <node id=\"VER\" address=\"0x"+format(adr+1,"08x")+"\" permission=\"r\"/>\n"

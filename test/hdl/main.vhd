@@ -19,8 +19,8 @@ entity main is
 end entity main;
 
 architecture rtl of main is
-  signal LINKS_wb_m_o  : t_wishbone_master_out_array(0 to NSEL_MAX);
-  signal LINKS_wb_m_i  : t_wishbone_master_in_array(0 to NSEL_MAX);
+  signal LINKS_wb_m_o  : t_wishbone_master_out_array(0 to NSEL_MAX-1);
+  signal LINKS_wb_m_i  : t_wishbone_master_in_array(0 to NSEL_MAX-1);
   signal EXTERN_wb_m_o : t_wishbone_master_out_array(0 to (NEXTERNS-1));
   signal EXTERN_wb_m_i : t_wishbone_master_in_array(0 to (NEXTERNS-1));
   signal CDC_wb_m_o    : t_wishbone_master_out_array(0 to (NEXTERNS-1));
@@ -67,7 +67,7 @@ gl0: for i in 0 to NEXTERNS-1 generate
 
 end generate gl0;
 
-  gl1 : for i in 0 to NSEL_MAX generate
+  gl1 : for i in 0 to NSEL_MAX-1 generate
 
     sys1_1 : entity work.sys1
       port map (
