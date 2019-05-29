@@ -103,7 +103,6 @@ def handle_includes(file_path, base_dir="./"):
 def find_error(lines_origin,line_number):
     res=[]
     for block in lines_origin:
-       if (block.start <= line_number) and (block.end >= line_number):
-          res.append((block.fpath,line_number+block.offset-block.start),)
+        if (block.start <= line_number) and (block.end >= line_number):
+            res.append((block.fpath,line_number+block.offset-block.start),)
     return res
-

@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 """
-This is the script that generates the VHDL code needed to access 
+This is the script that generates the VHDL code needed to access
 the registers in a hierarchical Wishbone-conencted system.
 
 Written by Wojciech M. Zabolotny
@@ -47,25 +47,25 @@ ver_id = zlib.crc32(bytes(final_xml.encode('utf-8')))
 
 # We get the root element, and find the corresponding block
 try:
-   er=et.fromstring(final_xml)
+    er=et.fromstring(final_xml)
 except et.ParseError as perr:
-   # Handle the parsing error
-   row,col = perr.position
-   print("Parsing error "+str(perr.code)+"("+\
-     pe.ErrorString(perr.code)+") in column "+\
-     str(col)+" of the line "+str(row)+" of the concatenated XML:")
-   print(final_xml.split("\n")[row-1])
-   print(col*"-"+"|")
-   print("The erroneous line was produced from the following sources:")
-   err_src = include.find_error(lines_origin,row)
-   for src in err_src:
-      print("file: "+src[0]+", line:"+str(src[1]))
-   sys.exit(1) 
+    # Handle the parsing error
+    row,col = perr.position
+    print("Parsing error "+str(perr.code)+"("+\
+      pe.ErrorString(perr.code)+") in column "+\
+      str(col)+" of the line "+str(row)+" of the concatenated XML:")
+    print(final_xml.split("\n")[row-1])
+    print(col*"-"+"|")
+    print("The erroneous line was produced from the following sources:")
+    err_src = include.find_error(lines_origin,row)
+    for src in err_src:
+        print("file: "+src[0]+", line:"+str(src[1]))
+    sys.exit(1)
 top_name=er.attrib["top"]
 if "masters" in er.attrib:
-  n_masters=ex.exprval(er.attrib["masters"])
+    n_masters=ex.exprval(er.attrib["masters"])
 else:
-  n_masters=1
+    n_masters=1
 # Find constants and feed them into the expressions module
 for el in er.findall("constant"):
     ex.addval(el.attrib['name'],el.attrib['val'])
@@ -99,7 +99,7 @@ with open(ipbus_path+"/"+top_name+"_const.py","w") as fo:
         " # "+ex.comments[cnst]+"\n")
 # Generation of constants for Forth is added to the generation of
 # the access words
-    
+
 # Now we find the top block definition
 
 # We should evaluate the address space requirements in each block
@@ -109,38 +109,39 @@ with open(ipbus_path+"/"+top_name+"_const.py","w") as fo:
 
 # Create the list of blocks
 for el in er.findall("block"):
-   # Here we take each block and count registers inside
-   # We also prepare the list of subblocks (of vectors of
-   # subblocks)
-   bn=el.attrib['name']
-   if bn in wb.blocks:
-      raise Exception("Duplicate definition of block: "+bn)
-   bl = wb.wb_block(el, vhdl_path, ipbus_path)
-   wb.blocks[bn] = bl
+    # Here we take each block and count registers inside
+    # We also prepare the list of subblocks (of vectors of
+    # subblocks)
+    bn=el.attrib['name']
+    if bn in wb.blocks:
+        raise Exception("Duplicate definition of block: "+bn)
+    bl = wb.wb_block(el, vhdl_path, ipbus_path)
+    wb.blocks[bn] = bl
 # Here we have everything, we could get from the first scan.
 bl=wb.blocks[top_name]
 #overwite the number of master ports in the top module
 bl.n_masters=n_masters
 bl.analyze()
 for key,bl in wb.blocks.items():
-   if bl.used:
-     bl.gen_vhdl(ver_id)
-# Now we generate the address tables
+    if bl.used:
+        bl.gen_vhdl(ver_id)
+# Now we generate the IPbus address tables
 for key,bl in wb.blocks.items():
-   if bl.used:
-     bl.gen_ipbus_xml(ver_id)
+    if bl.used:
+        bl.gen_ipbus_xml(ver_id)
+# Now we generate the C address tables
+for key,bl in wb.blocks.items():
+    if bl.used:
+        bl.gen_C_header(ver_id)
 # Generate the Forth address table
 bl=wb.blocks[top_name]
 with open(forth_path+"/"+top_name+".fs","w") as fo:
-   #First generate constants
-   for cnst in ex.defines:
+    #First generate constants
+    for cnst in ex.defines:
         fo.write(": %"+cnst+" $"+format(ex.defines[cnst],'x')+" ; \\ "+\
         ex.comments[cnst]+"\n")
-   #Now generate the HW access words
-   root_word='%/'
-   #Add empty definition for root_word
-   fo.write(": "+root_word+" $0 ;\n") 
-   fo.write(bl.gen_forth(ver_id,root_word))
-
-
-   
+    #Now generate the HW access words
+    root_word='%/'
+    #Add empty definition for root_word
+    fo.write(": "+root_word+" $0 ;\n")
+    fo.write(bl.gen_forth(ver_id,root_word))
