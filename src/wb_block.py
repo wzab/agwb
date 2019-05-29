@@ -835,8 +835,8 @@ class wb_block(object):
                 else:
                     res += "  agwb_" + ar.obj.name + " " + ar.name+"["+str(ar.reps)+"];\n"
                 # ar.total_size considers repetition number
-                cur_addr += ar.total_size
-            print("area: "+ar.name+" total_size:" + str(ar.total_size) + "reps="+str(ar.reps)+" cur_adr:"+str(cur_addr))
+                cur_addr += ar.reps*ar.obj.addr_size
+            print("area: "+ar.name+" total_size:" + str(ar.total_size) + " reps="+str(ar.reps)+" cur_adr:"+str(cur_addr))
         # Add fillers 
         if cur_addr < self.addr_size:
             res += "  volatile uint32_t filler"+str(filler_nr)+"["+str(self.addr_size-cur_addr)+"];\n"
