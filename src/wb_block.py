@@ -180,7 +180,7 @@ class wb_field(object):
     def def_adjust(self,parent_reg):
         if self.default_val is not None:
             if parent_reg.default_val is None:
-                   # If there was no default value in the parent, set it to 0
+                # If there was no default value in the parent, set it to 0
                 parent_reg.default_val = 0
             # Now we must set the bits belonging to the bitfield.
             # Create the mask for the bitfield
@@ -240,7 +240,7 @@ class wb_reg(object):
             self.free_bit = 32
         self.default_val = el.get('default')
         if self.default_val is not None:
-                    # Convert it to the numerical value
+            # Convert it to the numerical value
             self.default_val = ex.exprval(self.default_val)
         # Default value may be also modified by default values from bitfields (that have higher priority)
         for fl in self.fields:
@@ -439,7 +439,7 @@ class wb_reg(object):
 
     def gen_C_header(self,reg_base):
         if len(self.fields) == 0:
-                # There are no bitfields
+            # There are no bitfields
             res = "  volatile uint32_t " + self.name
         else:
             # There are bitfields
@@ -823,7 +823,7 @@ class wb_block(object):
                 # Check if it was nessary to add a filler
             print(ar.name,ar.adr,cur_addr)
             if ar.adr < cur_addr:
-                    # That should never happen! It would mean that blocks are not ordered properly
+                # That should never happen! It would mean that blocks are not ordered properly
                 raise Exception("Incorrect ordering of blocks!")
             if ar.adr > cur_addr:
                 res += "  volatile uint32_t filler"+str(filler_nr)+"["+str(ar.adr-cur_addr)+"];\n"
@@ -849,7 +849,6 @@ class wb_block(object):
                     res += "  agwb_" + ar.obj.name + " " + ar.name+";\n"
                 else:
                     res += "  agwb_" + ar.obj.name + " " + ar.name+"["+str(ar.reps)+"];\n"
-                # ar.total_size considers repetition number
                 cur_addr += ar.reps*ar.obj.addr_size
             print("area: "+ar.name+" total_size:" + str(ar.total_size) + " reps="+str(ar.reps)+" cur_adr:"+str(cur_addr))
         # Add fillers
