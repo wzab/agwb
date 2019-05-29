@@ -3,7 +3,7 @@ use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 library work;
 use work.wishbone_pkg.all;
-use work.MAIN_wb_pkg.all;
+use work.agwb_MAIN_wb_pkg.all;
 
 entity main is
 
@@ -58,7 +58,7 @@ begin  -- architecture rtl
       master_i       => wb_s_out,
       master_o       => wb_s_in);
   
-  MAIN_wb_1 : entity work.MAIN_wb
+  MAIN_wb_1 : entity work.agwb_MAIN_wb
     port map (
       slave_i       => wb_s_in,
       slave_o       => wb_s_out,

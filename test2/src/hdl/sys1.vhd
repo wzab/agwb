@@ -3,7 +3,7 @@ use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 library work;
 use work.wishbone_pkg.all;
-use work.sys1_wb_pkg.all;
+use work.agwb_sys1_wb_pkg.all;
   
 entity sys1 is
   
@@ -28,7 +28,7 @@ architecture rtl of sys1 is
   
 begin  -- architecture rtl
 
-  SYS1_wb_1: entity work.SYS1_wb
+  SYS1_wb_1: entity work.agwb_SYS1_wb
     port map (
       slave_i   => wb_s_in,
       slave_o   => wb_s_out,
