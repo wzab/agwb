@@ -441,29 +441,43 @@ class wb_reg(object):
 
         return res
 
-    def gen_C_header(self,reg_base):
-        if len(self.fields) == 0:
-            # There are no bitfields
-            res = "  "+xvolatile+" uint32_t " + self.name
-        else:
-            # There are bitfields
-            res = "  "+xvolatile+" union {\n    struct {\n"
+    def gen_C_header(self,reg_base,block_name):
+        res = "  "+xvolatile+" uint32_t " + self.name
+        head = ""
+        if len(self.fields) != 0:
+            # There are bitfields, so we need to generate functions needed to access them
+            base_type = "agwb_"+block_name
             for bf in self.fields:
+                # Below we generate a set of masks and shift values needed to extract or to set the appropriate value...
+                base_name = "agwb_"+block_name+"_"+self.name+"_"+bf.name
+                fshift = bf.lsb
+                fmask =(1 << (bf.msb-bf.lsb+1)) - 1
+                fvalmask = 0xFFFFffff - (fmask<<bf.lsb)
+                fsignmask = 1 << (bf.msb-bf.lsb)
+                fsignext =  ((1 << (31-(bf.msb-bf.lsb)))-1) << bf.msb
                 if bf.type == "signed":
-                    res += "     int "
+                    # Function for getting the value
+                    head += "static inline int32_t "+base_name+"_get(uint32_t * ptr) { \n"
+                    head += "  int32_t res = (((* ptr) >> "+hex(fshift)+") & "+hex(fmask)+");\n"
+                    head += "  return (res & "+hex(fsignmask)+") ? (res | "+hex(fsignext)+") : res;\n };\n"
+                    # Function for setting the value
+                    head += "static inline void "+base_name+"_set(uint32_t * ptr, int32_t val) { \n"
+                    head += "  * ptr = ((* ptr) & "+hex(fvalmask)+") | ((val & "+hex(fmask)+") << "+hex(fshift)+");\n"
+                    head += "};\n"
                 else:
-                    res += "     unsigned int "
-                res += bf.name + " : "
-                res += str(bf.size) + ";\n"
-            res += "    };\n"
-            res += "    uint32_t raw;\n"
-            res += "  } " + self.name
+                    # Function for getting the value
+                    head += "static inline uint32_t "+base_name+"_get(uint32_t * ptr) { \n"
+                    head += "  return ((* ptr) >> "+hex(fshift)+") & "+hex(fmask)+";\n};\n"
+                    # Function for setting the value
+                    head += "static inline void "+base_name+"_set(uint32_t * ptr, uint32_t val) { \n"
+                    head += "  * ptr = ((* ptr) & "+hex(fvalmask)+") | ((val & "+hex(fmask)+") << "+hex(fshift)+");\n"                    
+                    head += "};\n"
         # The generated code depends on the fact it is a single register or the vector of registers
         if self.size > 1:
             res += "["+str(self.size)+"];\n"
         else:
             res += ";\n"
-        return res
+        return res,head
 
 
     def gen_forth(self,reg_base,parent):
@@ -848,7 +862,9 @@ class wb_block(object):
                 cur_addr += 2
                 #Now add other registers in a loop
                 for reg in self.regs:
-                    res += reg.gen_C_header(adr)
+                    rn,hn = reg.gen_C_header(adr,self.name)
+                    head += hn
+                    res += rn
                     cur_addr += reg.size
             else:
                 #Subblock or vector of subblocks
