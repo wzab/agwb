@@ -12,6 +12,10 @@ This file implements the class handling a Wishbone connected block
 import re
 import zlib
 import expressions as ex
+# Define if "volatile" should be used in C headers (if you use _sync_synchronize()
+# it may be probably avoided with better results!
+#xvolatile = "volatile" # "volatile" is used
+xvolatile = "" # "volatile" not used
 
 # Template for generation of the VHDL package
 templ_pkg = """\
@@ -440,17 +444,19 @@ class wb_reg(object):
     def gen_C_header(self,reg_base):
         if len(self.fields) == 0:
             # There are no bitfields
-            res = "  volatile uint32_t " + self.name
+            res = "  "+xvolatile+" uint32_t " + self.name
         else:
             # There are bitfields
-            res = "  volatile struct {\n"
+            res = "  "+xvolatile+" union {\n    struct {\n"
             for bf in self.fields:
                 if bf.type == "signed":
-                    res += "   int "
+                    res += "     int "
                 else:
-                    res += "   unsigned int "
+                    res += "     unsigned int "
                 res += bf.name + " : "
                 res += str(bf.size) + ";\n"
+            res += "    };\n"
+            res += "    uint32_t raw;\n"
             res += "  } " + self.name
         # The generated code depends on the fact it is a single register or the vector of registers
         if self.size > 1:
@@ -510,7 +516,7 @@ class wb_blackbox(object):
         res="#ifndef __"+self.name+"__INC_H\n"
         res+="#define __"+self.name+"__INC_H\n"
         res+="typedef struct {\n"
-        res+="  volatile uint32_t filler["+str(self.addr_size)+"];\n"
+        res+="  "+xvolatile+" uint32_t filler["+str(self.addr_size)+"];\n"
         res+="}  __attribute__((packed)) "+"agwb_"+self.name+";\n"
         res+="#endif\n"
         with open(self.c_header_path+"agwb_"+self.name+".h","w") as fo:
@@ -830,15 +836,15 @@ class wb_block(object):
                 # That should never happen! It would mean that blocks are not ordered properly
                 raise Exception("Incorrect ordering of blocks!")
             if ar.adr > cur_addr:
-                res += "  volatile uint32_t filler"+str(filler_nr)+"["+str(ar.adr-cur_addr)+"];\n"
+                res += "  "+xvolatile+" uint32_t filler"+str(filler_nr)+"["+str(ar.adr-cur_addr)+"];\n"
                 filler_nr += 1
                 cur_addr = ar.adr;
             if ar.obj == None:
                 #Registers area
                 #Add two standard registers - ID and VER
                 adr = ar.adr
-                res += "  volatile uint32_t ID;\n"
-                res += "  volatile uint32_t VER;\n"
+                res += "  "+xvolatile+" uint32_t ID;\n"
+                res += "  "+xvolatile+" uint32_t VER;\n"
                 cur_addr += 2
                 #Now add other registers in a loop
                 for reg in self.regs:
@@ -857,10 +863,10 @@ class wb_block(object):
             print("area: "+ar.name+" total_size:" + str(ar.total_size) + " reps="+str(ar.reps)+" cur_adr:"+str(cur_addr))
         # Add fillers
         if cur_addr < self.addr_size:
-            res += "  volatile uint32_t filler"+str(filler_nr)+"["+str(self.addr_size-cur_addr)+"];\n"
+            res += "  "+xvolatile+" uint32_t filler"+str(filler_nr)+"["+str(self.addr_size-cur_addr)+"];\n"
             filler_nr += 1
         cur_addr = self.addr_size
-        res += "} __attribute__((packed)) agwb_"+self.name+" ;\n"
+        res += "} __attribute__((aligned(4))) agwb_"+self.name+" ;\n"
         res += "#endif\n"
         print ("block: "+self.name+" cur_addr="+str(cur_addr))
         with open(self.c_header_path+"agwb_"+self.name+".h","w") as fo:
