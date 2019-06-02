@@ -4,7 +4,12 @@ This is the script that generates the VHDL code needed to access
 the registers in a hierarchical Wishbone-conencted system.
 
 Written by Wojciech M. Zabolotny
-(wzab01@gmail.com or wzab@ise.pw.edu.pl)
+(wzab01<at>gmail.com or wzab<at>ise.pw.edu.pl)
+
+Significant improvements by 
+Michal Kruszewski (mkru<at>protonmail.com)
+and
+Marek Guminski (marek.guminski<at>gmail.com)
 
 The code is published under LGPL V2 license
 """
