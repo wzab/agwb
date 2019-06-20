@@ -6,7 +6,7 @@ the registers in a hierarchical Wishbone-conencted system.
 Written by Wojciech M. Zabolotny
 (wzab01<at>gmail.com or wzab<at>ise.pw.edu.pl)
 
-Significant improvements by 
+Significant improvements by
 Michal Kruszewski (mkru<at>protonmail.com)
 and
 Marek Guminski (marek.guminski<at>gmail.com)
@@ -15,92 +15,93 @@ The code is published under LGPL V2 license
 """
 import xml.etree.ElementTree as et
 import xml.parsers.expat as pe
-import wb_block as wb
-import time
 import sys
-import os.path
-import include
 import zlib
 import argparse
-parser = argparse.ArgumentParser()
-parser.add_argument("--infile", help="Input file path", default='../example1.xml')
-parser.add_argument("--hdl", help="VHDL outputs destination", default='.')
-parser.add_argument("--ipbus", help="IPbus outputs destination", default='.')
-parser.add_argument("--header", help="C header outputs destination", default='.')
-parser.add_argument("--fs", help="Forth outputs destination", default='.')
-args = parser.parse_args()
-
-infilename=args.infile
-ipbus_path=args.ipbus+"/"
-vhdl_path=args.hdl+"/"
-forth_path=args.fs+"/"
-c_header_path=args.header+"/"
-
-print(ipbus_path)
-print(vhdl_path)
-
+import wb_block as wb
+import include
 # The module expressions accepts definitions of constants (function addval)
 # and evaluates the expressions (function exprval)
 import expressions as ex
 
+
+PARSER = argparse.ArgumentParser()
+PARSER.add_argument("--infile", help="Input file path", default='../example1.xml')
+PARSER.add_argument("--hdl", help="VHDL outputs destination", default='.')
+PARSER.add_argument("--ipbus", help="IPbus outputs destination", default='.')
+PARSER.add_argument("--header", help="C header outputs destination", default='.')
+PARSER.add_argument("--fs", help="Forth outputs destination", default='.')
+PARSER.add_argument("--python", help="Python outputs destination", default='.')
+ARGS = PARSER.parse_args()
+
+INFILENAME = ARGS.infile
+IPBUS_PATH = ARGS.ipbus+"/"
+VHDL_PATH = ARGS.hdl+"/"
+FORTH_PATH = ARGS.fs+"/"
+C_HEADER_PATH = ARGS.header+"/"
+PYTHON_PATH = ARGS.python+"/"
+
+print(IPBUS_PATH)
+print(VHDL_PATH)
+
 # The line below reads the XML and recursively inserts included XMLs
 # it also generates the list of objects describing the origin of each line
 # in the final XML (to facilitate future error detection)
-final_xml, lines_origin = include.handle_includes(infilename)
+FINAL_XML, LINES_ORIGIN = include.handle_includes(INFILENAME)
 
 # The version ID is calculated as a hash of the XML defining the interface
 # it is encoded in UTF-8, to avoid problems with different locales
-ver_id = zlib.crc32(bytes(final_xml.encode('utf-8')))
+VER_ID = zlib.crc32(bytes(FINAL_XML.encode('utf-8')))
 
 # We get the root element, and find the corresponding block
 try:
-    er=et.fromstring(final_xml)
+    EL_ROOT = et.fromstring(FINAL_XML)
 except et.ParseError as perr:
     # Handle the parsing error
-    row,col = perr.position
+    ROW, COL = perr.position
     print("Parsing error "+str(perr.code)+"("+\
       pe.ErrorString(perr.code)+") in column "+\
-      str(col)+" of the line "+str(row)+" of the concatenated XML:")
-    print(final_xml.split("\n")[row-1])
-    print(col*"-"+"|")
+      str(COL)+" of the line "+str(ROW)+" of the concatenated XML:")
+    print(FINAL_XML.split("\n")[ROW-1])
+    print(COL*"-"+"|")
     print("The erroneous line was produced from the following sources:")
-    err_src = include.find_error(lines_origin,row)
-    for src in err_src:
+    ERR_SRC = include.find_error(LINES_ORIGIN, ROW)
+    for src in ERR_SRC:
         print("file: "+src[0]+", line:"+str(src[1]))
     sys.exit(1)
-top_name=er.attrib["top"]
-if "masters" in er.attrib:
-    n_masters=ex.exprval(er.attrib["masters"])
+TOP_NAME = EL_ROOT.attrib["top"]
+if "masters" in EL_ROOT.attrib:
+    N_MASTERS = ex.exprval(EL_ROOT.attrib["masters"])
 else:
-    n_masters=1
+    N_MASTERS = 1
 # Find constants and feed them into the expressions module
-for el in er.findall("constant"):
-    ex.addval(el.attrib['name'],el.attrib['val'])
+for el in EL_ROOT.findall("constant"):
+    ex.addval(el.attrib['name'], el.attrib['val'])
 # We prepare the packages with constants for different backends
 # For VHDL
-with open(vhdl_path+"/agwb_"+top_name+"_const_pkg.vhd","w") as fo:
+with open(VHDL_PATH+"/agwb_"+TOP_NAME+"_const_pkg.vhd", "w") as fo:
     fo.write("""library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 library work;
 """)
-    fo.write("package agwb_"+top_name+"_const_pkg is\n")
+    fo.write("package agwb_"+TOP_NAME+"_const_pkg is\n")
     for cnst in ex.defines:
         fo.write("constant "+cnst+" : integer := "+\
         str(ex.defines[cnst])+"; -- "+\
         ex.comments[cnst]+"\n")
-    fo.write("end agwb_"+top_name+"_const_pkg;\n")
+    fo.write("end agwb_"+TOP_NAME+"_const_pkg;\n")
 # For C
-with open(ipbus_path+"/agwb_"+top_name+"_const.h","w") as fo:
-    guard_name="_agwb_"+top_name+"_inc_H_"
-    fo.write("#ifndef "+guard_name+"\n")
-    fo.write("#define "+guard_name+"\n\n")
+with open(IPBUS_PATH+"/agwb_"+TOP_NAME+"_const.h", "w") as fo:
+    GUARD_NAME = "_agwb_"+TOP_NAME+"_inc_H_"
+    fo.write("#ifndef "+GUARD_NAME+"\n")
+    fo.write("#define "+GUARD_NAME+"\n\n")
     for cnst in ex.defines:
         fo.write("#define "+cnst+" "+str(ex.defines[cnst])+\
         " // "+ex.comments[cnst]+"\n")
     fo.write("\n#endif\n")
 # For Python
-with open(ipbus_path+"/agwb_"+top_name+"_const.py","w") as fo:
+with open(IPBUS_PATH+"/agwb_"+TOP_NAME+"_const.py", "w") as fo:
     for cnst in ex.defines:
         fo.write(cnst+" = "+str(ex.defines[cnst])+\
         " # "+ex.comments[cnst]+"\n")
@@ -115,42 +116,42 @@ with open(ipbus_path+"/agwb_"+top_name+"_const.py","w") as fo:
 # analyze the block dependencies.
 
 # Create the list of blocks
-for el in er.findall("block"):
+for el in EL_ROOT.findall("block"):
     # Here we take each block and count registers inside
     # We also prepare the list of subblocks (of vectors of
     # subblocks)
-    bn=el.attrib['name']
+    bn = el.attrib['name']
     if bn in wb.blocks:
         raise Exception("Duplicate definition of block: "+bn)
-    bl = wb.wb_block(el, vhdl_path, ipbus_path,c_header_path)
+    bl = wb.wb_block(el, VHDL_PATH, IPBUS_PATH, C_HEADER_PATH)
     wb.blocks[bn] = bl
 # Here we have everything, we could get from the first scan.
-bl=wb.blocks[top_name]
+BL = wb.blocks[TOP_NAME]
 #overwite the number of master ports in the top module
-bl.n_masters=n_masters
-bl.analyze()
-for key,bl in wb.blocks.items():
-    if bl.used:
-        bl.gen_vhdl(ver_id)
+BL.N_MASTERS = N_MASTERS
+BL.analyze()
+for key, BL in wb.blocks.items():
+    if BL.used:
+        BL.gen_vhdl(VER_ID)
 # Now we generate the IPbus address tables
-for key,bl in wb.blocks.items():
-    if bl.used:
-        bl.gen_ipbus_xml(ver_id)
+for key, BL in wb.blocks.items():
+    if BL.used:
+        BL.gen_ipbus_xml(VER_ID)
 # Now we generate the C address tables
-for key,bl in wb.blackboxes.items():
-    bl.gen_C_header(ver_id)
-for key,bl in wb.blocks.items():
-    if bl.used:
-        bl.gen_C_header(ver_id)
+for key, BL in wb.blackboxes.items():
+    BL.gen_C_header(VER_ID)
+for key, BL in wb.blocks.items():
+    if BL.used:
+        BL.gen_C_header(VER_ID)
 # Generate the Forth address table
-bl=wb.blocks[top_name]
-with open(forth_path+"/agwb_"+top_name+".fs","w") as fo:
+BL = wb.blocks[TOP_NAME]
+with open(FORTH_PATH+"/agwb_"+TOP_NAME+".fs", "w") as fo:
     #First generate constants
     for cnst in ex.defines:
-        fo.write(": %"+cnst+" $"+format(ex.defines[cnst],'x')+" ; \\ "+\
+        fo.write(": %"+cnst+" $"+format(ex.defines[cnst], 'x')+" ; \\ "+\
         ex.comments[cnst]+"\n")
     #Now generate the HW access words
-    root_word='%/'
-    #Add empty definition for root_word
-    fo.write(": "+root_word+" $0 ;\n")
-    fo.write(bl.gen_forth(ver_id,root_word))
+    ROOT_WORD = '%/'
+    #Add empty definition for ROOT_WORD
+    fo.write(": "+ROOT_WORD+" $0 ;\n")
+    fo.write(BL.gen_forth(VER_ID, ROOT_WORD))
