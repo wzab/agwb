@@ -121,30 +121,30 @@ for el in EL_ROOT.findall("block"):
     # We also prepare the list of subblocks (of vectors of
     # subblocks)
     bn = el.attrib['name']
-    if bn in wb.blocks:
+    if bn in wb.blocks():
         raise Exception("Duplicate definition of block: "+bn)
-    bl = wb.wb_block(el, VHDL_PATH, IPBUS_PATH, C_HEADER_PATH)
-    wb.blocks[bn] = bl
+    bl = wb.WbBlock(el, VHDL_PATH, IPBUS_PATH, C_HEADER_PATH)
+    wb.blocks()[bn] = bl
 # Here we have everything, we could get from the first scan.
-BL = wb.blocks[TOP_NAME]
+BL = wb.blocks()[TOP_NAME]
 #overwite the number of master ports in the top module
 BL.N_MASTERS = N_MASTERS
 BL.analyze()
-for key, BL in wb.blocks.items():
+for key, BL in wb.blocks().items():
     if BL.used:
         BL.gen_vhdl(VER_ID)
 # Now we generate the IPbus address tables
-for key, BL in wb.blocks.items():
+for key, BL in wb.blocks().items():
     if BL.used:
         BL.gen_ipbus_xml(VER_ID)
 # Now we generate the C address tables
-for key, BL in wb.blackboxes.items():
-    BL.gen_C_header(VER_ID)
-for key, BL in wb.blocks.items():
+for key, BL in wb.blackboxes().items():
+    BL.gen_c_header(VER_ID)
+for key, BL in wb.blocks().items():
     if BL.used:
-        BL.gen_C_header(VER_ID)
+        BL.gen_c_header(VER_ID)
 # Generate the Forth address table
-BL = wb.blocks[TOP_NAME]
+BL = wb.blocks()[TOP_NAME]
 with open(FORTH_PATH+"/agwb_"+TOP_NAME+".fs", "w") as fo:
     #First generate constants
     for cnst in ex.defines:

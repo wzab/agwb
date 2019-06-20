@@ -171,10 +171,17 @@ def templ_wb(nof_masters):
   """
     return res
 
-blocks = {}
-blackboxes = {}
+class GlobalVars(object):
+    def __init__(self):
+        self.blocks = {}
+        self.blackboxes = {}
+GLB = GlobalVars()
+def blocks():
+    return GLB.blocks
+def blackboxes():
+    return GLB.blackboxes
 
-class wb_field(object):
+class WbField(object):
     def __init__(self, fl, lsb):
         self.name = fl.attrib['name']
         self.lsb = lsb
@@ -219,8 +226,8 @@ class wb_field(object):
             parent_reg.default_val &= and_mask
             parent_reg.default_val |= (or_mask & val)
 
-class wb_reg(object):
-    """ The class wb_reg describes a single register
+class WbReg(object):
+    """ The class WbReg describes a single register
     """
     def __init__(self, el, adr):
         """
@@ -237,14 +244,14 @@ class wb_reg(object):
         # Read list of fields
         self.fields = []
         self.free_bit = 0
-        for fl in el.findall('field'):
-            fdef = wb_field(fl, self.free_bit)
+        for f_l in el.findall('field'):
+            fdef = WbField(f_l, self.free_bit)
             self.free_bit += fdef.size
             if self.free_bit > 32:
                 raise Exception("Total width of fields in register " +\
                                 self.name+ " is above 32-bits")
             self.fields.append(fdef)
-        if len(self.fields) > 0 and self.type != 'std_logic_vector':
+        if self.fields and self.type != 'std_logic_vector':
             raise Exception("Register "+self.name+" with bitfields can't have "+\
                             self.type+" type.")
         if self.free_bit == 0:
@@ -255,8 +262,8 @@ class wb_reg(object):
             self.default_val = ex.exprval(self.default_val)
         # Default value may be also modified by default values
         # from bitfields (that have higher priority)
-        for fl in self.fields:
-            fl.def_adjust(self)
+        for f_l in self.fields:
+            f_l.def_adjust(self)
         if self.default_val is not None:
             if self.default_val > 2**self.free_bit - 1:
                 raise Exception("Default value for " + self.name + " register is too big.")
@@ -264,7 +271,7 @@ class wb_reg(object):
                 self.default = "(others => "
             else:
                 self.default = ""
-            if len(self.fields) != 0:
+            if self.fields:
                 self.default += "stlv2t_"+self.name+"("
             if self.type == "unsigned":
                 self.default += "to_unsigned(" + str(self.default_val) + \
@@ -275,7 +282,7 @@ class wb_reg(object):
             else:
                 self.default += "std_logic_vector(to_unsigned(" + str(self.default_val) + \
                     "," + str(self.free_bit) + "))"
-            if len(self.fields) != 0:
+            if self.fields:
                 self.default += ")"
             if self.size != 1:
                 self.default += ")"
@@ -295,50 +302,50 @@ class wb_reg(object):
            and the optional ACK or STB flags
         * Read or write sequence to be embedded in the process
         """
-        dt = ""
-        dtb = ""
-        dti = ""
+        d_t = ""
+        d_b = ""
+        d_i = ""
         # Generate the type corresponding to the register
         tname = "t_"+self.name
-        if len(self.fields) == 0:
+        if not self.fields:
             # Simple register, no fields
-            dt += "subtype "+tname+" is "+\
+            d_t += "subtype "+tname+" is "+\
                self.type+"(31 downto 0);\n"
         else:
             # Register with fields, we have to create a record
-            dt += "type "+tname+" is record\n"
-            for fl in self.fields:
-                dt += "  "+fl.name+":"+fl.type+"("+str(fl.size-1)+" downto 0);\n"
-            dt += "end record;\n\n"
+            d_t += "type "+tname+" is record\n"
+            for f_l in self.fields:
+                d_t += "  "+f_l.name+":"+f_l.type+"("+str(f_l.size-1)+" downto 0);\n"
+            d_t += "end record;\n\n"
 
             #Conversion function stlv to record
-            dt += "function stlv2"+tname+"(x : std_logic_vector) return "+tname+";\n"
-            dtb += "function stlv2"+tname+"(x : std_logic_vector) return "+tname+" is\n"
-            dtb += "variable res : "+tname+";\n"
-            dtb += "begin\n"
-            for fl in self.fields:
-                dtb += "  res."+fl.name+" := "+fl.type+"(x("+str(fl.msb)+\
-                    " downto "+str(fl.lsb)+"));\n"
-            dtb += "  return res;\n"
-            dtb += "end stlv2"+tname+";\n\n"
+            d_t += "function stlv2"+tname+"(x : std_logic_vector) return "+tname+";\n"
+            d_b += "function stlv2"+tname+"(x : std_logic_vector) return "+tname+" is\n"
+            d_b += "variable res : "+tname+";\n"
+            d_b += "begin\n"
+            for f_l in self.fields:
+                d_b += "  res."+f_l.name+" := "+f_l.type+"(x("+str(f_l.msb)+\
+                    " downto "+str(f_l.lsb)+"));\n"
+            d_b += "  return res;\n"
+            d_b += "end stlv2"+tname+";\n\n"
 
             #conversion function record to stlv
-            dt += "function "+tname+"2stlv(x : "+tname+") return std_logic_vector;\n"
-            dtb += "function "+tname+"2stlv(x : "+tname+") return std_logic_vector is\n"
-            dtb += "variable res : std_logic_vector(31 downto 0);\n"
-            dtb += "begin\n"
-            dtb += "  res := (others => '0');\n"
-            for fl in self.fields:
-                dtb += "  res("+str(fl.msb)+" downto "+str(fl.lsb)+ \
-                    ") := std_logic_vector(x."+fl.name+");\n"
-            dtb += "  return res;\n"
-            dtb += "end "+tname+"2stlv;\n\n"
+            d_t += "function "+tname+"2stlv(x : "+tname+") return std_logic_vector;\n"
+            d_b += "function "+tname+"2stlv(x : "+tname+") return std_logic_vector is\n"
+            d_b += "variable res : std_logic_vector(31 downto 0);\n"
+            d_b += "begin\n"
+            d_b += "  res := (others => '0');\n"
+            for f_l in self.fields:
+                d_b += "  res("+str(f_l.msb)+" downto "+str(f_l.lsb)+ \
+                    ") := std_logic_vector(x."+f_l.name+");\n"
+            d_b += "  return res;\n"
+            d_b += "end "+tname+"2stlv;\n\n"
         # If this is a vector of registers, create the array type
         if self.size > 1:
-            dt += "type "+tname+"_array is array(0 to "+ str(self.size-1) +") of "+tname+";\n"
+            d_t += "type "+tname+"_array is array(0 to "+ str(self.size-1) +") of "+tname+";\n"
         # Append the generated types to the parents package section
-        parent.add_templ('p_package', dt, 0)
-        parent.add_templ('p_package_body', dtb, 0)
+        parent.add_templ('p_package', d_t, 0)
+        parent.add_templ('p_package_body', d_b, 0)
 
         # Now generate the entity ports
         sfx = '_i'
@@ -347,42 +354,38 @@ class wb_reg(object):
             sfx = '_o'
             sdir = "out "
         if self.size == 1:
-            dt = self.name+sfx+" : "+sdir+" "+tname+";\n"
+            d_t = self.name+sfx+" : "+sdir+" "+tname+";\n"
         else:
-            dt = self.name+sfx+" : "+sdir+" "+tname+"_array;\n"
+            d_t = self.name+sfx+" : "+sdir+" "+tname+"_array;\n"
         # Now we generate the STB or ACK ports (if required)
         if self.regtype == 'creg' and self.stb == 1:
-            dt += self.name+sfx+"_stb : out std_logic;\n"
-            # We need to generate STB output
-            pass # To be implemented!
+            d_t += self.name+sfx+"_stb : out std_logic;\n"
         if self.regtype == 'sreg' and self.ack == 1:
-            dt += self.name+sfx+"_ack : out std_logic;\n"
-            # We need to generate ACK output
-            pass # To be implemented!
-        parent.add_templ('signal_ports', dt, 4)
+            d_t += self.name+sfx+"_ack : out std_logic;\n"
+        parent.add_templ('signal_ports', d_t, 4)
         # Generate the intermediate signals for output ports
         # (because they can't be read back)
         if self.regtype == 'creg':
             #Create the intermediate readable signal
             if self.size == 1:
-                dt = "signal int_"+self.name+sfx+" : "+tname
+                d_t = "signal int_"+self.name+sfx+" : "+tname
             else:
-                dt = "signal int_"+self.name+sfx+" : "+tname+"_array"
+                d_t = "signal int_"+self.name+sfx+" : "+tname+"_array"
             if self.default is not None:
-                dt += " := "+self.default
-            dt += ";"
+                d_t += " := "+self.default
+            d_t += ";"
             if self.default is not None:
-                dt += " -- Hex value: " + hex(self.default_val)
-            dt += "\n"
+                d_t += " -- Hex value: " + hex(self.default_val)
+            d_t += "\n"
             dt2 = self.name+sfx+" <= int_"+self.name+sfx+";\n"
-            parent.add_templ('signal_decls', dt, 4)
+            parent.add_templ('signal_decls', d_t, 4)
             parent.add_templ('cont_assigns', dt2, 2)
         # Reset control registers
         if self.regtype == 'creg':
             if self.default is not None:
-                rt = "int_"+self.name+sfx+" <= "+self.default+\
+                r_t = "int_"+self.name+sfx+" <= "+self.default+\
                     "; -- Hex value: " + hex(self.default_val) + "\n"
-                parent.add_templ('control_registers_reset', rt, 10)
+                parent.add_templ('control_registers_reset', r_t, 10)
         # Generate the signal assignment in the process
         for i in range(0, self.size):
             # We prepare the index string used in case if this is a vector of registers
@@ -390,10 +393,10 @@ class wb_reg(object):
                 ind = "("+str(i)+")"
             else:
                 ind = ""
-            dt = "when \""+format(self.base+i, "0"+str(parent.reg_adr_bits)+"b")+\
+            d_t = "when \""+format(self.base+i, "0"+str(parent.reg_adr_bits)+"b")+\
                 "\" => -- "+hex(self.base+i)+"\n"
             # The conversion functions
-            if len(self.fields) == 0:
+            if not self.fields:
                 conv_fun = "std_logic_vector"
                 iconv_fun = self.type
             else:
@@ -401,43 +404,43 @@ class wb_reg(object):
                 iconv_fun = "stlv2t_"+self.name
             # Read access
             if self.regtype == 'sreg':
-                dt += "   int_regs_wb_m_i.dat <= "+conv_fun+"("+self.name+"_i"+ind+");\n"
+                d_t += "   int_regs_wb_m_i.dat <= "+conv_fun+"("+self.name+"_i"+ind+");\n"
                 if self.ack == 1:
-                    dt += "   if int_regs_wb_m_i.ack = \'0\' then\n"
+                    d_t += "   if int_regs_wb_m_i.ack = \'0\' then\n"
                     # We shorten the STB to a single clock
-                    dt += "      "+self.name+sfx+"_ack <= '1';\n"
-                    dt += "   end if;\n"
+                    d_t += "      "+self.name+sfx+"_ack <= '1';\n"
+                    d_t += "   end if;\n"
                     # Add clearing of ACK signal at the begining of the process
-                    dti += self.name+sfx+"_ack <= '0';\n"
+                    d_i += self.name+sfx+"_ack <= '0';\n"
             else:
-                dt += "   int_regs_wb_m_i.dat <= "+conv_fun+"(int_"+self.name+"_o"+ind+");\n"
+                d_t += "   int_regs_wb_m_i.dat <= "+conv_fun+"(int_"+self.name+"_o"+ind+");\n"
             # Write access
             if self.regtype == 'creg':
-                dt += "   if int_regs_wb_m_o.we = '1' then\n"
-                dt += "     int_"+self.name+"_o"+ind+" <= "+iconv_fun+"(int_regs_wb_m_o.dat);\n"
+                d_t += "   if int_regs_wb_m_o.we = '1' then\n"
+                d_t += "     int_"+self.name+"_o"+ind+" <= "+iconv_fun+"(int_regs_wb_m_o.dat);\n"
                 if self.stb == 1:
-                    dt += "   if int_regs_wb_m_i.ack = \'0\' then\n"
+                    d_t += "   if int_regs_wb_m_i.ack = \'0\' then\n"
                     # We shorten the STB to a single clock
-                    dt += "      "+self.name+sfx+"_stb <= '1';\n"
-                    dt += "   end if;\n"
+                    d_t += "      "+self.name+sfx+"_stb <= '1';\n"
+                    d_t += "   end if;\n"
                     # Add clearing of STB signal at the begining of the process
-                    dti += self.name+sfx+"_stb <= '0';\n"
-                dt += "   end if;\n"
-            dt += "   int_regs_wb_m_i.ack <= '1';\n"
-            dt += "   int_regs_wb_m_i.err <= '0';\n"
-            parent.add_templ('register_access', dt, 10)
-            parent.add_templ('signals_idle', dti, 10)
+                    d_i += self.name+sfx+"_stb <= '0';\n"
+                d_t += "   end if;\n"
+            d_t += "   int_regs_wb_m_i.ack <= '1';\n"
+            d_t += "   int_regs_wb_m_i.err <= '0';\n"
+            parent.add_templ('register_access', d_t, 10)
+            parent.add_templ('signals_idle', d_i, 10)
 
     def gen_ipbus_xml(self, reg_base):
         # The generated code depends on the fact it is a single register or the vector of registers
         res = ""
-        for rn in range(0, self.size):
-            adr = reg_base+self.base+rn
+        for r_n in range(0, self.size):
+            adr = reg_base+self.base+r_n
             # The name format depends whether its a single register or an item in a vector
             if self.size == 1:
                 rname = self.name
             else:
-                rname = self.name + "["+str(rn)+"]"
+                rname = self.name + "["+str(r_n)+"]"
             # Set permissions
             if self.regtype == 'creg':
                 perms = "rw"
@@ -446,36 +449,36 @@ class wb_reg(object):
             else:
                 raise Exception("Unknown type of register")
             # Finally the format of the description depends on the presence of bitfields
-            if len(self.fields) == 0:
+            if not self.fields:
                 res += "  <node id=\""+rname+"\" address=\"0x"+format(adr, "08x")+\
                     "\" permission=\""+perms+"\"/>\n"
             else:
                 res += "  <node id=\""+rname+"\" address=\"0x"+format(adr, "08x")+\
                     "\" permission=\""+perms+"\">\n"
-                for bf in self.fields:
-                    maskval = ((1<<(bf.msb+1))-1) ^ ((1<<bf.lsb)-1)
+                for b_f in self.fields:
+                    maskval = ((1<<(b_f.msb+1))-1) ^ ((1<<b_f.lsb)-1)
                     mask = format(maskval, "08x")
-                    res += "    <node id=\""+bf.name+"\" mask=\"0x"+mask+"\"/>\n"
+                    res += "    <node id=\""+b_f.name+"\" mask=\"0x"+mask+"\"/>\n"
                 res += "  </node>\n"
 
         return res
 
-    def gen_C_header(self, reg_base, block_name):
+    def gen_c_header(self, reg_base, block_name):
         res = "  "+XVOLATILE+" uint32_t " + self.name
         head = ""
-        if len(self.fields) != 0:
+        if self.fields:
             # There are bitfields, so we need to generate functions needed to access them
             base_type = "agwb_"+block_name
-            for bf in self.fields:
+            for b_f in self.fields:
                 # Below we generate a set of masks and shift values needed
                 # to extract or to set the appropriate value...
-                base_name = "agwb_"+block_name+"_"+self.name+"_"+bf.name
-                fshift = bf.lsb
-                fmask = (1 << (bf.msb-bf.lsb+1)) - 1
-                fvalmask = 0xFFFFffff - (fmask<<bf.lsb)
-                fsignmask = 1 << (bf.msb-bf.lsb)
-                fsignext = ((1 << (31-(bf.msb-bf.lsb)))-1) << bf.msb
-                if bf.type == "signed":
+                base_name = base_type+"_"+self.name+"_"+b_f.name
+                fshift = b_f.lsb
+                fmask = (1 << (b_f.msb-b_f.lsb+1)) - 1
+                fvalmask = 0xFFFFffff - (fmask<<b_f.lsb)
+                fsignmask = 1 << (b_f.msb-b_f.lsb)
+                fsignext = ((1 << (31-(b_f.msb-b_f.lsb)))-1) << b_f.msb
+                if b_f.type == "signed":
                     # Function for getting the value
                     head += "static inline int32_t "+base_name+"_get(uint32_t * ptr) { \n"
                     head += "  int32_t res = (((* ptr) >> "+hex(fshift)+") & "+hex(fmask)+");\n"
@@ -515,14 +518,14 @@ class wb_reg(object):
         else:
             node = parent+"#"+self.name
             cdefs += ": "+node+" "+parent+" + $"+format(adr, 'x')+" + ;\n"
-        if len(self.fields) != 0:
-            for bf in self.fields:
-                maskval = ((1<<(bf.msb+1))-1) ^ ((1<<bf.lsb)-1)
-                cdefs += ": "+node+"."+bf.name+" "+node+" $"+format(maskval, 'x')+\
-                    " $"+format(bf.lsb, 'x')+" ;\n"
+        if self.fields:
+            for b_f in self.fields:
+                maskval = ((1<<(b_f.msb+1))-1) ^ ((1<<b_f.lsb)-1)
+                cdefs += ": "+node+"."+b_f.name+" "+node+" $"+format(maskval, 'x')+\
+                    " $"+format(b_f.lsb, 'x')+" ;\n"
         return cdefs
 
-class wb_area(object):
+class WbArea(object):
     """ The class representing the address area
     """
     def __init__(self, size, name, obj, reps):
@@ -538,7 +541,7 @@ class wb_area(object):
     def sort_key(self):
         return self.size
 
-class wb_blackbox(object):
+class WbBlackBox(object):
     def __init__(self, el, c_header_path):
         self.name = el.attrib['name']
         self.c_header_path = c_header_path
@@ -549,7 +552,7 @@ class wb_blackbox(object):
     def gen_forth(self, ver_id, parent):
         #We do not need to generate any special words for blackboxes
         return ""
-    def gen_C_header(self, ver_id):
+    def gen_c_header(self, ver_id):
         #Here we need to create a dummy header, that just fills the generated structure
         print("Creating C header:"+self.name+"\n")
         res = "#ifndef __"+self.name+"__INC_H\n"
@@ -558,22 +561,22 @@ class wb_blackbox(object):
         res += "  "+XVOLATILE+" uint32_t filler["+str(self.addr_size)+"];\n"
         res += "}  __attribute__((packed)) "+"agwb_"+self.name+";\n"
         res += "#endif\n"
-        with open(self.c_header_path+"agwb_"+self.name+".h", "w") as fo:
-            fo.write(res)
+        with open(self.c_header_path+"agwb_"+self.name+".h", "w") as f_o:
+            f_o.write(res)
 
-class wb_block(object):
+class WbBlock(object):
     def __init__(self, el, vhdl_path, ipbus_path, c_header_path=None):
+        """
+        The constructor takes an XML node that describes the block
+        It also calculates the number of registers, and creates
+        the description of the record
+        """
         self.vhdl_path = vhdl_path
         self.ipbus_path = ipbus_path
         if c_header_path is None:
             self.c_header_path = ipbus_path
         else:
             self.c_header_path = c_header_path
-        """
-        The constructor takes an XML node that describes the block
-        It also calculates the number of registers, and creates
-        the description of the record
-        """
         self.used = False # Mark the block as not used yet
         self.templ_dict = {}
         self.name = el.attrib['name']
@@ -590,12 +593,12 @@ class wb_block(object):
             # We don't do alignment (yet)
             if child.tag == 'creg':
                 # This is a control register
-                reg = wb_reg(child, self.free_reg_addr)
+                reg = WbReg(child, self.free_reg_addr)
                 self.free_reg_addr += reg.size
                 self.regs.append(reg)
             elif child.tag == 'sreg':
                 # This is a status register
-                reg = wb_reg(child, self.free_reg_addr)
+                reg = WbReg(child, self.free_reg_addr)
                 self.free_reg_addr += reg.size
                 self.regs.append(reg)
             elif child.tag == 'subblock':
@@ -615,17 +618,17 @@ class wb_block(object):
 
     def analyze(self):
         # Add the length of the local addresses to the list of areas
-        self.areas.append(wb_area(self.free_reg_addr, "int_regs", None, 1))
+        self.areas.append(WbArea(self.free_reg_addr, "int_regs", None, 1))
         # Scan the subblocks
         for sblk in self.subblks:
             if sblk.tag == 'subblock':
                 #@!@ Here we must to correct something! The name of the subblock
                 #Is currently lost. We must to decide how it should be passed
                 #To the generated code@!@
-                bl = blocks[sblk.attrib['type']]
+                b_l = GLB.blocks[sblk.attrib['type']]
                 # If the subblock was not analyzed yet, analyze it now
-                if len(bl.areas) == 0:
-                    bl.analyze()
+                if not b_l.areas:
+                    b_l.analyze()
                     # Now we can be sure, that it is analyzed, so we can
                     # add its address space to ours.
                 # Check if this is a vector of subblocks
@@ -633,18 +636,18 @@ class wb_block(object):
                 print("reps:"+str(reps))
                 # Now recalculate the size of the area, considering possible
                 # block repetitions
-                addr_size = bl.addr_size * reps
-                self.areas.append(wb_area(addr_size, sblk.get('name'), bl, reps))
+                addr_size = b_l.addr_size * reps
+                self.areas.append(WbArea(addr_size, sblk.get('name'), b_l, reps))
             elif sblk.tag == 'blackbox':
                 # We don't need to analyze the blackbox. We allready have its
                 # address area size.
-                if not sblk.attrib['type'] in blackboxes:
-                    blackboxes[sblk.attrib['type']] = wb_blackbox(sblk, self.c_header_path)
-                bl = blackboxes[sblk.attrib['type']]
+                if not sblk.attrib['type'] in GLB.blackboxes:
+                    GLB.blackboxes[sblk.attrib['type']] = WbBlackBox(sblk, self.c_header_path)
+                b_l = GLB.blackboxes[sblk.attrib['type']]
                 reps = ex.exprval(sblk.get('reps', '1'))
                 print("reps:"+str(reps))
-                addr_size = bl.addr_size * reps
-                self.areas.append(wb_area(addr_size, sblk.get('name'), bl, reps))
+                addr_size = b_l.addr_size * reps
+                self.areas.append(WbArea(addr_size, sblk.get('name'), b_l, reps))
             else:
                 raise Exception("Unknown type of subblock")
         # Now we can calculate the total length of address space
@@ -652,17 +655,17 @@ class wb_block(object):
         # their size is rounded up to the nearest power of 2
         # They are allocated in order.
         cur_base = 0
-        self.areas.sort(key=wb_area.sort_key, reverse=True)
-        for ar in self.areas:
-            if ar.obj == None:
+        self.areas.sort(key=WbArea.sort_key, reverse=True)
+        for a_r in self.areas:
+            if a_r.obj is None:
                 # This is the register block
                 self.reg_base = cur_base
-            ar.adr = cur_base
-            ar.adr_bits = (ar.size-1).bit_length()
-            ar.total_size = 1 << ar.adr_bits
+            a_r.adr = cur_base
+            a_r.adr_bits = (a_r.size-1).bit_length()
+            a_r.total_size = 1 << a_r.adr_bits
             # Now we shift the position of the next block
-            cur_base += ar.total_size
-            print("added size:"+str(ar.total_size))
+            cur_base += a_r.total_size
+            print("added size:"+str(a_r.total_size))
         self.addr_size = cur_base
         # We must adjust the address space to the power of two
         self.adr_bits = (self.addr_size-1).bit_length()
@@ -679,9 +682,9 @@ class wb_block(object):
         if templ_key not in self.templ_dict:
             self.templ_dict[templ_key] = ""
         # Now we add all lines from value, providing the appropriate indentation
-        for ln in re.findall(r'.*\n?', value)[:-1]:
-            if ln != "":
-                self.templ_dict[templ_key] += indent*" " + ln
+        for l_n in re.findall(r'.*\n?', value)[:-1]:
+            if l_n != "":
+                self.templ_dict[templ_key] += indent*" " + l_n
 
     def gen_vhdl(self, ver_id):
         # To fill the template, we must to set the following values:
@@ -713,44 +716,44 @@ class wb_block(object):
         ar_adr_bits = []
         ar_addresses = []
         n_ports = 0
-        dt = ""
-        for ar in self.areas:
-            if (ar.reps == 1):
-                ar.first_port = n_ports
-                ar.last_port = n_ports
+        d_t = ""
+        for a_r in self.areas:
+            if a_r.reps == 1:
+                a_r.first_port = n_ports
+                a_r.last_port = n_ports
                 n_ports += 1
-                ar_addresses.append(ar.adr)
-                ar_adr_bits.append(ar.adr_bits)
+                ar_addresses.append(a_r.adr)
+                ar_adr_bits.append(a_r.adr_bits)
                 #generate the entity port but not for internal registers
-                if ar.obj != None:
-                    dt = ar.name+"_wb_m_o : out t_wishbone_master_out;\n"
-                    dt += ar.name+"_wb_m_i : in t_wishbone_master_in;\n"
-                    self.add_templ('subblk_busses', dt, 4)
+                if a_r.obj != None:
+                    d_t = a_r.name+"_wb_m_o : out t_wishbone_master_out;\n"
+                    d_t += a_r.name+"_wb_m_i : in t_wishbone_master_in;\n"
+                    self.add_templ('subblk_busses', d_t, 4)
                 #generate the signal assignment
-                dt = "wb_m_i("+str(ar.first_port)+") <= "+ar.name+"_wb_m_i;\n"
-                dt += ar.name+"_wb_m_o  <= "+"wb_m_o("+str(ar.first_port)+");\n"
-                self.add_templ('cont_assigns', dt, 2)
+                d_t = "wb_m_i("+str(a_r.first_port)+") <= "+a_r.name+"_wb_m_i;\n"
+                d_t += a_r.name+"_wb_m_o  <= "+"wb_m_o("+str(a_r.first_port)+");\n"
+                self.add_templ('cont_assigns', d_t, 2)
             else:
                 # The area is associated with the vector of subblocks
-                ar.first_port = n_ports
-                ar.last_port = n_ports+ar.reps-1
-                n_ports += ar.reps
+                a_r.first_port = n_ports
+                a_r.last_port = n_ports+a_r.reps-1
+                n_ports += a_r.reps
                 #generate the entity port
-                dt = ar.name+"_wb_m_o : out t_wishbone_master_out_array(0 to "+\
-                    str(ar.last_port-ar.first_port)+");\n"
-                dt += ar.name+"_wb_m_i : in t_wishbone_master_in_array(0 to "+\
-                    str(ar.last_port-ar.first_port)+");\n"
-                self.add_templ('subblk_busses', dt, 4)
+                d_t = a_r.name+"_wb_m_o : out t_wishbone_master_out_array(0 to "+\
+                    str(a_r.last_port-a_r.first_port)+");\n"
+                d_t += a_r.name+"_wb_m_i : in t_wishbone_master_in_array(0 to "+\
+                    str(a_r.last_port-a_r.first_port)+");\n"
+                self.add_templ('subblk_busses', d_t, 4)
                 # Now we have to assign addresses and masks for each subblock and connect the port
-                base = ar.adr
-                nport = ar.first_port
-                for i in range(0, ar.reps):
+                base = a_r.adr
+                nport = a_r.first_port
+                for i in range(0, a_r.reps):
                     ar_addresses.append(base)
-                    base += ar.obj.addr_size
-                    ar_adr_bits.append(ar.obj.adr_bits)
-                    dt = "wb_m_i("+str(nport)+") <= "+ar.name+"_wb_m_i("+str(i)+");\n"
-                    dt += ar.name+"_wb_m_o("+str(i)+")  <= "+"wb_m_o("+str(nport)+");\n"
-                    self.add_templ('cont_assigns', dt, 2)
+                    base += a_r.obj.addr_size
+                    ar_adr_bits.append(a_r.obj.adr_bits)
+                    d_t = "wb_m_i("+str(nport)+") <= "+a_r.name+"_wb_m_i("+str(i)+");\n"
+                    d_t += a_r.name+"_wb_m_o("+str(i)+")  <= "+"wb_m_o("+str(nport)+");\n"
+                    self.add_templ('cont_assigns', d_t, 2)
                     nport += 1
         #Now generate vectors with addresses and masks
         adrs = "("
@@ -780,10 +783,10 @@ class wb_block(object):
         self.add_templ('p_entity', "agwb_"+self.name+"_wb", 0)
         # All template is filled, so we can now generate the files
         print(self.templ_dict)
-        with open(self.vhdl_path+"agwb_"+self.name+"_wb.vhd", "w") as fo:
-            fo.write(templ_wb(self.n_masters).format(**self.templ_dict))
-        with open(self.vhdl_path+"agwb_"+self.name+"_wb_pkg.vhd", "w") as fo:
-            fo.write(TEMPL_PKG.format(**self.templ_dict))
+        with open(self.vhdl_path+"agwb_"+self.name+"_wb.vhd", "w") as f_o:
+            f_o.write(templ_wb(self.n_masters).format(**self.templ_dict))
+        with open(self.vhdl_path+"agwb_"+self.name+"_wb_pkg.vhd", "w") as f_o:
+            f_o.write(TEMPL_PKG.format(**self.templ_dict))
 
     def gen_ipbus_xml(self, ver_id):
         """ This function generates the address map in the XML format
@@ -791,11 +794,11 @@ class wb_block(object):
         """
         res = "<node id=\""+self.name+"\">\n"
         # Iterate the areas, generating the addresses
-        for ar in self.areas:
-            if ar.obj == None:
+        for a_r in self.areas:
+            if a_r.obj is None:
                 #Registers area
                 #Add two standard registers - ID and VER
-                adr = ar.adr
+                adr = a_r.adr
                 res += "  <node id=\"ID\" address=\"0x"+format(adr, "08x")+\
                     "\" permission=\"r\"/>\n"
                 res += "  <node id=\"VER\" address=\"0x"+format(adr+1, "08x")+\
@@ -806,23 +809,23 @@ class wb_block(object):
             else:
                 #Subblock or vector of subblocks
                 #If it is a subblock, prefix the name of the table with "agwb_"
-                xname = ar.obj.name
-                if isinstance(ar.obj, wb_block):
+                xname = a_r.obj.name
+                if isinstance(a_r.obj, WbBlock):
                     xname = "agwb_"+xname
-                if ar.reps == 1:
+                if a_r.reps == 1:
                     #Single subblock
-                    res += "  <node id=\""+ar.name+"\""+\
-                           " address=\"0x"+format(ar.adr, "08x")+"\""+\
+                    res += "  <node id=\""+a_r.name+"\""+\
+                           " address=\"0x"+format(a_r.adr, "08x")+"\""+\
                            " module=\"file://"+xname+"_address.xml\"/>\n"
                 else:
                     #Vector of subblocks
-                    for nb in range(0, ar.reps):
-                        res += "  <node id=\""+ar.name+"["+str(nb)+"]\""+\
-                               " address=\"0x"+format(ar.adr+nb*ar.obj.addr_size, "08x")+"\""+\
+                    for n_b in range(0, a_r.reps):
+                        res += "  <node id=\""+a_r.name+"["+str(n_b)+"]\""+\
+                               " address=\"0x"+format(a_r.adr+n_b*a_r.obj.addr_size, "08x")+"\""+\
                                " module=\"file://"+xname+"_address.xml\"/>\n"
         res += "</node>\n"
-        with open(self.ipbus_path+"agwb_"+self.name+"_address.xml", "w") as fo:
-            fo.write(res)
+        with open(self.ipbus_path+"agwb_"+self.name+"_address.xml", "w") as f_o:
+            f_o.write(res)
 
     def gen_forth(self, ver_id, parent):
         """ This function generates the address map in the Forth format
@@ -830,11 +833,11 @@ class wb_block(object):
         """
         # Iterate the areas, generating the addresses
         cdefs = ""
-        for ar in self.areas:
-            if ar.obj == None:
+        for a_r in self.areas:
+            if a_r.obj is None:
                 #Registers area
                 #Add two standard registers - ID and VER
-                adr = ar.adr
+                adr = a_r.adr
                 cdefs += ": "+parent+"_ID "+parent+" $"+format(adr, "x")+" + ;\n"
                 cdefs += ": "+parent+"_VER "+parent+" $"+format(adr+1, "x")+" + ;\n"
                 #Now add other registers in a loop
@@ -842,21 +845,21 @@ class wb_block(object):
                     cdefs += reg.gen_forth(adr, parent)
             else:
                 #Subblock or vector of subblocks
-                if ar.reps == 1:
-                    node = parent+"_"+ar.name
+                if a_r.reps == 1:
+                    node = parent+"_"+a_r.name
                     #Single subblock
-                    cdefs += ": "+node+" "+parent+" $"+format(ar.adr, 'x')+" + ;\n"
-                    cdefs += ar.obj.gen_forth(ver_id, node)
+                    cdefs += ": "+node+" "+parent+" $"+format(a_r.adr, 'x')+" + ;\n"
+                    cdefs += a_r.obj.gen_forth(ver_id, node)
                 else:
                     #Vector of subblocks
-                    node = parent+"#"+ar.name
+                    node = parent+"#"+a_r.name
                     #Single subblock
-                    cdefs += ": "+node+" "+parent+" $"+format(ar.adr, 'x')+\
-                        " + swap $"+format(ar.obj.addr_size, 'x')+" * + ;\n"
-                    cdefs += ar.obj.gen_forth(ver_id, node)
+                    cdefs += ": "+node+" "+parent+" $"+format(a_r.adr, 'x')+\
+                        " + swap $"+format(a_r.obj.addr_size, 'x')+" * + ;\n"
+                    cdefs += a_r.obj.gen_forth(ver_id, node)
         return cdefs
 
-    def gen_C_header(self, ver_id):
+    def gen_c_header(self, ver_id):
         """ This function generates the address map as C/C++ header
 
         """
@@ -872,43 +875,43 @@ class wb_block(object):
         cur_addr = 0
         res = "typedef struct {\n"
         # The areas must be sorted by increasing address
-        self.areas.sort(key=wb_area.sort_adr)
-        for ar in self.areas:
+        self.areas.sort(key=WbArea.sort_adr)
+        for a_r in self.areas:
                 # Check if it was nessary to add a filler
-            print(ar.name, ar.adr, cur_addr)
-            if ar.adr < cur_addr:
+            print(a_r.name, a_r.adr, cur_addr)
+            if a_r.adr < cur_addr:
                 # That should never happen! It would mean that blocks are not ordered properly
                 raise Exception("Incorrect ordering of blocks!")
-            if ar.adr > cur_addr:
+            if a_r.adr > cur_addr:
                 res += "  "+XVOLATILE+" uint32_t filler"+str(filler_nr)+\
-                    "["+str(ar.adr-cur_addr)+"];\n"
+                    "["+str(a_r.adr-cur_addr)+"];\n"
                 filler_nr += 1
-                cur_addr = ar.adr
-            if ar.obj == None:
+                cur_addr = a_r.adr
+            if a_r.obj is None:
                 #Registers area
                 #Add two standard registers - ID and VER
-                adr = ar.adr
+                adr = a_r.adr
                 res += "  "+XVOLATILE+" uint32_t ID;\n"
                 res += "  "+XVOLATILE+" uint32_t VER;\n"
                 cur_addr += 2
                 #Now add other registers in a loop
                 for reg in self.regs:
-                    rn, hn = reg.gen_C_header(adr, self.name)
-                    head += hn
-                    res += rn
+                    r_n, h_n = reg.gen_c_header(adr, self.name)
+                    head += h_n
+                    res += r_n
                     cur_addr += reg.size
             else:
                 #Subblock or vector of subblocks
                 #Add the related header
-                head += "#include <agwb_"+ar.obj.name+".h>\n"
-                if ar.reps == 1:
+                head += "#include <agwb_"+a_r.obj.name+".h>\n"
+                if a_r.reps == 1:
                     #Single subblock
-                    res += "  agwb_" + ar.obj.name + " " + ar.name+";\n"
+                    res += "  agwb_" + a_r.obj.name + " " + a_r.name+";\n"
                 else:
-                    res += "  agwb_" + ar.obj.name + " " + ar.name+"["+str(ar.reps)+"];\n"
-                cur_addr += ar.reps*ar.obj.addr_size
-            print("area: "+ar.name+" total_size:" + str(ar.total_size) + \
-                  " reps="+str(ar.reps)+" cur_adr:"+str(cur_addr))
+                    res += "  agwb_" + a_r.obj.name + " " + a_r.name+"["+str(a_r.reps)+"];\n"
+                cur_addr += a_r.reps*a_r.obj.addr_size
+            print("area: "+a_r.name+" total_size:" + str(a_r.total_size) + \
+                  " reps="+str(a_r.reps)+" cur_adr:"+str(cur_addr))
         # Add fillers
         if cur_addr < self.addr_size:
             res += "  "+XVOLATILE+" uint32_t filler"+str(filler_nr)+"["+\
@@ -918,6 +921,6 @@ class wb_block(object):
         res += "} __attribute__((aligned(4))) agwb_"+self.name+" ;\n"
         res += "#endif\n"
         print ("block: "+self.name+" cur_addr="+str(cur_addr))
-        with open(self.c_header_path+"agwb_"+self.name+".h", "w") as fo:
-            fo.write(head)
-            fo.write(res)
+        with open(self.c_header_path+"agwb_"+self.name+".h", "w") as f_o:
+            f_o.write(head)
+            f_o.write(res)
