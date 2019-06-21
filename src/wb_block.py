@@ -525,6 +525,38 @@ class WbReg(object):
                     " $"+format(b_f.lsb, 'x')+" ;\n"
         return cdefs
 
+    def gen_python(self, reg_base):
+        sp8 = 8*" "
+        sp12 = 12*" "
+        res = ""
+        if self.size == 1:
+            # Single register
+            res += sp8+"'"+self.name+"':("+hex(reg_base+self.base)+",("
+        else:
+            # Vector of registers
+            res += sp8+"'"+self.name+"':("+hex(reg_base+self.base)+","+str(self.size)+",("
+        if self.regtype == "sreg":
+            res += "AwSreg,"
+        elif self.regtype == "creg":
+            res += "AwSreg,"
+        else:
+            raise Exception("Incorrect type of register:"+self.regtype)
+        if not self.fields:
+            # No bitfields
+            res += ")),\n"
+        else:
+            # Handle bitfields
+            res += "\n"+sp8+"{\\\n"
+            for f_l in self.fields:
+                res += sp12+"'"+f_l.name+"':("+str(f_l.msb)+","+str(f_l.lsb)+","
+                if self.type == "signed":
+                    res += "True"
+                else:
+                    res += "False"
+                res += "),\\\n"
+            res += sp8+"})),\n"
+        return res
+            
 class WbArea(object):
     """ The class representing the address area
     """
@@ -552,6 +584,7 @@ class WbBlackBox(object):
     def gen_forth(self, ver_id, parent):
         #We do not need to generate any special words for blackboxes
         return ""
+
     def gen_c_header(self, ver_id):
         #Here we need to create a dummy header, that just fills the generated structure
         print("Creating C header:"+self.name+"\n")
@@ -563,6 +596,16 @@ class WbBlackBox(object):
         res += "#endif\n"
         with open(self.c_header_path+"agwb_"+self.name+".h", "w") as f_o:
             f_o.write(res)
+
+    def gen_python(self, ver_id):
+        """ This function generates the class providing access
+        to the block from the Python code"""
+        sp4 = 4*" "
+        sp8 = 8*" "
+        res = "class Agwb_"+self.name+"(AwObj):\n"
+        res += sp4+"x__size = "+str(self.addr_size)+"\n"
+        return res
+        
 
 class WbBlock(object):
     def __init__(self, el, vhdl_path, ipbus_path, c_header_path=None):
@@ -924,3 +967,33 @@ class WbBlock(object):
         with open(self.c_header_path+"agwb_"+self.name+".h", "w") as f_o:
             f_o.write(head)
             f_o.write(res)
+
+    def gen_python(self, ver_id):
+        """ This function generates the class providing access
+        to the block from the Python code"""
+        sp4 = 4*" "
+        sp8 = 8*" "
+        res = "class Agwb_"+self.name+"(AwObj):\n"
+        res += sp4+"x__size = "+str(self.addr_size)+"\n"
+        res += sp4+"x__fields = {\n"        
+        for a_r in self.areas:
+            if a_r.obj is None:
+                # Registers area
+                # Add two standard register - ID and VER
+                adr = a_r.adr
+                res += sp8+"'ID':("+hex(adr)+",(AwSreg,)),\\\n"
+                res += sp8+"'VER':("+hex(adr+1)+",(AwSreg,)),\\\n"
+                for reg in self.regs:
+                    res += reg.gen_python(adr)
+            else:
+                # The format depends on whether this is a block or vector of blocks
+                if a_r.reps == 1:
+                    # Single subblock
+                    res+= sp8+"'"+a_r.name+"':("+hex(a_r.adr)+",(Agwb_"+a_r.obj.name+",)),\\\n"
+                else:
+                    # Vector of subblocks
+                    res+= sp8+"'"+a_r.name+"':("+hex(a_r.adr)+","+ \
+                    str(a_r.reps)+",(Agwb_"+a_r.obj.name+",)),\\\n"
+        res += sp4+"}\n"
+        return res
+

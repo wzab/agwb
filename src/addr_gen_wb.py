@@ -130,9 +130,20 @@ BL = wb.blocks()[TOP_NAME]
 #overwite the number of master ports in the top module
 BL.N_MASTERS = N_MASTERS
 BL.analyze()
+# Now we can generate the VHDL code that implements
+# the system
 for key, BL in wb.blocks().items():
     if BL.used:
         BL.gen_vhdl(VER_ID)
+# Now we generate the Python access code
+res = "from agwb import AwObj,AwSreg,AwCreg\n"
+for key, BL in wb.blackboxes().items():
+    res += BL.gen_python(VER_ID)
+for key, BL in wb.blocks().items():
+    if BL.used:
+        res += BL.gen_python(VER_ID)
+with open(PYTHON_PATH+"/agwb_"+TOP_NAME+".py", "w") as fo:
+    fo.write(res)
 # Now we generate the IPbus address tables
 for key, BL in wb.blocks().items():
     if BL.used:
