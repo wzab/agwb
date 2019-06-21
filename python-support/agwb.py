@@ -127,6 +127,7 @@ class AwReg(object):
     """The AwReg class is the base class supporting access to the 
     register.
     """
+    x__size = 1
     def __init__(self, iface, base, bfields={}):
         self.x__iface = iface
         self.x__base = base

@@ -17,6 +17,7 @@ SOURCES = \
  hdl/sys1.vhd \
  gen/agwb_MAIN_wb_pkg.vhd \
  gen/agwb_MAIN_wb.vhd \
+ hdl/htest.vhd \
  hdl/exttest.vhd \
  hdl/wb_cdc.vhd \
  hdl/main.vhd \

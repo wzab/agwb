@@ -136,7 +136,7 @@ for key, BL in wb.blocks().items():
     if BL.used:
         BL.gen_vhdl(VER_ID)
 # Now we generate the Python access code
-res = "from agwb import AwObj,AwSreg,AwCreg\n"
+res = "from agwb import AwObj,AwSreg,AwCreg,AwBfd\n"
 for key, BL in wb.blackboxes().items():
     res += BL.gen_python(VER_ID)
 for key, BL in wb.blocks().items():

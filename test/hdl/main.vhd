@@ -21,6 +21,8 @@ end entity main;
 architecture rtl of main is
   signal LINKS_wb_m_o  : t_wishbone_master_out_array(0 to NSEL_MAX-1);
   signal LINKS_wb_m_i  : t_wishbone_master_in_array(0 to NSEL_MAX-1);
+  signal EXTHUGE_wb_m_o : t_wishbone_master_out;
+  signal EXTHUGE_wb_m_i : t_wishbone_master_in;
   signal EXTERN_wb_m_o : t_wishbone_master_out_array(0 to (NEXTERNS-1));
   signal EXTERN_wb_m_i : t_wishbone_master_in_array(0 to (NEXTERNS-1));
   signal CDC_wb_m_o    : t_wishbone_master_out_array(0 to (NEXTERNS-1));
@@ -34,6 +36,8 @@ begin  -- architecture rtl
       slave_o       => wb_s_out,
       LINKS_wb_m_o  => LINKS_wb_m_o,
       LINKS_wb_m_i  => LINKS_wb_m_i,
+      EXTHUGE_wb_m_o => EXTHUGE_wb_m_o,
+      EXTHUGE_wb_m_i => EXTHUGE_wb_m_i,
       EXTERN_wb_m_o => CDC_wb_m_o,
       EXTERN_wb_m_i => CDC_wb_m_i,
       CTRL_o        => CTRL_o,
@@ -67,6 +71,17 @@ gl0: for i in 0 to NEXTERNS-1 generate
 
 end generate gl0;
 
+  htst_1 : entity work.htest
+    generic map (
+      instance_number => 0,
+      addr_size       => 16
+      )
+    port map (
+      rst_n_i   => rst_n_i,
+      clk_sys_i => clk_sys_i,
+      wb_s_in   => EXTHUGE_wb_m_o,
+      wb_s_out  => EXTHUGE_wb_m_i);
+     
   gl1 : for i in 0 to NSEL_MAX-1 generate
 
     sys1_1 : entity work.sys1

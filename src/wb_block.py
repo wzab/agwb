@@ -538,7 +538,7 @@ class WbReg(object):
         if self.regtype == "sreg":
             res += "AwSreg,"
         elif self.regtype == "creg":
-            res += "AwSreg,"
+            res += "AwCreg,"
         else:
             raise Exception("Incorrect type of register:"+self.regtype)
         if not self.fields:
@@ -548,7 +548,7 @@ class WbReg(object):
             # Handle bitfields
             res += "\n"+sp8+"{\\\n"
             for f_l in self.fields:
-                res += sp12+"'"+f_l.name+"':("+str(f_l.msb)+","+str(f_l.lsb)+","
+                res += sp12+"'"+f_l.name+"':AwBfd("+str(f_l.msb)+","+str(f_l.lsb)+","
                 if self.type == "signed":
                     res += "True"
                 else:
@@ -599,11 +599,18 @@ class WbBlackBox(object):
 
     def gen_python(self, ver_id):
         """ This function generates the class providing access
-        to the block from the Python code"""
+        to the blackbox from the Python code.
+        Currently the blackbox is simply handled as a vector
+        of registers reg[size].
+        """
         sp4 = 4*" "
         sp8 = 8*" "
         res = "class Agwb_"+self.name+"(AwObj):\n"
         res += sp4+"x__size = "+str(self.addr_size)+"\n"
+        res += sp4+"x__fields = {\n"
+        res += sp8+"'reg':("+hex(0)+","+\
+            str(self.addr_size)+",(AwCreg,))\n"
+        res += sp4+"}\n"
         return res
         
 

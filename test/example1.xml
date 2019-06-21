@@ -6,6 +6,7 @@
 <!-- include block1.xml -->
 
 <block name="MAIN">
+  <blackbox name="EXTHUGE" type="HTEST" addrbits="16" />
   <subblock name="LINKS" type="SYS1" reps="NSEL_MAX"/>
   <blackbox name="EXTERN" type="EXTTEST" addrbits="10" reps="NEXTERNS" />
   <creg name="CTRL" desc="Control register in the main block" default="0x11">
