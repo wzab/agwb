@@ -637,7 +637,7 @@ class WbBlock(object):
         self.free_reg_addr = 2 # The first free address after ID & VER
         # Prepare the list of subblocks
         self.subblks = []
-        self.n_masters = 1
+        self.N_MASTERS = 1
         for child in el.findall("*"):
             # Now for registers we allocate addresses in order
             # We don't do alignment (yet)
@@ -829,12 +829,12 @@ class WbBlock(object):
         self.add_templ('p_masks', masks, 0)
         self.add_templ('p_registered', 'false', 0)
         self.add_templ('nof_subblks', str(n_ports), 0)
-        self.add_templ('nof_masters', str(self.n_masters), 0)
+        self.add_templ('nof_masters', str(self.N_MASTERS), 0)
         self.add_templ('p_entity', "agwb_"+self.name+"_wb", 0)
         # All template is filled, so we can now generate the files
         print(self.templ_dict)
         with open(self.vhdl_path+"agwb_"+self.name+"_wb.vhd", "w") as f_o:
-            f_o.write(templ_wb(self.n_masters).format(**self.templ_dict))
+            f_o.write(templ_wb(self.N_MASTERS).format(**self.templ_dict))
         with open(self.vhdl_path+"agwb_"+self.name+"_wb_pkg.vhd", "w") as f_o:
             f_o.write(TEMPL_PKG.format(**self.templ_dict))
 
