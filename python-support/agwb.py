@@ -113,6 +113,10 @@ class AwObj(object):
         # Each created object must have its base
     x__size = 1
     x__fields = {}
+
+    def __dir__(self):
+        return self.x__fields.keys()
+
     def __getattr__(self, name):
         f_i = self.x__fields[name]
         if len(f_i) == 3:
@@ -132,6 +136,8 @@ class AwReg(object):
         self.x__iface = iface
         self.x__base = base
         self.x__bfields = bfields
+    def __dir__(self):
+        return self.x__bfields.keys()
     def read(self):
         return self.x__iface.read(self.x__base)
     def write(self, value):
