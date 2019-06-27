@@ -144,9 +144,9 @@ if wb.GLB.PYTHON_PATH:
     res = "from agwb import AwObj,AwSreg,AwCreg,AwBfd\n"
     for key, BL in wb.blackboxes().items():
         res += BL.gen_python()
-        for key, BL in wb.blocks().items():
-            if BL.used:
-                res += BL.gen_python()
+    for key, BL in wb.blocks().items():
+        if BL.used:
+            res += BL.gen_python()
     with open(wb.GLB.PYTHON_PATH+"/agwb_"+TOP_NAME+".py", "w") as fo:
         fo.write(res)
 # Now we generate the IPbus address tables
