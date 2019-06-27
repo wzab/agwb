@@ -166,3 +166,6 @@ with open(FORTH_PATH+"/agwb_"+TOP_NAME+".fs", "w") as fo:
     #Add empty definition for ROOT_WORD
     fo.write(": "+ROOT_WORD+" $0 ;\n")
     fo.write(BL.gen_forth(VER_ID, ROOT_WORD))
+
+with open("/tmp/test.html","w") as fo:
+    fo.write(BL.gen_html(0,""))

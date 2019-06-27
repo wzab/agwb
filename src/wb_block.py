@@ -114,7 +114,7 @@ def templ_wb(nof_masters):
     port map (
        clk_sys_i => clk_sys_i,
        rst_n_i   => rst_n_i,
-  """
+"""
     if nof_masters > 1:
         res += """\
         slave_i   => slave_i,
@@ -188,6 +188,7 @@ class WbField(object):
         self.size = ex.exprval(fl.attrib['width'])
         self.msb = lsb + self.size - 1
         self.type = fl.get('type', 'std_logic_vector')
+        self.desc = fl.get('desc', '')
         self.default_val = fl.get('default')
         if self.default_val is not None:
             # Convert it to the numerical value
@@ -239,6 +240,7 @@ class WbReg(object):
         self.base = adr
         self.size = nregs
         self.name = el.attrib['name']
+        self.desc = el.get('desc', '')
         self.ack = ex.exprval(el.get('ack', '0'))
         self.stb = ex.exprval(el.get('stb', '0'))
         # Read list of fields
@@ -556,7 +558,22 @@ class WbReg(object):
                 res += "),\\\n"
             res += sp8+"})),\n"
         return res
-            
+    
+    def gen_html(self, base, name):
+        res = ""
+        res +="<details><summary>"+hex(base+self.base)+": "+name+"."+self.name+"</p>"
+        res += "</summary>"
+        res += "<p>"+self.desc+"</p>"
+        if self.fields:
+            res += "<ul>"
+            for f_l in self.fields:
+                res += "<li>"+str(f_l.msb)+"-"+str(f_l.lsb)+": "+f_l.name+"<br>"
+                res += f_l.desc+"</li>"
+            res += "</ul>"
+        res += "</details>"
+        return res
+    
+
 class WbArea(object):
     """ The class representing the address area
     """
@@ -576,6 +593,7 @@ class WbArea(object):
 class WbBlackBox(object):
     def __init__(self, el, c_header_path):
         self.name = el.attrib['name']
+        self.desc = el.get('desc', '')
         self.c_header_path = c_header_path
         self.adr_bits = ex.exprval(el.attrib['addrbits'])
         self.addr_size = 1<<self.adr_bits
@@ -612,7 +630,10 @@ class WbBlackBox(object):
             str(self.addr_size)+",(AwCreg,))\n"
         res += sp4+"}\n"
         return res
-        
+
+    def gen_html(self, base, name):
+        res = "Address: "+hex(base)+" Name: "+name+"<br>"
+        return res
 
 class WbBlock(object):
     def __init__(self, el, vhdl_path, ipbus_path, c_header_path=None):
@@ -630,6 +651,7 @@ class WbBlock(object):
         self.used = False # Mark the block as not used yet
         self.templ_dict = {}
         self.name = el.attrib['name']
+        self.desc = el.get('desc', '')
         # We prepare the list of address areas
         self.areas = []
         # We prepare the table for storing the registers.
@@ -996,11 +1018,53 @@ class WbBlock(object):
                 # The format depends on whether this is a block or vector of blocks
                 if a_r.reps == 1:
                     # Single subblock
-                    res+= sp8+"'"+a_r.name+"':("+hex(a_r.adr)+",(Agwb_"+a_r.obj.name+",)),\\\n"
+                    res += sp8+"'"+a_r.name+"':("+hex(a_r.adr)+",(Agwb_"+a_r.obj.name+",)),\\\n"
                 else:
                     # Vector of subblocks
-                    res+= sp8+"'"+a_r.name+"':("+hex(a_r.adr)+","+ \
+                    res += sp8+"'"+a_r.name+"':("+hex(a_r.adr)+","+ \
                     str(a_r.reps)+",(Agwb_"+a_r.obj.name+",)),\\\n"
         res += sp4+"}\n"
         return res
 
+    def gen_html(self, base, mname):
+        """ This function generates the description of the particular block in a HTML format """
+        res = ""
+        # First write the name and description
+        res += "<p><b>Address:</b> "+hex(base)+"-"+hex(base+self.addr_size-1)+"<br>"
+        res += "<b>Type: </b> "+self.name+"<br>"
+        res += "<b>Name: </b> "+mname+"<br>"
+        res += "<b>Description:</b>"+self.desc+"</p>"
+        # Now generate the collapsible list of address areas
+        res += "<details><summary>Areas"
+        res += "</summary>"
+        res += "<ul>"
+        for a_r in self.areas: # We assume that they are sorted by increasing base address
+            if a_r.obj is None:
+                area_name = "Registers"
+            else:
+                area_name = a_r.name
+            res += "<li><details><summary>"
+            res += hex(base+a_r.adr)+"-"+hex(base+a_r.adr+a_r.total_size-1)+" "+area_name
+            res += "</summary>"
+            # Here we generate the detailed description of the area
+            if a_r.obj is None:
+                # Registers
+                res += hex(0)+": "+mname+".ID - block ID register"
+                res += hex(1)+": "+manme+".VER - block VER register"
+                for reg in self.regs:
+                    res += reg.gen_html(base+a_r.adr,mname)
+            else:
+                # Blocks or vectors of blocks
+                if a_r.reps == 1:
+                    # Single block
+                    res += a_r.obj.gen_html(base+a_r.adr,mname+"."+a_r.name)
+                else:
+                    # Vector of blocks
+                    for i in range(0,a_r.reps):
+                        res += a_r.obj.gen_html(base+a_r.adr+i*a_r.size,
+                                                mname+"."+a_r.name+"["+str(i)+"]")
+            res += "</details></li>"
+        res += "</ul>"
+        res += "</details>"
+        return res
+    
