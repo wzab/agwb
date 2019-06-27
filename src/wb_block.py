@@ -175,6 +175,7 @@ class GlobalVars(object):
     def __init__(self):
         self.blocks = {}
         self.blackboxes = {}
+        self.VER_ID = 0
 GLB = GlobalVars()
 def blocks():
     return GLB.blocks
@@ -599,11 +600,11 @@ class WbBlackBox(object):
         self.addr_size = 1<<self.adr_bits
         #We do not store "reps" in the instance, as it may depend on the instance!
 
-    def gen_forth(self, ver_id, parent):
+    def gen_forth(self, parent):
         #We do not need to generate any special words for blackboxes
         return ""
 
-    def gen_c_header(self, ver_id):
+    def gen_c_header(self):
         #Here we need to create a dummy header, that just fills the generated structure
         print("Creating C header:"+self.name+"\n")
         res = "#ifndef __"+self.name+"__INC_H\n"
@@ -615,7 +616,7 @@ class WbBlackBox(object):
         with open(self.c_header_path+"agwb_"+self.name+".h", "w") as f_o:
             f_o.write(res)
 
-    def gen_python(self, ver_id):
+    def gen_python(self):
         """ This function generates the class providing access
         to the blackbox from the Python code.
         Currently the blackbox is simply handled as a vector
@@ -651,6 +652,7 @@ class WbBlock(object):
         self.used = False # Mark the block as not used yet
         self.templ_dict = {}
         self.name = el.attrib['name']
+        self.id_val = zlib.crc32(bytes(self.name.encode('utf-8')))
         self.desc = el.get('desc', '')
         # We prepare the list of address areas
         self.areas = []
@@ -758,7 +760,7 @@ class WbBlock(object):
             if l_n != "":
                 self.templ_dict[templ_key] += indent*" " + l_n
 
-    def gen_vhdl(self, ver_id):
+    def gen_vhdl(self):
         # To fill the template, we must to set the following values:
         # p_entity, valid_bits
 
@@ -844,9 +846,8 @@ class WbBlock(object):
         self.add_templ('block_id_addr', "\""+format(0, "0"+str(self.reg_adr_bits)+"b")+"\"", 0)
         self.add_templ('block_ver_addr', "\""+format(1, "0"+str(self.reg_adr_bits)+"b")+"\"", 0)
         self.add_templ('reg_adr_bits', str(self.reg_adr_bits), 0)
-        block_id_val = zlib.crc32(bytes(self.name.encode('utf-8')))
-        self.add_templ('block_id', "x\""+format(block_id_val, "08x")+"\"", 0)
-        self.add_templ('block_ver', "x\""+format(ver_id, "08x")+"\"", 0)
+        self.add_templ('block_id', "x\""+format(self.id_val, "08x")+"\"", 0)
+        self.add_templ('block_ver', "x\""+format(GLB.VER_ID, "08x")+"\"", 0)
         self.add_templ('p_addresses', adrs, 0)
         self.add_templ('p_masks', masks, 0)
         self.add_templ('p_registered', 'false', 0)
@@ -860,7 +861,7 @@ class WbBlock(object):
         with open(self.vhdl_path+"agwb_"+self.name+"_wb_pkg.vhd", "w") as f_o:
             f_o.write(TEMPL_PKG.format(**self.templ_dict))
 
-    def gen_ipbus_xml(self, ver_id):
+    def gen_ipbus_xml(self):
         """ This function generates the address map in the XML format
 
         """
@@ -899,7 +900,7 @@ class WbBlock(object):
         with open(self.ipbus_path+"agwb_"+self.name+"_address.xml", "w") as f_o:
             f_o.write(res)
 
-    def gen_forth(self, ver_id, parent):
+    def gen_forth(self, parent):
         """ This function generates the address map in the Forth format
             The "path" argument informs how the object should be named in the Forth access words
         """
@@ -921,17 +922,17 @@ class WbBlock(object):
                     node = parent+"_"+a_r.name
                     #Single subblock
                     cdefs += ": "+node+" "+parent+" $"+format(a_r.adr, 'x')+" + ;\n"
-                    cdefs += a_r.obj.gen_forth(ver_id, node)
+                    cdefs += a_r.obj.gen_forth(node)
                 else:
                     #Vector of subblocks
                     node = parent+"#"+a_r.name
                     #Single subblock
                     cdefs += ": "+node+" "+parent+" $"+format(a_r.adr, 'x')+\
                         " + swap $"+format(a_r.obj.addr_size, 'x')+" * + ;\n"
-                    cdefs += a_r.obj.gen_forth(ver_id, node)
+                    cdefs += a_r.obj.gen_forth(node)
         return cdefs
 
-    def gen_c_header(self, ver_id):
+    def gen_c_header(self):
         """ This function generates the address map as C/C++ header
 
         """
@@ -997,7 +998,7 @@ class WbBlock(object):
             f_o.write(head)
             f_o.write(res)
 
-    def gen_python(self, ver_id):
+    def gen_python(self):
         """ This function generates the class providing access
         to the block from the Python code"""
         sp4 = 4*" "
@@ -1049,8 +1050,10 @@ class WbBlock(object):
             # Here we generate the detailed description of the area
             if a_r.obj is None:
                 # Registers
-                res += hex(0)+": "+mname+".ID - block ID register"
-                res += hex(1)+": "+manme+".VER - block VER register"
+                res += hex(base+a_r.adr)+": "+mname+".ID = " + \
+                    hex(self.id_val)+" - block ID register  <br>"
+                res += hex(base+a_r.adr+1)+": "+mname+".VER = " + \
+                    hex(GLB.VER_ID)+" - block VER register <br>"
                 for reg in self.regs:
                     res += reg.gen_html(base+a_r.adr,mname)
             else:

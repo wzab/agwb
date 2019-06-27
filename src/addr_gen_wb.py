@@ -51,7 +51,7 @@ FINAL_XML, LINES_ORIGIN = include.handle_includes(INFILENAME)
 
 # The version ID is calculated as a hash of the XML defining the interface
 # it is encoded in UTF-8, to avoid problems with different locales
-VER_ID = zlib.crc32(bytes(FINAL_XML.encode('utf-8')))
+wb.GLB.VER_ID = zlib.crc32(bytes(FINAL_XML.encode('utf-8')))
 
 # We get the root element, and find the corresponding block
 try:
@@ -134,26 +134,26 @@ BL.analyze()
 # the system
 for key, BL in wb.blocks().items():
     if BL.used:
-        BL.gen_vhdl(VER_ID)
+        BL.gen_vhdl()
 # Now we generate the Python access code
 res = "from agwb import AwObj,AwSreg,AwCreg,AwBfd\n"
 for key, BL in wb.blackboxes().items():
-    res += BL.gen_python(VER_ID)
+    res += BL.gen_python()
 for key, BL in wb.blocks().items():
     if BL.used:
-        res += BL.gen_python(VER_ID)
+        res += BL.gen_python()
 with open(PYTHON_PATH+"/agwb_"+TOP_NAME+".py", "w") as fo:
     fo.write(res)
 # Now we generate the IPbus address tables
 for key, BL in wb.blocks().items():
     if BL.used:
-        BL.gen_ipbus_xml(VER_ID)
+        BL.gen_ipbus_xml()
 # Now we generate the C address tables
 for key, BL in wb.blackboxes().items():
-    BL.gen_c_header(VER_ID)
+    BL.gen_c_header()
 for key, BL in wb.blocks().items():
     if BL.used:
-        BL.gen_c_header(VER_ID)
+        BL.gen_c_header()
 # Generate the Forth address table
 BL = wb.blocks()[TOP_NAME]
 with open(FORTH_PATH+"/agwb_"+TOP_NAME+".fs", "w") as fo:
@@ -165,7 +165,7 @@ with open(FORTH_PATH+"/agwb_"+TOP_NAME+".fs", "w") as fo:
     ROOT_WORD = '%/'
     #Add empty definition for ROOT_WORD
     fo.write(": "+ROOT_WORD+" $0 ;\n")
-    fo.write(BL.gen_forth(VER_ID, ROOT_WORD))
+    fo.write(BL.gen_forth(ROOT_WORD))
 
 with open("/tmp/test.html","w") as fo:
     fo.write(BL.gen_html(0,""))
