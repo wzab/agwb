@@ -32,17 +32,17 @@ PARSER.add_argument("--ipbus", help="IPbus outputs destination", default='.')
 PARSER.add_argument("--header", help="C header outputs destination", default='.')
 PARSER.add_argument("--fs", help="Forth outputs destination", default='.')
 PARSER.add_argument("--python", help="Python outputs destination", default='.')
+PARSER.add_argument("--html", help="HTML documentation destination", default='.')
 ARGS = PARSER.parse_args()
 
 INFILENAME = ARGS.infile
-IPBUS_PATH = ARGS.ipbus+"/"
-VHDL_PATH = ARGS.hdl+"/"
-FORTH_PATH = ARGS.fs+"/"
-C_HEADER_PATH = ARGS.header+"/"
-PYTHON_PATH = ARGS.python+"/"
+wb.GLB.IPBUS_PATH = ARGS.ipbus
+wb.GLB.VHDL_PATH = ARGS.hdl
+wb.GLB.FORTH_PATH = ARGS.fs
+wb.GLB.C_HEADER_PATH = ARGS.header
+wb.GLB.PYTHON_PATH = ARGS.python
+wb.GLB.HTML_PATH = ARGS.html
 
-print(IPBUS_PATH)
-print(VHDL_PATH)
 
 # The line below reads the XML and recursively inserts included XMLs
 # it also generates the list of objects describing the origin of each line
@@ -79,32 +79,35 @@ for el in EL_ROOT.findall("constant"):
     ex.addval(el.attrib['name'], el.attrib['val'])
 # We prepare the packages with constants for different backends
 # For VHDL
-with open(VHDL_PATH+"/agwb_"+TOP_NAME+"_const_pkg.vhd", "w") as fo:
-    fo.write("""library ieee;
+if wb.GLB.VHDL_PATH:
+    with open(wb.GLB.VHDL_PATH+"/agwb_"+TOP_NAME+"_const_pkg.vhd", "w") as fo:
+        fo.write("""library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 library work;
 """)
-    fo.write("package agwb_"+TOP_NAME+"_const_pkg is\n")
-    for cnst in ex.defines:
-        fo.write("constant "+cnst+" : integer := "+\
-        str(ex.defines[cnst])+"; -- "+\
-        ex.comments[cnst]+"\n")
-    fo.write("end agwb_"+TOP_NAME+"_const_pkg;\n")
+        fo.write("package agwb_"+TOP_NAME+"_const_pkg is\n")
+        for cnst in ex.defines:
+            fo.write("constant "+cnst+" : integer := "+\
+                     str(ex.defines[cnst])+"; -- "+\
+                     ex.comments[cnst]+"\n")
+        fo.write("end agwb_"+TOP_NAME+"_const_pkg;\n")
 # For C
-with open(IPBUS_PATH+"/agwb_"+TOP_NAME+"_const.h", "w") as fo:
-    GUARD_NAME = "_agwb_"+TOP_NAME+"_inc_H_"
-    fo.write("#ifndef "+GUARD_NAME+"\n")
-    fo.write("#define "+GUARD_NAME+"\n\n")
-    for cnst in ex.defines:
-        fo.write("#define "+cnst+" "+str(ex.defines[cnst])+\
-        " // "+ex.comments[cnst]+"\n")
-    fo.write("\n#endif\n")
+if wb.GLB.C_HEADER_PATH:
+    with open(wb.GLB.C_HEADER_PATH+"/agwb_"+TOP_NAME+"_const.h", "w") as fo:
+        GUARD_NAME = "_agwb_"+TOP_NAME+"_inc_H_"
+        fo.write("#ifndef "+GUARD_NAME+"\n")
+        fo.write("#define "+GUARD_NAME+"\n\n")
+        for cnst in ex.defines:
+            fo.write("#define "+cnst+" "+str(ex.defines[cnst])+\
+                     " // "+ex.comments[cnst]+"\n")
+        fo.write("\n#endif\n")
 # For Python
-with open(IPBUS_PATH+"/agwb_"+TOP_NAME+"_const.py", "w") as fo:
-    for cnst in ex.defines:
-        fo.write(cnst+" = "+str(ex.defines[cnst])+\
-        " # "+ex.comments[cnst]+"\n")
+if wb.GLB.PYTHON_PATH:
+    with open(wb.GLB.PYTHON_PATH+"/agwb_"+TOP_NAME+"_const.py", "w") as fo:
+        for cnst in ex.defines:
+            fo.write(cnst+" = "+str(ex.defines[cnst])+\
+                     " # "+ex.comments[cnst]+"\n")
 # Generation of constants for Forth is added to the generation of
 # the access words
 
@@ -123,7 +126,7 @@ for el in EL_ROOT.findall("block"):
     bn = el.attrib['name']
     if bn in wb.blocks():
         raise Exception("Duplicate definition of block: "+bn)
-    bl = wb.WbBlock(el, VHDL_PATH, IPBUS_PATH, C_HEADER_PATH)
+    bl = wb.WbBlock(el)
     wb.blocks()[bn] = bl
 # Here we have everything, we could get from the first scan.
 BL = wb.blocks()[TOP_NAME]
@@ -132,40 +135,46 @@ BL.N_MASTERS = N_MASTERS
 BL.analyze()
 # Now we can generate the VHDL code that implements
 # the system
-for key, BL in wb.blocks().items():
-    if BL.used:
-        BL.gen_vhdl()
+if wb.GLB.VHDL_PATH:
+    for key, BL in wb.blocks().items():
+        if BL.used:
+            BL.gen_vhdl()
 # Now we generate the Python access code
-res = "from agwb import AwObj,AwSreg,AwCreg,AwBfd\n"
-for key, BL in wb.blackboxes().items():
-    res += BL.gen_python()
-for key, BL in wb.blocks().items():
-    if BL.used:
+if wb.GLB.PYTHON_PATH:
+    res = "from agwb import AwObj,AwSreg,AwCreg,AwBfd\n"
+    for key, BL in wb.blackboxes().items():
         res += BL.gen_python()
-with open(PYTHON_PATH+"/agwb_"+TOP_NAME+".py", "w") as fo:
-    fo.write(res)
+        for key, BL in wb.blocks().items():
+            if BL.used:
+                res += BL.gen_python()
+    with open(wb.GLB.PYTHON_PATH+"/agwb_"+TOP_NAME+".py", "w") as fo:
+        fo.write(res)
 # Now we generate the IPbus address tables
-for key, BL in wb.blocks().items():
-    if BL.used:
-        BL.gen_ipbus_xml()
+if wb.GLB.IPBUS_PATH:
+    for key, BL in wb.blocks().items():
+        if BL.used:
+            BL.gen_ipbus_xml()
 # Now we generate the C address tables
-for key, BL in wb.blackboxes().items():
-    BL.gen_c_header()
-for key, BL in wb.blocks().items():
-    if BL.used:
+if wb.GLB.C_HEADER_PATH:
+    for key, BL in wb.blackboxes().items():
         BL.gen_c_header()
+    for key, BL in wb.blocks().items():
+        if BL.used:
+            BL.gen_c_header()
 # Generate the Forth address table
 BL = wb.blocks()[TOP_NAME]
-with open(FORTH_PATH+"/agwb_"+TOP_NAME+".fs", "w") as fo:
-    #First generate constants
-    for cnst in ex.defines:
-        fo.write(": %"+cnst+" $"+format(ex.defines[cnst], 'x')+" ; \\ "+\
-        ex.comments[cnst]+"\n")
-    #Now generate the HW access words
-    ROOT_WORD = '%/'
-    #Add empty definition for ROOT_WORD
-    fo.write(": "+ROOT_WORD+" $0 ;\n")
-    fo.write(BL.gen_forth(ROOT_WORD))
+if wb.GLB.FORTH_PATH:
+    with open(wb.GLB.FORTH_PATH+"/agwb_"+TOP_NAME+".fs", "w") as fo:
+        #First generate constants
+        for cnst in ex.defines:
+            fo.write(": %"+cnst+" $"+format(ex.defines[cnst], 'x')+" ; \\ "+\
+                     ex.comments[cnst]+"\n")
+        #Now generate the HW access words
+        ROOT_WORD = '%/'
+        #Add empty definition for ROOT_WORD
+        fo.write(": "+ROOT_WORD+" $0 ;\n")
+        fo.write(BL.gen_forth(ROOT_WORD))
 
-with open("/tmp/test.html","w") as fo:
-    fo.write(BL.gen_html(0,""))
+if wb.GLB.HTML_PATH:
+    with open(wb.GLB.HTML_PATH+"/addresses.html","w") as fo:
+        fo.write(BL.gen_html(0,""))

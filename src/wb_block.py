@@ -592,10 +592,9 @@ class WbArea(object):
         return self.size
 
 class WbBlackBox(object):
-    def __init__(self, el, c_header_path):
+    def __init__(self, el):
         self.name = el.attrib['name']
         self.desc = el.get('desc', '')
-        self.c_header_path = c_header_path
         self.adr_bits = ex.exprval(el.attrib['addrbits'])
         self.addr_size = 1<<self.adr_bits
         #We do not store "reps" in the instance, as it may depend on the instance!
@@ -613,7 +612,7 @@ class WbBlackBox(object):
         res += "  "+XVOLATILE+" uint32_t filler["+str(self.addr_size)+"];\n"
         res += "}  __attribute__((packed)) "+"agwb_"+self.name+";\n"
         res += "#endif\n"
-        with open(self.c_header_path+"agwb_"+self.name+".h", "w") as f_o:
+        with open(GLB.C_HEADER_PATH+"/agwb_"+self.name+".h", "w") as f_o:
             f_o.write(res)
 
     def gen_python(self):
@@ -637,18 +636,12 @@ class WbBlackBox(object):
         return res
 
 class WbBlock(object):
-    def __init__(self, el, vhdl_path, ipbus_path, c_header_path=None):
+    def __init__(self, el):
         """
         The constructor takes an XML node that describes the block
         It also calculates the number of registers, and creates
         the description of the record
         """
-        self.vhdl_path = vhdl_path
-        self.ipbus_path = ipbus_path
-        if c_header_path is None:
-            self.c_header_path = ipbus_path
-        else:
-            self.c_header_path = c_header_path
         self.used = False # Mark the block as not used yet
         self.templ_dict = {}
         self.name = el.attrib['name']
@@ -716,7 +709,7 @@ class WbBlock(object):
                 # We don't need to analyze the blackbox. We allready have its
                 # address area size.
                 if not sblk.attrib['type'] in GLB.blackboxes:
-                    GLB.blackboxes[sblk.attrib['type']] = WbBlackBox(sblk, self.c_header_path)
+                    GLB.blackboxes[sblk.attrib['type']] = WbBlackBox(sblk)
                 b_l = GLB.blackboxes[sblk.attrib['type']]
                 reps = ex.exprval(sblk.get('reps', '1'))
                 print("reps:"+str(reps))
@@ -856,9 +849,9 @@ class WbBlock(object):
         self.add_templ('p_entity', "agwb_"+self.name+"_wb", 0)
         # All template is filled, so we can now generate the files
         print(self.templ_dict)
-        with open(self.vhdl_path+"agwb_"+self.name+"_wb.vhd", "w") as f_o:
+        with open(GLB.VHDL_PATH+"/agwb_"+self.name+"_wb.vhd", "w") as f_o:
             f_o.write(templ_wb(self.N_MASTERS).format(**self.templ_dict))
-        with open(self.vhdl_path+"agwb_"+self.name+"_wb_pkg.vhd", "w") as f_o:
+        with open(GLB.VHDL_PATH+"/agwb_"+self.name+"_wb_pkg.vhd", "w") as f_o:
             f_o.write(TEMPL_PKG.format(**self.templ_dict))
 
     def gen_ipbus_xml(self):
@@ -897,7 +890,7 @@ class WbBlock(object):
                                " address=\"0x"+format(a_r.adr+n_b*a_r.obj.addr_size, "08x")+"\""+\
                                " module=\"file://"+xname+"_address.xml\"/>\n"
         res += "</node>\n"
-        with open(self.ipbus_path+"agwb_"+self.name+"_address.xml", "w") as f_o:
+        with open(GLB.IPBUS_PATH+"/agwb_"+self.name+"_address.xml", "w") as f_o:
             f_o.write(res)
 
     def gen_forth(self, parent):
@@ -913,6 +906,9 @@ class WbBlock(object):
                 adr = a_r.adr
                 cdefs += ": "+parent+"_ID "+parent+" $"+format(adr, "x")+" + ;\n"
                 cdefs += ": "+parent+"_VER "+parent+" $"+format(adr+1, "x")+" + ;\n"
+                #Add two constants
+                cdefs += "$"+format(self.id_val,"x")+" constant "+parent+"_ID_VAL \n"
+                cdefs += "$"+format(GLB.VER_ID,"x")+" constant "+parent+"_VER_VAL \n"
                 #Now add other registers in a loop
                 for reg in self.regs:
                     cdefs += reg.gen_forth(adr, parent)
@@ -942,6 +938,9 @@ class WbBlock(object):
         print("Creating C header:"+self.name+"\n")
         head = "#ifndef __"+self.name+"__INC_H\n"
         head += "#define __"+self.name+"__INC_H\n"
+        # Generate the constants with block ID and with version ID
+        head += "constant uint32_t agwb_"+self.name+"_ID_VAL = "+hex(self.id_val)+";\n"
+        head += "constant uint32_t agwb_"+self.name+"_VER_VAL = "+hex(GLB.VER_ID)+";\n"
         # Iterate the areas, generating the addresses
         # We have to add fillers to ensure proper address allocation
         filler_nr = 1
@@ -994,7 +993,7 @@ class WbBlock(object):
         res += "} __attribute__((aligned(4))) agwb_"+self.name+" ;\n"
         res += "#endif\n"
         print ("block: "+self.name+" cur_addr="+str(cur_addr))
-        with open(self.c_header_path+"agwb_"+self.name+".h", "w") as f_o:
+        with open(GLB.C_HEADER_PATH+"/agwb_"+self.name+".h", "w") as f_o:
             f_o.write(head)
             f_o.write(res)
 
@@ -1005,6 +1004,8 @@ class WbBlock(object):
         sp8 = 8*" "
         res = "class Agwb_"+self.name+"(AwObj):\n"
         res += sp4+"x__size = "+str(self.addr_size)+"\n"
+        res += sp4+"x__id = "+hex(self.id_val)+"\n"
+        res += sp4+"x__ver = "+hex(GLB.VER_ID)+"\n"
         res += sp4+"x__fields = {\n"        
         for a_r in self.areas:
             if a_r.obj is None:
