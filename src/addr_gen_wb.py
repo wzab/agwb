@@ -167,10 +167,10 @@ if wb.GLB.FORTH_PATH:
     with open(wb.GLB.FORTH_PATH+"/agwb_"+TOP_NAME+".fs", "w") as fo:
         #First generate constants
         for cnst in ex.defines:
-            fo.write(": %"+cnst+" $"+format(ex.defines[cnst], 'x')+" ; \\ "+\
+            fo.write(": /%"+cnst+" $"+format(ex.defines[cnst], 'x')+" ; \\ "+\
                      ex.comments[cnst]+"\n")
         #Now generate the HW access words
-        ROOT_WORD = '%/'
+        ROOT_WORD = '//'
         #Add empty definition for ROOT_WORD
         fo.write(": "+ROOT_WORD+" $0 ;\n")
         fo.write(BL.gen_forth(ROOT_WORD))
