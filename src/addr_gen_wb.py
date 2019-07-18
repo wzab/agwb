@@ -27,12 +27,12 @@ import expressions as ex
 
 PARSER = argparse.ArgumentParser()
 PARSER.add_argument("--infile", help="Input file path", default='../example1.xml')
-PARSER.add_argument("--hdl", help="VHDL outputs destination", default='.')
-PARSER.add_argument("--ipbus", help="IPbus outputs destination", default='.')
-PARSER.add_argument("--header", help="C header outputs destination", default='.')
-PARSER.add_argument("--fs", help="Forth outputs destination", default='.')
-PARSER.add_argument("--python", help="Python outputs destination", default='.')
-PARSER.add_argument("--html", help="HTML documentation destination", default='.')
+PARSER.add_argument("--hdl", help="VHDL outputs destination", default='')
+PARSER.add_argument("--ipbus", help="IPbus outputs destination", default='')
+PARSER.add_argument("--header", help="C header outputs destination", default='')
+PARSER.add_argument("--fs", help="Forth outputs destination", default='')
+PARSER.add_argument("--python", help="Python outputs destination", default='')
+PARSER.add_argument("--html", help="HTML documentation destination", default='')
 ARGS = PARSER.parse_args()
 
 INFILENAME = ARGS.infile
