@@ -176,5 +176,5 @@ if wb.GLB.FORTH_PATH:
         fo.write(BL.gen_forth(ROOT_WORD))
 
 if wb.GLB.HTML_PATH:
-    with open(wb.GLB.HTML_PATH+"/addresses.html","w") as fo:
+    with open(wb.GLB.HTML_PATH+"/agwb_address_map.html","w") as fo:
         fo.write(BL.gen_html(0,""))
