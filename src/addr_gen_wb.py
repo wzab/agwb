@@ -23,6 +23,7 @@ import include
 # The module expressions accepts definitions of constants (function addval)
 # and evaluates the expressions (function exprval)
 import expressions as ex
+import yaml
 
 
 PARSER = argparse.ArgumentParser()
@@ -33,6 +34,8 @@ PARSER.add_argument("--header", help="C header outputs destination", default='')
 PARSER.add_argument("--fs", help="Forth outputs destination", default='')
 PARSER.add_argument("--python", help="Python outputs destination", default='')
 PARSER.add_argument("--html", help="HTML documentation destination", default='')
+PARSER.add_argument("--fusesoc", help="Generate FuseSoc .core file", action='store_true')
+PARSER.add_argument("--fusesoc_vlnv", help="FuseSoc VLNV tag", default='')
 ARGS = PARSER.parse_args()
 
 INFILENAME = ARGS.infile
@@ -178,3 +181,17 @@ if wb.GLB.FORTH_PATH:
 if wb.GLB.HTML_PATH:
     with open(wb.GLB.HTML_PATH+"/agwb_address_map.html","w") as fo:
         fo.write(BL.gen_html(0,""))
+
+if ARGS.fusesoc:
+    with open("./agwb_"+TOP_NAME+".core", "w") as fo:
+        fo.write('CAPI=2:\n')
+
+        coredata = {'name' : ARGS.fusesoc_vlnv,
+                    'targets' : {'default' : {}},
+        }
+
+        coredata['filesets'] = {'rtl' : {'files' : wb.created_files['vhdl'],
+                                         'file_type' : 'vhdlSource-93'}}
+        coredata['targets']['default']['filesets'] = ['rtl']
+
+        fo.write(yaml.dump(coredata))
