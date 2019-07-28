@@ -41,6 +41,8 @@ package body {p_entity}_pkg is
 end {p_entity}_pkg;
 """
 
+created_files = {'vhdl' : []}
+
 # The function below returns the template for generation of the VHDL code
 # There is one argument, describing if it is the top block, that requires
 # the multi-master support or not.
@@ -849,10 +851,14 @@ class WbBlock(object):
         self.add_templ('p_entity', "agwb_"+self.name+"_wb", 0)
         # All template is filled, so we can now generate the files
         print(self.templ_dict)
-        with open(GLB.VHDL_PATH+"/agwb_"+self.name+"_wb.vhd", "w") as f_o:
-            f_o.write(templ_wb(self.N_MASTERS).format(**self.templ_dict))
-        with open(GLB.VHDL_PATH+"/agwb_"+self.name+"_wb_pkg.vhd", "w") as f_o:
+        wb_vhdl_pkg_file = GLB.VHDL_PATH+"/agwb_"+self.name+"_wb_pkg.vhd"
+        with open(wb_vhdl_pkg_file, "w") as f_o:
             f_o.write(TEMPL_PKG.format(**self.templ_dict))
+            created_files['vhdl'].append(wb_vhdl_pkg_file)
+        wb_vhdl_file = GLB.VHDL_PATH+"/agwb_"+self.name+"_wb.vhd"
+        with open(wb_vhdl_file, "w") as f_o:
+            f_o.write(templ_wb(self.N_MASTERS).format(**self.templ_dict))
+            created_files['vhdl'].append(wb_vhdl_file)
 
     def gen_ipbus_xml(self):
         """ This function generates the address map in the XML format

@@ -1,0 +1,9 @@
+CAPI=2:
+
+name: wzab::addr_gen_wb
+
+generators:
+    addr_gen_wb:
+        interpreter: python
+        command: src/addr_gen_wb_fusesoc_wrapper.py
+        description: Generator for register access for hierarchical Wishbone connected systems
