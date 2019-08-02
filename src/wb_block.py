@@ -37,6 +37,7 @@ package {p_entity}_pkg is
 end {p_entity}_pkg;
 
 package body {p_entity}_pkg is
+  const {p_entity}_addr_bits : integer := {p_adr_bits};
 {p_package_body}
 end {p_entity}_pkg;
 """
@@ -841,6 +842,7 @@ class WbBlock(object):
         self.add_templ('block_id_addr', "\""+format(0, "0"+str(self.reg_adr_bits)+"b")+"\"", 0)
         self.add_templ('block_ver_addr', "\""+format(1, "0"+str(self.reg_adr_bits)+"b")+"\"", 0)
         self.add_templ('reg_adr_bits', str(self.reg_adr_bits), 0)
+        self.add_templ('p_adr_bits', str(self.adr_bits), 0)
         self.add_templ('block_id', "x\""+format(self.id_val, "08x")+"\"", 0)
         self.add_templ('block_ver', "x\""+format(GLB.VER_ID, "08x")+"\"", 0)
         self.add_templ('p_addresses', adrs, 0)
