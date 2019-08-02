@@ -33,11 +33,11 @@ library work;
 use work.wishbone_pkg.all;
 
 package {p_entity}_pkg is
+  constant {p_entity}_addr_bits : integer := {p_adr_bits};
 {p_package}
 end {p_entity}_pkg;
 
 package body {p_entity}_pkg is
-  const {p_entity}_addr_bits : integer := {p_adr_bits};
 {p_package_body}
 end {p_entity}_pkg;
 """
