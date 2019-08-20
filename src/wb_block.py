@@ -61,20 +61,20 @@ def templ_wb(nof_masters):
 
   entity {p_entity} is
     port (
-  """
+"""
     if nof_masters > 1:
         res += """\
-        slave_i : in t_wishbone_slave_in_array(0 to {nof_masters}-1);
-        slave_o : out t_wishbone_slave_out_array(0 to {nof_masters}-1);
-    """
+      slave_i : in t_wishbone_slave_in_array(0 to {nof_masters}-1);
+      slave_o : out t_wishbone_slave_out_array(0 to {nof_masters}-1);
+"""
     else:
         res += """\
-        slave_i : in t_wishbone_slave_in;
-        slave_o : out t_wishbone_slave_out;
-    """
+      slave_i : in t_wishbone_slave_in;
+      slave_o : out t_wishbone_slave_out;
+"""
     res += """\
-  {subblk_busses}
-  {signal_ports}
+{subblk_busses}
+{signal_ports}
       rst_n_i : in std_logic;
       clk_sys_i : in std_logic
       );
@@ -97,12 +97,12 @@ def templ_wb(nof_masters):
     constant c_mask : t_wishbone_address_array(0 to {nof_subblks}-1) := {p_masks};
 
   begin
-  """
+"""
     if nof_masters == 1:
         res += """\
-      wb_up_i(0) <= slave_i;
-      slave_o <= wb_up_o(0);
-    """
+    wb_up_i(0) <= slave_i;
+    slave_o <= wb_up_o(0);
+"""
     res += """\
     int_addr <= int_regs_wb_m_o.adr({reg_adr_bits}-1 downto 0);
 
@@ -122,12 +122,12 @@ def templ_wb(nof_masters):
         res += """\
         slave_i   => slave_i,
         slave_o   => slave_o,
-   """
+"""
     else:
         res += """\
         slave_i   => wb_up_i,
         slave_o   => wb_up_o,
-   """
+"""
     res += """\
        master_i  => wb_m_i,
        master_o  => wb_m_o,
@@ -146,12 +146,12 @@ def templ_wb(nof_masters):
           int_regs_wb_m_i.rty <= '0';
           int_regs_wb_m_i.ack <= '0';
           int_regs_wb_m_i.err <= '0';
-  {signals_idle}
+{signals_idle}
           if (int_regs_wb_m_o.cyc = '1') and (int_regs_wb_m_o.stb = '1') then
             int_regs_wb_m_i.err <= '1'; -- in case of missed address
             -- Access, now we handle consecutive registers
             case int_addr is
-  {register_access}
+{register_access}
             when {block_id_addr} =>
                int_regs_wb_m_i.dat <= {block_id};
                int_regs_wb_m_i.ack <= '1';
@@ -169,9 +169,9 @@ def templ_wb(nof_masters):
         end if;
       end if;
     end process;
-  {cont_assigns}
+{cont_assigns}
   end architecture;
-  """
+"""
     return res
 
 class GlobalVars(object):
@@ -368,7 +368,7 @@ class WbReg(object):
             d_t += self.name+sfx+"_stb : out std_logic;\n"
         if self.regtype == 'sreg' and self.ack == 1:
             d_t += self.name+sfx+"_ack : out std_logic;\n"
-        parent.add_templ('signal_ports', d_t, 4)
+        parent.add_templ('signal_ports', d_t, 6)
         # Generate the intermediate signals for output ports
         # (because they can't be read back)
         if self.regtype == 'creg':
@@ -385,7 +385,7 @@ class WbReg(object):
             d_t += "\n"
             dt2 = self.name+sfx+" <= int_"+self.name+sfx+";\n"
             parent.add_templ('signal_decls', d_t, 4)
-            parent.add_templ('cont_assigns', dt2, 2)
+            parent.add_templ('cont_assigns', dt2, 4)
         # Reset control registers
         if self.regtype == 'creg':
             if self.default is not None:
@@ -434,7 +434,7 @@ class WbReg(object):
                 d_t += "   end if;\n"
             d_t += "   int_regs_wb_m_i.ack <= '1';\n"
             d_t += "   int_regs_wb_m_i.err <= '0';\n"
-            parent.add_templ('register_access', d_t, 10)
+            parent.add_templ('register_access', d_t, 12)
             parent.add_templ('signals_idle', d_i, 10)
 
     def gen_ipbus_xml(self, reg_base):
@@ -798,11 +798,11 @@ class WbBlock(object):
                 if a_r.obj != None:
                     d_t = a_r.name+"_wb_m_o : out t_wishbone_master_out;\n"
                     d_t += a_r.name+"_wb_m_i : in t_wishbone_master_in;\n"
-                    self.add_templ('subblk_busses', d_t, 4)
+                    self.add_templ('subblk_busses', d_t, 6)
                 #generate the signal assignment
                 d_t = "wb_m_i("+str(a_r.first_port)+") <= "+a_r.name+"_wb_m_i;\n"
                 d_t += a_r.name+"_wb_m_o  <= "+"wb_m_o("+str(a_r.first_port)+");\n"
-                self.add_templ('cont_assigns', d_t, 2)
+                self.add_templ('cont_assigns', d_t, 4)
             else:
                 # The area is associated with the vector of subblocks
                 a_r.first_port = n_ports
@@ -813,7 +813,7 @@ class WbBlock(object):
                     str(a_r.last_port-a_r.first_port)+");\n"
                 d_t += a_r.name+"_wb_m_i : in t_wishbone_master_in_array(0 to "+\
                     str(a_r.last_port-a_r.first_port)+");\n"
-                self.add_templ('subblk_busses', d_t, 4)
+                self.add_templ('subblk_busses', d_t, 6)
                 # Now we have to assign addresses and masks for each subblock and connect the port
                 base = a_r.adr
                 nport = a_r.first_port
@@ -823,7 +823,7 @@ class WbBlock(object):
                     ar_adr_bits.append(a_r.obj.adr_bits)
                     d_t = "wb_m_i("+str(nport)+") <= "+a_r.name+"_wb_m_i("+str(i)+");\n"
                     d_t += a_r.name+"_wb_m_o("+str(i)+")  <= "+"wb_m_o("+str(nport)+");\n"
-                    self.add_templ('cont_assigns', d_t, 2)
+                    self.add_templ('cont_assigns', d_t, 4)
                     nport += 1
         #Now generate vectors with addresses and masks
         adrs = "("
