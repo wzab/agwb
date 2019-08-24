@@ -29,9 +29,10 @@ library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
-library work;
-use work.wishbone_pkg.all;
+library general_cores;
+use general_cores.wishbone_pkg.all;
 
+library work;
 package {p_entity}_pkg is
   constant {p_entity}_addr_bits : integer := {p_adr_bits};
 {p_package}
@@ -55,8 +56,9 @@ def templ_wb(nof_masters):
   library ieee;
   use ieee.std_logic_1164.all;
   use ieee.numeric_std.all;
+  library general_cores;
+  use general_cores.wishbone_pkg.all;
   library work;
-  use work.wishbone_pkg.all;
   use work.{p_entity}_pkg.all;
 
   entity {p_entity} is
@@ -107,7 +109,7 @@ def templ_wb(nof_masters):
     int_addr <= int_regs_wb_m_o.adr({reg_adr_bits}-1 downto 0);
 
   -- Main crossbar
-    xwb_crossbar_1: entity work.xwb_crossbar
+    xwb_crossbar_1: entity general_cores.xwb_crossbar
     generic map (
        g_num_masters => {nof_masters},
        g_num_slaves  => {nof_subblks},
