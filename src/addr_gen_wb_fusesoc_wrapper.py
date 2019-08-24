@@ -7,12 +7,9 @@ import subprocess
 
 if __name__ == "__main__":
 
-    print(sys.argv)
-
     with open(sys.argv[1], 'r') as config_file:
         try:
             config = yaml.safe_load(config_file)
-            print(config)
         except yaml.YAMLError as exc:
             print(exc)
 
@@ -59,5 +56,4 @@ if __name__ == "__main__":
     except:
         pass
 
-    print(args)
     subprocess.run(args)
