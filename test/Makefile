@@ -32,9 +32,9 @@ OBJECTS_GC=$(SOURCES_GC:.vhd=.o)
 
 all: show
 
-$(filter %.o,$(OBJECTS)): %.o : %.vhd
+$(OBJECTS): %.o : %.vhd
 	ghdl -a -g -C  --std=${VSTD} --ieee=${STD} $<
-$(filter %.o,$(OBJECTS_GC)): %.o : %.vhd
+$(OBJECTS_GC): %.o : %.vhd
 	ghdl -a -g --work=general_cores -C  --std=${VSTD} --ieee=${STD} $<
 #	ghdl -a -g -C --workdir=comp --std=${VSTD} --ieee=${STD} $<
 
