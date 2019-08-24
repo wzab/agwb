@@ -5,6 +5,6 @@ vhdl work gen/agwb_SYS1_wb_pkg.vhd
 vhdl work gen/agwb_SYS1_wb.vhd
 # Sources included from the OHWR general cores
 # They should be downloded by prepare.sh
-vhdl work general-cores/modules/genrams/genram_pkg.vhd
-vhdl work general-cores/modules/wishbone/wishbone_pkg.vhd
-vhdl work general-cores/modules/wishbone/wb_crossbar/xwb_crossbar.vhd
+vhdl general_cores general-cores/modules/genrams/genram_pkg.vhd
+vhdl general_cores general-cores/modules/wishbone/wishbone_pkg.vhd
+vhdl general_cores general-cores/modules/wishbone/wb_crossbar/xwb_crossbar.vhd

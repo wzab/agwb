@@ -29,8 +29,9 @@
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
+library general_cores;
+use general_cores.wishbone_pkg.all;
 library work;
-use work.wishbone_pkg.all;
 
 entity wb_cdc is
 

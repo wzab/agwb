@@ -70,8 +70,9 @@ library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 use ieee.std_logic_unsigned.all;
+library general_cores;
+use general_cores.wishbone_pkg.all;
 library work;
-use work.wishbone_pkg.all;
 
 entity jtag2wb is
   generic (
