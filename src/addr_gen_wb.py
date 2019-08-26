@@ -190,7 +190,9 @@ if ARGS.fusesoc:
                     'targets' : {'default' : {}},
         }
 
-        coredata['filesets'] = {'rtl' : {'files' : wb.created_files['vhdl'],
+        created_files = wb.created_files['vhdl']
+        created_files.append(wb.GLB.VHDL_PATH+"/agwb_"+TOP_NAME+"_const_pkg.vhd")
+        coredata['filesets'] = {'rtl' : {'files' : created_files,
                                          'file_type' : 'vhdlSource-93'}}
         coredata['targets']['default']['filesets'] = ['rtl']
 
