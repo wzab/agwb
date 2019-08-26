@@ -13,8 +13,10 @@ if __name__ == "__main__":
         except yaml.YAMLError as exc:
             print(exc)
 
+    files_root = config['files_root'] + "/"
+
     try:
-        infile = config['files_root'] + "/" + config['parameters']['infile']
+        infile = files_root + config['parameters']['infile']
     except:
         print("ERROR: Input .xml file (infile parameter) needs to be specified!")
         sys.exit(1)
@@ -32,27 +34,27 @@ if __name__ == "__main__":
 
     try:
         ipbus = str(config['parameters']['ipbus'])
-        args += ['--ipbus', ipbus]
+        args += ['--ipbus', files_root + ipbus]
     except:
         pass
     try:
         header = str(config['parameters']['header'])
-        args += ['--header', header]
+        args += ['--header', files_root + header]
     except:
         pass
     try:
         fs = str(config['parameters']['fs'])
-        args += ['--fs', fs]
+        args += ['--fs', files_root + fs]
     except:
         pass
     try:
         python = str(config['parameters']['python'])
-        args += ['--python', python]
+        args += ['--python', files_root + python]
     except:
         pass
     try:
         html = str(config['parameters']['html'])
-        args += ['--html', html]
+        args += ['--html', files_root + html]
     except:
         pass
 
