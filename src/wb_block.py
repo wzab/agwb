@@ -313,6 +313,8 @@ class WbReg(object):
         d_t = ""
         d_b = ""
         d_i = ""
+
+        d_t += "constant C_"  + self.name + "_REG_ADDR: unsigned := x\"" + format(self.base, "08x") + "\";\n"
         # Generate the type corresponding to the register
         tname = "t_"+self.name
         if not self.fields:
