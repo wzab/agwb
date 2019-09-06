@@ -10,7 +10,12 @@ kind. You use it on your own risk!
 """
 import os.path
 import re
-R1 = r"<!--\s*include\s*(?P<fname>\S+)\s*-->"
+import sys
+
+comm_start = re.compile(r'.*<!--.*')
+comm_stop = re.compile(r'.*-->.*')
+
+R1 = r'\s*<include\s+path=\"(?P<fname>\S+)\"\s*/>\s*'
 P1 = re.compile(R1)
 class LineLocation(object):
     """ Class LineLocation stores the origin of the
@@ -50,6 +55,15 @@ def handle_includes(file_path, base_dir="./"):
         full_file_path = base_dir + '/' + file_path
     # Read the file contents
     contents = open(full_file_path, 'r').read()
+    for line in contents.split('\n'):
+        
+        st = comm_start.match(line) 
+        sp = comm_stop.match(line)
+        if (st and not sp):
+            print("addr_gen_wb doesn't support multiline comments (in file %s):"%full_file_path)
+            print(line)
+            sys.exit(1)
+
     # Create the base directory for possible further includes
     next_base_dir = os.path.dirname(full_file_path)
     # Find the include directives
