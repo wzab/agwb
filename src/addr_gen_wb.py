@@ -47,31 +47,81 @@ wb.GLB.PYTHON_PATH = ARGS.python
 wb.GLB.HTML_PATH = ARGS.html
 
 
-# The line below reads the XML and recursively inserts included XMLs
-# it also generates the list of objects describing the origin of each line
-# in the final XML (to facilitate future error detection)
-FINAL_XML, LINES_ORIGIN = include.handle_includes(INFILENAME)
+def build_tree(xml_string):
+    
+    try:
+        EL_ROOT = et.fromstring(xml_string)
+    except et.ParseError as perr:
+        # Handle the parsing error
+        ROW, COL = perr.position
+        print("Parsing error "+str(perr.code)+"("+\
+          pe.ErrorString(perr.code)+") in column "+\
+          str(COL)+" of the line "+str(ROW)+" of the concatenated XML:")
+        print(xml_string.split("\n")[ROW-1])
+        print(COL*"-"+"|")
+        print("The erroneous line was produced from the following sources:")
+        ERR_SRC = include.find_error(LINES_ORIGIN, ROW)
+        for src in ERR_SRC:
+            print("file: "+src[0]+", line:"+str(src[1]))
+        sys.exit(1)
+
+    return EL_ROOT
+
+def add_included_file(xml_string, incfile_list):
+
+    EL_ROOT = build_tree(xml_string)
+
+    for node in EL_ROOT.iter("*"):
+        if 'include' in node.attrib:
+            incfile=node.attrib['include']
+            
+            if not incfile in incfile_list:
+                print("Including file: "+incfile)
+
+                with open(incfile, 'r') as file:
+                    data = file.read()
+
+                final_split = xml_string.split('\n')
+                sysdefnr=-1
+
+                for i in range(len(final_split)):
+                    if "sysdef" in final_split[i]:
+                        sysdefnr=i
+                        break
+                else:
+                    print("Didn't find sysdef")
+                    sys.exit(1)
+
+                xml_string = '\n'.join(final_split[0:sysdefnr+1]) +'\n'+data + '\n'.join(final_split[sysdefnr+1:])
+                incfile_list.append(incfile)
+
+    return xml_string, incfile_list
+
+# read mainxml to string
+with open(INFILENAME, 'r') as file:
+    FINAL_XML = file.read()
+
+incfile_list = []
+
+# include other xml files
+while True:
+    new_xml, incfile_list = add_included_file(FINAL_XML,incfile_list)
+    if new_xml==FINAL_XML:
+        FINAL_XML = new_xml
+        break
+    else:
+        FINAL_XML = new_xml
+
+# print(FINAL_XML)
+EL_ROOT=build_tree(FINAL_XML)
+build_tree(FINAL_XML)
+
 
 # The version ID is calculated as a hash of the XML defining the interface
 # it is encoded in UTF-8, to avoid problems with different locales
 wb.GLB.VER_ID = zlib.crc32(bytes(FINAL_XML.encode('utf-8')))
 
-# We get the root element, and find the corresponding block
-try:
-    EL_ROOT = et.fromstring(FINAL_XML)
-except et.ParseError as perr:
-    # Handle the parsing error
-    ROW, COL = perr.position
-    print("Parsing error "+str(perr.code)+"("+\
-      pe.ErrorString(perr.code)+") in column "+\
-      str(COL)+" of the line "+str(ROW)+" of the concatenated XML:")
-    print(FINAL_XML.split("\n")[ROW-1])
-    print(COL*"-"+"|")
-    print("The erroneous line was produced from the following sources:")
-    ERR_SRC = include.find_error(LINES_ORIGIN, ROW)
-    for src in ERR_SRC:
-        print("file: "+src[0]+", line:"+str(src[1]))
-    sys.exit(1)
+
 TOP_NAME = EL_ROOT.attrib["top"]
 if "masters" in EL_ROOT.attrib:
     N_MASTERS = ex.exprval(EL_ROOT.attrib["masters"])
@@ -120,6 +170,8 @@ if wb.GLB.PYTHON_PATH:
 # In the first run, we calculate the space occupied by registers,
 # but as blocks may be defined in different order, we also
 # analyze the block dependencies.
+
+
 
 # Create the list of blocks
 for el in EL_ROOT.findall("block"):
