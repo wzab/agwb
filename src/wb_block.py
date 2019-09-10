@@ -369,9 +369,15 @@ class WbReg(object):
             d_t = self.name+sfx+" : "+sdir+" "+tname+"_array;\n"
         # Now we generate the STB or ACK ports (if required)
         if self.regtype == 'creg' and self.stb == 1:
-            d_t += self.name+sfx+"_stb : out std_logic;\n"
+            if self.size == 1:
+                d_t += self.name+sfx+"_stb : out std_logic;\n"
+            else:
+                d_t += self.name+sfx+"_stb : out std_logic_vector(" +str(self.size-1)+ " downto 0);\n"
         if self.regtype == 'sreg' and self.ack == 1:
-            d_t += self.name+sfx+"_ack : out std_logic;\n"
+            if self.size == 1:
+                d_t += self.name+sfx+"_ack : out std_logic;\n"
+            else:
+                d_t += self.name+sfx+"_ack : out std_logic_vector(" +str(self.size-1)+ " downto 0);\n"
         parent.add_templ('signal_ports', d_t, 6)
         # Generate the intermediate signals for output ports
         # (because they can't be read back)
@@ -405,6 +411,7 @@ class WbReg(object):
                 ind = ""
             d_t = "when \""+format(self.base+i, "0"+str(parent.reg_adr_bits)+"b")+\
                 "\" => -- "+hex(self.base+i)+"\n"
+            d_i = ""
             # The conversion functions
             if not self.fields:
                 conv_fun = "std_logic_vector"
@@ -418,10 +425,10 @@ class WbReg(object):
                 if self.ack == 1:
                     d_t += "   if int_regs_wb_m_i.ack = \'0\' then\n"
                     # We shorten the STB to a single clock
-                    d_t += "      "+self.name+sfx+"_ack <= '1';\n"
+                    d_t += "      "+self.name+sfx+"_ack" + ind + " <= '1';\n"
                     d_t += "   end if;\n"
                     # Add clearing of ACK signal at the begining of the process
-                    d_i += self.name+sfx+"_ack <= '0';\n"
+                    d_i += self.name+sfx+"_ack" + ind + " <= '0';\n"
             else:
                 d_t += "   int_regs_wb_m_i.dat <= "+conv_fun+"(int_"+self.name+"_o"+ind+");\n"
             # Write access
@@ -431,10 +438,10 @@ class WbReg(object):
                 if self.stb == 1:
                     d_t += "   if int_regs_wb_m_i.ack = \'0\' then\n"
                     # We shorten the STB to a single clock
-                    d_t += "      "+self.name+sfx+"_stb <= '1';\n"
+                    d_t += "      "+self.name+sfx+"_stb" + ind + " <= '1';\n"
                     d_t += "   end if;\n"
                     # Add clearing of STB signal at the begining of the process
-                    d_i += self.name+sfx+"_stb <= '0';\n"
+                    d_i += self.name+sfx+"_stb" + ind + " <= '0';\n"
                 d_t += "   end if;\n"
             d_t += "   int_regs_wb_m_i.ack <= '1';\n"
             d_t += "   int_regs_wb_m_i.err <= '0';\n"
