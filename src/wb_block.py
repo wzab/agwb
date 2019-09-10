@@ -600,7 +600,7 @@ class WbArea(object):
 
 class WbBlackBox(object):
     def __init__(self, el):
-        self.name = el.attrib['name']
+        self.name = el.attrib['type']
         self.desc = el.get('desc', '')
         self.adr_bits = ex.exprval(el.attrib['addrbits'])
         self.addr_size = 1<<self.adr_bits
