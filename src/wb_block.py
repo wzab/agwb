@@ -603,6 +603,7 @@ class WbBlackBox(object):
         self.name = el.attrib['type']
         self.desc = el.get('desc', '')
         self.adr_bits = ex.exprval(el.attrib['addrbits'])
+        self.xmlpath = el.get('xmlpath','')
         self.addr_size = 1<<self.adr_bits
         #We do not store "reps" in the instance, as it may depend on the instance!
 
@@ -889,18 +890,23 @@ class WbBlock(object):
                 #If it is a subblock, prefix the name of the table with "agwb_"
                 xname = a_r.obj.name
                 if isinstance(a_r.obj, WbBlock):
-                    xname = "agwb_"+xname
+                    xname = "agwb_"+xname+"_address.xml"
+                if isinstance(a_r.obj, WbBlackBox):
+                    if a_r.obj.xmlpath:
+                        xname = a_r.obj.xmlpath
+                    else:
+                        xname = xname+"_address.xml"
                 if a_r.reps == 1:
                     #Single subblock
                     res += "  <node id=\""+a_r.name+"\""+\
                            " address=\"0x"+format(a_r.adr, "08x")+"\""+\
-                           " module=\"file://"+xname+"_address.xml\"/>\n"
+                           " module=\"file://"+xname+"\"/>\n"
                 else:
                     #Vector of subblocks
                     for n_b in range(0, a_r.reps):
                         res += "  <node id=\""+a_r.name+"["+str(n_b)+"]\""+\
                                " address=\"0x"+format(a_r.adr+n_b*a_r.obj.addr_size, "08x")+"\""+\
-                               " module=\"file://"+xname+"_address.xml\"/>\n"
+                               " module=\"file://"+xname+"\"/>\n"
         res += "</node>\n"
         with open(GLB.IPBUS_PATH+"/agwb_"+self.name+"_address.xml", "w") as f_o:
             f_o.write(res)
