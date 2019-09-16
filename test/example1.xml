@@ -15,7 +15,7 @@
     <field name="PLL_RESET" width="1"/>
   </creg>
   <creg name="TEST_OUT" width="17" reps="3" />
-  <sreg name="TEST_IN" width="13" reps="5" />
+  <sreg name="TEST_IN" width="16" reps="5" />
 </block>
 
 </sysdef>

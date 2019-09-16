@@ -42,6 +42,9 @@ print("And again we read the LINKS1 ID and version")
 print("LINKS1 ID read:"+hex(a.LINKS[0].ID.read()))
 print("LINKS1 VER read:"+hex(a.LINKS[0].VER.read()))
 a.TEST_OUT[1].write(0x13)
+print("TEST_IN_i(0):"+hex(a.TEST_IN[0].read()))
+print("TEST_IN_i(1):"+hex(a.TEST_IN[1].read()))
+print("TEST_IN_i(2):"+hex(a.TEST_IN[2].read()))
 cbus.bus_delay(3000)
 
 

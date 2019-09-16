@@ -49,6 +49,9 @@ begin  -- architecture rtl
       rst_n_i	     => rst_n_i,
       clk_sys_i	     => clk_sys_i);
 
+  TEST_IN_i(0) <= x"1234";
+  TEST_IN_i(1) <= x"7654";
+  
   gl0 : for i in 0 to NEXTERNS-1 generate
     wb_cdc_1 : entity work.wb_cdc
       generic map (
