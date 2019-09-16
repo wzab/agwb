@@ -261,9 +261,12 @@ class WbReg(object):
                 raise Exception("Total width of fields in register " +\
                                 self.name+ " is above 32-bits")
             self.fields.append(fdef)
+        # For registers with bitfields we allow enforcing the name of the generated record type
         if self.fields and self.type != 'std_logic_vector':
-            raise Exception("Register "+self.name+" with bitfields can't have "+\
-                            self.type+" type.")
+            self.rtype = self.type
+            self.type = 'std_logic_vector'
+        else:
+            self.rtype = None
         if self.free_bit == 0:
             self.free_bit = 32
         # For register with fields, the real width is set by the width of all fields
@@ -328,6 +331,9 @@ class WbReg(object):
                self.type+"("+str(self.width-1)+" downto 0);\n"
         else:
             # Register with fields, we have to create a record
+            # If the user specified the name of the type, use it
+            if self.rtype is not None:
+                tname = self.rtype
             d_t += "type "+tname+" is record\n"
             for f_l in self.fields:
                 d_t += "  "+f_l.name+":"+f_l.type+"("+str(f_l.size-1)+" downto 0);\n"
