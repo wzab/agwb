@@ -249,6 +249,8 @@ class WbReg(object):
         self.desc = el.get('desc', '')
         self.ack = ex.exprval(el.get('ack', '0'))
         self.stb = ex.exprval(el.get('stb', '0'))
+        # Set the width of the register
+        self.width = ex.exprval(el.get('width','32'))
         # Read list of fields
         self.fields = []
         self.free_bit = 0
@@ -264,6 +266,9 @@ class WbReg(object):
                             self.type+" type.")
         if self.free_bit == 0:
             self.free_bit = 32
+        # For register with fields, the real width is set by the width of all fields
+        if self.fields:
+            self.width = self.free_bit;
         self.default_val = el.get('default')
         if self.default_val is not None:
             # Convert it to the numerical value
@@ -320,7 +325,7 @@ class WbReg(object):
         if not self.fields:
             # Simple register, no fields
             d_t += "subtype "+tname+" is "+\
-               self.type+"(31 downto 0);\n"
+               self.type+"("+str(self.width-1)+" downto 0);\n"
         else:
             # Register with fields, we have to create a record
             d_t += "type "+tname+" is record\n"
@@ -342,7 +347,7 @@ class WbReg(object):
             #conversion function record to stlv
             d_t += "function "+tname+"2stlv(x : "+tname+") return std_logic_vector;\n"
             d_b += "function "+tname+"2stlv(x : "+tname+") return std_logic_vector is\n"
-            d_b += "variable res : std_logic_vector(31 downto 0);\n"
+            d_b += "variable res : std_logic_vector("+str(self.width-1)+" downto 0);\n"
             d_b += "begin\n"
             d_b += "  res := (others => '0');\n"
             for f_l in self.fields:
@@ -421,7 +426,10 @@ class WbReg(object):
                 iconv_fun = "stlv2t_"+self.name
             # Read access
             if self.regtype == 'sreg':
-                d_t += "   int_regs_wb_m_i.dat <= "+conv_fun+"("+self.name+"_i"+ind+");\n"
+                # First initialize the whole retun value with zeroes
+                d_t += "   int_regs_wb_m_i.dat <= (others => '0');\n"
+                # Now set the used bits with correct values
+                d_t += "   int_regs_wb_m_i.dat("+str(self.width-1)+" downto 0) <= "+conv_fun+"("+self.name+"_i"+ind+");\n"
                 if self.ack == 1:
                     d_t += "   if int_regs_wb_m_i.ack = \'0\' then\n"
                     # We shorten the STB to a single clock
@@ -430,11 +438,14 @@ class WbReg(object):
                     # Add clearing of ACK signal at the begining of the process
                     d_i += self.name+sfx+"_ack" + ind + " <= '0';\n"
             else:
-                d_t += "   int_regs_wb_m_i.dat <= "+conv_fun+"(int_"+self.name+"_o"+ind+");\n"
+                # First initialize the whole retun value with zeroes
+                d_t += "   int_regs_wb_m_i.dat <= (others => '0');\n"
+                # Now set the used bits with correct values
+                d_t += "   int_regs_wb_m_i.dat("+str(self.width-1)+" downto 0) <= "+conv_fun+"(int_"+self.name+"_o"+ind+");\n"
             # Write access
             if self.regtype == 'creg':
                 d_t += "   if int_regs_wb_m_o.we = '1' then\n"
-                d_t += "     int_"+self.name+"_o"+ind+" <= "+iconv_fun+"(int_regs_wb_m_o.dat);\n"
+                d_t += "     int_"+self.name+"_o"+ind+" <= "+iconv_fun+"(int_regs_wb_m_o.dat("+str(self.width-1)+" downto 0));\n"
                 if self.stb == 1:
                     d_t += "   if int_regs_wb_m_i.ack = \'0\' then\n"
                     # We shorten the STB to a single clock
