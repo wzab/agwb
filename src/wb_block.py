@@ -288,7 +288,10 @@ class WbReg(object):
             else:
                 self.default = ""
             if self.fields:
-                self.default += "stlv2t_"+self.name+"("
+                if self.rtype is not None:
+                    self.default += "stlv2"+self.rtype+"("
+                else:
+                    self.default += "stlv2t_"+self.name+"("
             if self.type == "unsigned":
                 self.default += "to_unsigned(" + str(self.default_val) + \
                     "," + str(self.free_bit) + ")"
@@ -427,6 +430,9 @@ class WbReg(object):
             if not self.fields:
                 conv_fun = "std_logic_vector"
                 iconv_fun = self.type
+            elif self.rtype is not None:
+                conv_fun = self.rtype+"2stlv"
+                iconv_fun = "stlv2"+self.rtype
             else:
                 conv_fun = "t_"+self.name+"2stlv"
                 iconv_fun = "stlv2t_"+self.name
