@@ -243,6 +243,7 @@ class WbReg(object):
         nregs = ex.exprval(el.get('reps', '1'))
         self.regtype = el.tag
         self.type = el.get('type', 'std_logic_vector')
+        self.stype = el.get('stype', None)
         self.base = adr
         self.size = nregs
         self.name = el.attrib['name']
@@ -263,10 +264,7 @@ class WbReg(object):
             self.fields.append(fdef)
         # For registers with bitfields we allow enforcing the name of the generated record type
         if self.fields and self.type != 'std_logic_vector':
-            self.rtype = self.type
-            self.type = 'std_logic_vector'
-        else:
-            self.rtype = None
+            raise Exception("Register with fields must be of type std_logic_vector")
         if self.free_bit == 0:
             self.free_bit = 32
         # For register with fields, the real width is set by the width of all fields
@@ -288,8 +286,8 @@ class WbReg(object):
             else:
                 self.default = ""
             if self.fields:
-                if self.rtype is not None:
-                    self.default += "stlv2"+self.rtype+"("
+                if self.stype is not None:
+                    self.default += "stlv2"+self.stype+"("
                 else:
                     self.default += "stlv2t_"+self.name+"("
             if self.type == "unsigned":
@@ -327,7 +325,10 @@ class WbReg(object):
 
         d_t += "constant C_"  + self.name + "_REG_ADDR: unsigned := x\"" + format(self.base, "08x") + "\";\n"
         # Generate the type corresponding to the register
-        tname = "t_"+self.name
+        if self.stype is None:
+            tname = "t_"+self.name
+        else:
+            tname = self.stype
         if not self.fields:
             # Simple register, no fields
             d_t += "subtype "+tname+" is "+\
@@ -335,8 +336,6 @@ class WbReg(object):
         else:
             # Register with fields, we have to create a record
             # If the user specified the name of the type, use it
-            if self.rtype is not None:
-                tname = self.rtype
             d_t += "type "+tname+" is record\n"
             for f_l in self.fields:
                 d_t += "  "+f_l.name+":"+f_l.type+"("+str(f_l.size-1)+" downto 0);\n"
@@ -430,9 +429,9 @@ class WbReg(object):
             if not self.fields:
                 conv_fun = "std_logic_vector"
                 iconv_fun = self.type
-            elif self.rtype is not None:
-                conv_fun = self.rtype+"2stlv"
-                iconv_fun = "stlv2"+self.rtype
+            elif self.stype is not None:
+                conv_fun = self.stype+"2stlv"
+                iconv_fun = "stlv2"+self.stype
             else:
                 conv_fun = "t_"+self.name+"2stlv"
                 iconv_fun = "stlv2t_"+self.name
