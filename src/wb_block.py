@@ -292,13 +292,13 @@ class WbReg(object):
                     self.default += "stlv2t_"+self.name+"("
             if self.type == "unsigned":
                 self.default += "to_unsigned(" + str(self.default_val) + \
-                    "," + str(self.free_bit) + ")"
+                    "," + str(self.width) + ")"
             elif self.type == "signed":
                 self.default += "to_signed(" + str(self.default_val) + "," + \
-                    str(self.free_bit) + ")"
+                    str(self.width) + ")"
             else:
                 self.default += "std_logic_vector(to_unsigned(" + str(self.default_val) + \
-                    "," + str(self.free_bit) + "))"
+                    "," + str(self.width) + "))"
             if self.fields:
                 self.default += ")"
             if self.size != 1:

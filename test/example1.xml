@@ -14,7 +14,7 @@
     <field name="CLK_FREQ" width="4"/>
     <field name="PLL_RESET" width="1"/>
   </creg>
-  <creg name="TEST_OUT" width="17" reps="3" />
+  <creg name="TEST_OUT" width="17" reps="3" default="23" />
   <sreg name="TEST_IN" width="16" reps="5" />
 </block>
 
