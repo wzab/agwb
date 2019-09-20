@@ -930,7 +930,7 @@ class WbBlock(object):
                         xname = a_r.obj.xmlpath
                     else:
                         xname = xname+"_address.xml"
-                if a_r.reps == 1:
+                if ( a_r.reps == 1 ) and ( a_r.force_vec == 0 ):
                     #Single subblock
                     res += "  <node id=\""+a_r.name+"\""+\
                            " address=\"0x"+format(a_r.adr, "08x")+"\""+\
@@ -966,7 +966,7 @@ class WbBlock(object):
                     cdefs += reg.gen_forth(adr, parent)
             else:
                 #Subblock or vector of subblocks
-                if a_r.reps == 1:
+                if ( a_r.reps == 1 ) and ( a_r.force_vec == 0 ):
                     node = parent+"_"+a_r.name
                     #Single subblock
                     cdefs += ": "+node+" "+parent+" $"+format(a_r.adr, 'x')+" + ;\n"
@@ -1028,7 +1028,7 @@ class WbBlock(object):
                 #Subblock or vector of subblocks
                 #Add the related header
                 head += "#include <agwb_"+a_r.obj.name+".h>\n"
-                if a_r.reps == 1:
+                if ( a_r.reps == 1 ) and ( a_r.force_vec == 0):
                     #Single subblock
                     res += "  agwb_" + a_r.obj.name + " " + a_r.name+";\n"
                 else:
@@ -1070,7 +1070,7 @@ class WbBlock(object):
                     res += reg.gen_python(adr)
             else:
                 # The format depends on whether this is a block or vector of blocks
-                if a_r.reps == 1:
+                if ( a_r.reps == 1 ) and ( a_r.force_vec == 0):
                     # Single subblock
                     res += sp8+"'"+a_r.name+"':("+hex(a_r.adr)+",(Agwb_"+a_r.obj.name+",)),\\\n"
                 else:
@@ -1111,7 +1111,7 @@ class WbBlock(object):
                     res += reg.gen_html(base+a_r.adr,mname)
             else:
                 # Blocks or vectors of blocks
-                if a_r.reps == 1:
+                if ( a_r.reps == 1 ) and ( a_r.force_vec == 0 ):
                     # Single block
                     res += a_r.obj.gen_html(base+a_r.adr,mname+"."+a_r.name)
                 else:
