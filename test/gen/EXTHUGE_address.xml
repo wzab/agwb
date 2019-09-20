@@ -1,5 +1,0 @@
-<node id="EXTHUGE">
-  <node id="HREG0" address="00000000" permission="rw"/>
-  <node id="HREG1" address="00000001" permission="rw"/>
-  <node id="HREG2" address="0x00000002" permission="rw"/>
-</node>

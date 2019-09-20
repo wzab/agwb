@@ -614,7 +614,7 @@ class WbReg(object):
 class WbArea(object):
     """ The class representing the address area
     """
-    def __init__(self, size, name, obj, reps):
+    def __init__(self, size, name, obj, reps, force_vec=0):
         self.name = name
         self.size = size
         self.obj = obj
@@ -622,6 +622,7 @@ class WbArea(object):
         self.mask = 0
         self.total_size = 0
         self.reps = reps
+        self.force_vec = force_vec
     def sort_adr(self):
         return self.adr
     def sort_key(self):
@@ -737,11 +738,13 @@ class WbBlock(object):
                     # add its address space to ours.
                 # Check if this is a vector of subblocks
                 reps = ex.exprval(sblk.get('reps', '1'))
+                force_vec = ex.exprval(sblk.get('force_vec','0'))
+                print("force:"+str(force_vec))
                 print("reps:"+str(reps))
                 # Now recalculate the size of the area, considering possible
                 # block repetitions
                 addr_size = b_l.addr_size * reps
-                self.areas.append(WbArea(addr_size, sblk.get('name'), b_l, reps))
+                self.areas.append(WbArea(addr_size, sblk.get('name'), b_l, reps, force_vec))
             elif sblk.tag == 'blackbox':
                 # We don't need to analyze the blackbox. We allready have its
                 # address area size.
@@ -750,8 +753,10 @@ class WbBlock(object):
                 b_l = GLB.blackboxes[sblk.attrib['type']]
                 reps = ex.exprval(sblk.get('reps', '1'))
                 print("reps:"+str(reps))
+                force_vec = ex.exprval(sblk.get('force_vec','0'))
+                print("force:"+str(force_vec))
                 addr_size = b_l.addr_size * reps
-                self.areas.append(WbArea(addr_size, sblk.get('name'), b_l, reps))
+                self.areas.append(WbArea(addr_size, sblk.get('name'), b_l, reps, force_vec))
             else:
                 raise Exception("Unknown type of subblock")
         # Now we can calculate the total length of address space
@@ -822,7 +827,7 @@ class WbBlock(object):
         n_ports = 0
         d_t = ""
         for a_r in self.areas:
-            if a_r.reps == 1:
+            if (a_r.reps == 1) and (a_r.force_vec == 0):
                 a_r.first_port = n_ports
                 a_r.last_port = n_ports
                 n_ports += 1
