@@ -26,7 +26,7 @@ if __name__ == "__main__":
         print("ERROR: Path for HDL files (hdl parameter) needs to be specified!")
         sys.exit(1)
 
-    args = ['python', os.path.dirname(__file__) + '/addr_gen_wb.py',
+    args = ['python3', os.path.dirname(__file__) + '/addr_gen_wb.py',
             '--fusesoc',
             '--fusesoc_vlnv', config['vlnv'],
             '--infile', infile,
