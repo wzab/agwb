@@ -5,7 +5,7 @@
 import ast, math
 
 locals =  {key: value for (key,value) in vars(math).items() if key[0] != '_'}
-locals.update({"int": int, "abs": abs, "complex": complex, "min": min, "max": max, "pow": pow, "round": round})
+locals.update({"bit_length": int.bit_length, "int": int, "abs": abs, "complex": complex, "min": min, "max": max, "pow": pow, "round": round})
 # Additionally, we keep the list of our own constants, that should be put
 # to packages or header files
 defines ={}
