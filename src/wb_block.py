@@ -495,7 +495,7 @@ class WbReg(object):
 
             # Generate the mask for register with width below 32 bits
             s_mask = ""
-            if self.size < 32:
+            if self.width< 32:
                maskval = (1<<(self.size+1))-1
                s_mask = " mask=\"0x"+format(maskval, "08x")+"\""
             
@@ -505,7 +505,7 @@ class WbReg(object):
                     "\" permission=\""+perms+"\""+s_mode+s_mask+"/>\n"
             else:
                 res += "  <node id=\""+rname+"\" address=\"0x"+format(adr, "08x")+\
-                    "\" permission=\""+perms+"\""+s_mode+s_mask+">\n"
+                    "\" permission=\""+perms+"\""+s_mode+">\n"
                 for b_f in self.fields:
                     maskval = ((1<<(b_f.msb+1))-1) ^ ((1<<b_f.lsb)-1)
                     mask = format(maskval, "08x")
