@@ -247,6 +247,7 @@ class WbReg(object):
         self.base = adr
         self.size = nregs
         self.name = el.attrib['name']
+        self.mode = el.get('mode','')
         self.desc = el.get('desc', '')
         self.ack = ex.exprval(el.get('ack', '0'))
         self.stb = ex.exprval(el.get('stb', '0'))
@@ -487,13 +488,24 @@ class WbReg(object):
                 perms = "r"
             else:
                 raise Exception("Unknown type of register")
+            # Pass the "mode" attribute to the generated IPbus XML
+            s_mode = ""
+            if self.mode != "":
+                s_mode=" mode=\""+self.mode+"\"" 
+
+            # Generate the mask for register with width below 32 bits
+            s_mask = ""
+            if self.size < 32:
+               maskval = (1<<(self.size+1))-1
+               s_mask = " mask=\"0x"+format(maskval, "08x")+"\""
+            
             # Finally the format of the description depends on the presence of bitfields
             if not self.fields:
                 res += "  <node id=\""+rname+"\" address=\"0x"+format(adr, "08x")+\
-                    "\" permission=\""+perms+"\"/>\n"
+                    "\" permission=\""+perms+"\""+s_mode+s_mask+"/>\n"
             else:
                 res += "  <node id=\""+rname+"\" address=\"0x"+format(adr, "08x")+\
-                    "\" permission=\""+perms+"\">\n"
+                    "\" permission=\""+perms+"\""+s_mode+s_mask+">\n"
                 for b_f in self.fields:
                     maskval = ((1<<(b_f.msb+1))-1) ^ ((1<<b_f.lsb)-1)
                     mask = format(maskval, "08x")
