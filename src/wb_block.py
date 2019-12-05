@@ -195,6 +195,7 @@ class WbField(object):
         self.msb = lsb + self.size - 1
         self.type = fl.get('type', 'std_logic_vector')
         self.desc = fl.get('desc', '')
+        self.ignore = fl.get('ignore', '')
         self.default_val = fl.get('default')
         if self.default_val is not None:
             # Convert it to the numerical value
@@ -248,6 +249,7 @@ class WbReg(object):
         self.size = nregs
         self.name = el.attrib['name']
         self.mode = el.get('mode','')
+        self.ignore = el.get('ignore', '')
         self.desc = el.get('desc', '')
         self.ack = ex.exprval(el.get('ack', '0'))
         self.stb = ex.exprval(el.get('stb', '0'))
@@ -561,6 +563,8 @@ class WbReg(object):
     def gen_forth(self, reg_base, parent):
         # The generated code depends on the fact it is a single register or the vector of registers
         cdefs = ""
+        if 'forth' in self.ignore.split(','):
+            return cdefs
         adr = reg_base+self.base
         # The name format depends whether its a single register or an item in a vector
         if self.size == 1:
@@ -697,6 +701,7 @@ class WbBlock(object):
         self.name = el.attrib['name']
         self.id_val = zlib.crc32(bytes(self.name.encode('utf-8')))
         self.desc = el.get('desc', '')
+        self.ignore = el.get('ignore','')
         # We prepare the list of address areas
         self.areas = []
         # We prepare the table for storing the registers.
@@ -963,6 +968,8 @@ class WbBlock(object):
         """
         # Iterate the areas, generating the addresses
         cdefs = ""
+        if 'forth' in self.ignore.split(','):
+            return cdefs        
         for a_r in self.areas:
             if a_r.obj is None:
                 #Registers area
