@@ -187,7 +187,13 @@ def blocks():
 def blackboxes():
     return GLB.blackboxes
 
-class WbField(object):
+class WbObject(object):
+    def is_ignored(self,mode):
+        x = self.ignore.split(',')
+        z = [y.strip() for y in x]
+        return mode in z 
+
+class WbField(WbObject):
     def __init__(self, fl, lsb):
         self.name = fl.attrib['name']
         self.lsb = lsb
@@ -234,7 +240,7 @@ class WbField(object):
             parent_reg.default_val &= and_mask
             parent_reg.default_val |= (or_mask & val)
 
-class WbReg(object):
+class WbReg(WbObject):
     """ The class WbReg describes a single register
     """
     def __init__(self, el, adr):
@@ -563,7 +569,7 @@ class WbReg(object):
     def gen_forth(self, reg_base, parent):
         # The generated code depends on the fact it is a single register or the vector of registers
         cdefs = ""
-        if 'forth' in self.ignore.split(','):
+        if self.is_ignored('forth'):
             return cdefs
         adr = reg_base+self.base
         # The name format depends whether its a single register or an item in a vector
@@ -627,10 +633,10 @@ class WbReg(object):
         return res
     
 
-class WbArea(object):
+class WbArea(WbObject):
     """ The class representing the address area
     """
-    def __init__(self, size, name, obj, reps, force_vec=0):
+    def __init__(self, size, name, obj, reps, ignore='', force_vec=0):
         self.name = name
         self.size = size
         self.obj = obj
@@ -638,13 +644,14 @@ class WbArea(object):
         self.mask = 0
         self.total_size = 0
         self.reps = reps
+        self.ignore = ignore
         self.force_vec = force_vec
     def sort_adr(self):
         return self.adr
     def sort_key(self):
         return self.size
 
-class WbBlackBox(object):
+class WbBlackBox(WbObject):
     def __init__(self, el):
         self.name = el.attrib['type']
         self.desc = el.get('desc', '')
@@ -689,7 +696,7 @@ class WbBlackBox(object):
         res = "Address: "+hex(base)+" Name: "+name+"<br>"
         return res
 
-class WbBlock(object):
+class WbBlock(WbObject):
     def __init__(self, el):
         """
         The constructor takes an XML node that describes the block
@@ -755,13 +762,14 @@ class WbBlock(object):
                     # add its address space to ours.
                 # Check if this is a vector of subblocks
                 reps = ex.exprval(sblk.get('reps', '1'))
+                ignore = sblk.get('ignore','')
                 force_vec = ex.exprval(sblk.get('force_vec','0'))
                 print("force:"+str(force_vec))
                 print("reps:"+str(reps))
                 # Now recalculate the size of the area, considering possible
                 # block repetitions
                 addr_size = b_l.addr_size * reps
-                self.areas.append(WbArea(addr_size, sblk.get('name'), b_l, reps, force_vec))
+                self.areas.append(WbArea(addr_size, sblk.get('name'), b_l, reps, ignore, force_vec))
             elif sblk.tag == 'blackbox':
                 # We don't need to analyze the blackbox. We allready have its
                 # address area size.
@@ -770,10 +778,11 @@ class WbBlock(object):
                 b_l = GLB.blackboxes[sblk.attrib['type']]
                 reps = ex.exprval(sblk.get('reps', '1'))
                 print("reps:"+str(reps))
+                ignore = sblk.get('ignore','')
                 force_vec = ex.exprval(sblk.get('force_vec','0'))
                 print("force:"+str(force_vec))
                 addr_size = b_l.addr_size * reps
-                self.areas.append(WbArea(addr_size, sblk.get('name'), b_l, reps, force_vec))
+                self.areas.append(WbArea(addr_size, sblk.get('name'), b_l, reps, ignore, force_vec))
             else:
                 raise Exception("Unknown type of subblock")
         # Now we can calculate the total length of address space
@@ -968,7 +977,7 @@ class WbBlock(object):
         """
         # Iterate the areas, generating the addresses
         cdefs = ""
-        if 'forth' in self.ignore.split(','):
+        if self.is_ignored('forth'):
             return cdefs        
         for a_r in self.areas:
             if a_r.obj is None:
@@ -983,7 +992,7 @@ class WbBlock(object):
                 #Now add other registers in a loop
                 for reg in self.regs:
                     cdefs += reg.gen_forth(adr, parent)
-            else:
+            elif not a_r.is_ignored('forth'):
                 #Subblock or vector of subblocks
                 if ( a_r.reps == 1 ) and ( a_r.force_vec == 0 ):
                     node = parent+"_"+a_r.name
