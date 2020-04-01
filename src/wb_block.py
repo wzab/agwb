@@ -378,11 +378,22 @@ class WbReg(WbObject):
         # Append the generated types to the parents package section
         parent.add_templ('p_package', d_t, 0)
         parent.add_templ('p_package_body', d_b, 0)
-
-        # Now generate the entity ports
+        # If the outputs are aggregated, add the type of the signal to the output record type
+        if self.regtype == 'creg' and parent.out_type is not None:
+            if self.size > 1:
+                parent.add_templ('out_record',self.name+' : '+tname+'_array ;\n',2)
+            else:
+                parent.add_templ('out_record',self.name+' : '+tname+';\n',2)
+            if self.stb == 1:
+                if self.size > 1:
+                    parent.add_templ('out_record',self.name+"_stb : std_logic_vector(" +str(self.size-1)+ " downto 0);\n",2)
+                else:
+                    parent.add_templ('out_record',self.name+"_stb : std_logic;\n",2)                    
+        @@@@ To be correected! # Now generate the entity ports 
+        d_t = ""
         sfx = '_i'
         sdir = "in "
-        if self.regtype == 'creg':
+        if self.regtype == 'creg' and parent.out_type is None:
             sfx = '_o'
             sdir = "out "
         if self.size == 1:
@@ -390,7 +401,7 @@ class WbReg(WbObject):
         else:
             d_t = self.name+sfx+" : "+sdir+" "+tname+"_array;\n"
         # Now we generate the STB or ACK ports (if required)
-        if self.regtype == 'creg' and self.stb == 1:
+        if self.regtype == 'creg' and self.stb == 1 and parent.out_type is None:
             if self.size == 1:
                 d_t += self.name+sfx+"_stb : out std_logic;\n"
             else:
@@ -844,6 +855,14 @@ class WbBlock(WbObject):
         self.add_templ('subblk_busses', '', 0)
         self.add_templ('signal_ports', '', 0)
         self.add_templ('signals_idle', '', 0)
+        self.add_templ('out_record',''0)
+        # If the outputs must be aggregated in a single record,
+        # we will generate a type for that record instead of output ports
+        if parent.aggregate_outs:
+            self.out_type = "t_"+self.name+"_out_regs"
+            self.add_templ('out_record','type '+ self.out_type+' is record\n',0)
+        else:
+            self.out_type = None
         for reg in self.regs:
             #generate
             reg.gen_vhdl(self)
@@ -916,6 +935,8 @@ class WbBlock(WbObject):
         self.add_templ('nof_subblks', str(n_ports), 0)
         self.add_templ('nof_masters', str(self.N_MASTERS), 0)
         self.add_templ('p_entity', "agwb_"+self.name+"_wb", 0)
+        # If block has aggregated outputs, close the record definition
+        self.add_templ('out_record','end record;\n\n',0)
         # All template is filled, so we can now generate the files
         print(self.templ_dict)
         wb_vhdl_pkg_file = GLB.VHDL_PATH+"/agwb_"+self.name+"_wb_pkg.vhd"
