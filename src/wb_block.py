@@ -438,6 +438,16 @@ class WbReg(WbObject):
                 dt2 = self.name+sfx+" <= int_"+self.name+sfx+";\n"
             else:
                 dt2 = parent.out_name+"."+self.name+" <= int_"+self.name+sfx+";\n"
+            #Create intermediate signals for strobes
+            if self.stb == 1:
+                if self.size == 1:
+                    d_t += "signal int_" + self.name+sfx+"_stb : std_logic;\n"
+                else:
+                    d_t += "signal int_" + self.name+sfx+"_stb : std_logic_vector(" +str(self.size-1)+ " downto 0);\n"
+                if parent.out_type is None:
+                    dt2 += self.name + sfx + "_stb <= int_"+self.name + sfx + "_stb;\n"
+                else:
+                    dt2 += parent.out_name + "." + self.name + "_stb <= int_" + self.name + sfx + "_stb;\n"
             parent.add_templ('signal_decls', d_t, 4)
             parent.add_templ('cont_assigns', dt2, 4)
         # Reset control registers
@@ -491,10 +501,10 @@ class WbReg(WbObject):
                 if self.stb == 1:
                     d_t += "   if int_regs_wb_m_i.ack = \'0\' then\n"
                     # We shorten the STB to a single clock
-                    d_t += "      "+self.name+sfx+"_stb" + ind + " <= '1';\n"
+                    d_t += "      int_"+self.name+sfx+"_stb" + ind + " <= '1';\n"
                     d_t += "   end if;\n"
                     # Add clearing of STB signal at the begining of the process
-                    d_i += self.name+sfx+"_stb" + ind + " <= '0';\n"
+                    d_i += "int_"+self.name+sfx+"_stb" + ind + " <= '0';\n"
                 d_t += "   end if;\n"
             d_t += "   int_regs_wb_m_i.ack <= '1';\n"
             d_t += "   int_regs_wb_m_i.err <= '0';\n"
@@ -872,7 +882,7 @@ class WbBlock(WbObject):
         # If the outputs must be aggregated in a single record,
         # we will generate a type for that record instead of output ports
         print(self, self.name)
-        if self.aggregate_outs:
+        if self.aggregate_outs != '0':
             self.out_type = "t_"+self.name+"_out_regs"
             self.add_templ('out_record','type '+ self.out_type+' is record\n',0)
             self.out_name = "out_regs"

@@ -1,0 +1,10 @@
+<block name="SYS1" aggr_outs="1">
+  <creg name="CTRL" desc="Control register" stb="1">
+    <field name="START" width="1" desc="Start the operation"/>
+    <field name="SPEED" width="4" default="-1" type="signed" desc="Transmission speed"/>
+    <field name="STOP" width="1" desc="Stop the operation" />
+  </creg>
+  <sreg name="STATUS" desc="Status register" ack="1" />
+  <creg name="ENABLEs" desc="Link enable registers" stb="1" reps="10" default="0x0"/>
+</block>
+
