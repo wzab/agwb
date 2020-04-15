@@ -917,7 +917,6 @@ class WbBlock(WbObject):
         self.add_templ('nof_masters', str(self.N_MASTERS), 0)
         self.add_templ('p_entity', "agwb_"+self.name+"_wb", 0)
         # All template is filled, so we can now generate the files
-        print(self.templ_dict)
         wb_vhdl_pkg_file = GLB.VHDL_PATH+"/agwb_"+self.name+"_wb_pkg.vhd"
         with open(wb_vhdl_pkg_file, "w") as f_o:
             f_o.write(TEMPL_PKG.format(**self.templ_dict))
