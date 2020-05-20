@@ -967,7 +967,6 @@ class WbBlock(WbObject):
             self.add_templ('out_record','end record;\n\n',0)
             self.add_templ('signal_ports',self.out_name + ' : out ' + self.out_type + ";\n",6) 
         # All template is filled, so we can now generate the files
-        print(self.templ_dict)
         wb_vhdl_pkg_file = GLB.VHDL_PATH+"/agwb_"+self.name+"_wb_pkg.vhd"
         with open(wb_vhdl_pkg_file, "w") as f_o:
             f_o.write(TEMPL_PKG.format(**self.templ_dict))
