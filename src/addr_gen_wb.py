@@ -193,7 +193,8 @@ if ARGS.fusesoc:
         created_files = wb.created_files['vhdl']
         created_files.append(wb.GLB.VHDL_PATH+"/agwb_"+TOP_NAME+"_const_pkg.vhd")
         coredata['filesets'] = {'rtl' : {'files' : created_files,
-                                         'file_type' : 'vhdlSource-93'}}
+                                         'file_type' : 'vhdlSource-93',
+                                         'logical_name' : 'agwb'}}
         coredata['targets']['default']['filesets'] = ['rtl']
 
         fo.write(yaml.dump(coredata))
