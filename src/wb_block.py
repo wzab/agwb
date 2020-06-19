@@ -1068,8 +1068,8 @@ class WbBlock(WbObject):
         head = "#ifndef __"+self.name+"__INC_H\n"
         head += "#define __"+self.name+"__INC_H\n"
         # Generate the constants with block ID and with version ID
-        head += "constant uint32_t agwb_"+self.name+"_ID_VAL = "+hex(self.id_val)+";\n"
-        head += "constant uint32_t agwb_"+self.name+"_VER_VAL = "+hex(GLB.VER_ID)+";\n"
+        head += "const uint32_t agwb_"+self.name+"_ID_VAL = "+hex(self.id_val)+";\n"
+        head += "const uint32_t agwb_"+self.name+"_VER_VAL = "+hex(GLB.VER_ID)+";\n"
         # Iterate the areas, generating the addresses
         # We have to add fillers to ensure proper address allocation
         filler_nr = 1
