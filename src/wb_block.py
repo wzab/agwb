@@ -165,8 +165,8 @@ def templ_wb(nof_masters):
                int_regs_wb_m_i.err <= '0';
             when others =>
                int_regs_wb_m_i.dat <= x"A5A5A5A5";
-               int_regs_wb_m_i.ack <= '1';
-               int_regs_wb_m_i.err <= '0';
+               int_regs_wb_m_i.ack <= '0';
+               int_regs_wb_m_i.err <= '1';
             end case;
           end if;
         end if;
