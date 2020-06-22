@@ -3,7 +3,6 @@
 <constant name="NSEL_BITS" val="5" />
 <constant name="NSEL_MAX" val="(1 &lt;&lt; NSEL_BITS)-1" />
 
-<!-- <include path="block1.xml"/> -->
 <include path="block1.xml"/>
 
 <block name="MAIN">
