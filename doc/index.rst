@@ -11,6 +11,7 @@ Welcome to agwb's documentation!
    :caption: Contents:
 
    overview
+   installation_and_usage
    xml_description
 
 
