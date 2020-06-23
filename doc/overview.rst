@@ -21,6 +21,33 @@ To enable optimal implementation of address decoders the address space for each 
 To ensure efficient utilization of the address space, the required size of the address space for each block is calculated, traversing the system description from the most nested blocks to the top.
 After that, the blocks are ordered in the order of decreasing size of their address space, and their base addresses are set with the proper alignment.
 
+Input
+#####
+As an input AGWB accepts system registers structure described in *.xml* format.
+This is further described in :ref:`XML description` chapter.
+
+Output products
+###############
+AGWB always generates VHDL files appropriate to the defined blocks.
+User should expect following VHDL files to be generated.
+
+#. *agwb_{top_name}_const_pkg.vhd* - package with constants defined in input *.xml* files.
+#. *agwb_{block_name}_wb_pkg.vhd* - package for given block.
+   Packages for distinct blocks are generated into distinct files.
+   These packages contain various constants, subtypes, types definitions and conversion functions related to given block. 
+#. *agwb_{block_name}_wb.vhd* - entity for given block.
+   Entities for distinct blocks are generated into distinct files.
+
+Depending on the input arguments AGWB can also generate following helper files.
+
+#. IPbus compatible register files.
+#. C header files for ???.
+#. Python files for ???.
+#. Forth files for ???.
+#. HTML registers documentation file.
+
+To get to know how to generate these files execute :code:`python addr_gen_wb.py --help`.
+
 License
 #######
 

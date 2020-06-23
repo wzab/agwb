@@ -5,7 +5,7 @@ To be able to use AGWB you have to clone the repository from https://github.com/
 
 Although AGWB is not installable from PyPI via pip it is possible to install some parts of it.
 Namely, the :code:`agwb` Python package, which can be used for interaction with flashed FPGAs or simulation purposes.
-To install the package execute the following command in the repository root directory
+To install the package execute the following command in the repository root directory.
 
 .. code-block:: Python
 

@@ -128,7 +128,7 @@ Optional attribute:
 
 .. code-block:: xml
 
-   <sysdef top="foo">
+   <sysdef top="foo" masters="2">
       <block name="foo">
          ...
       </block>
