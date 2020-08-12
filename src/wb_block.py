@@ -1209,7 +1209,7 @@ class WbBlock(WbObject):
                 else:
                     # Vector of blocks
                     for i in range(0,a_r.reps):
-                        res += a_r.obj.gen_html(base+a_r.adr+i*a_r.size,
+                        res += a_r.obj.gen_html(base+a_r.adr+i*a_r.obj.addr_size,
                                                 mname+"."+a_r.name+"["+str(i)+"]")
             res += "</details></li>"
         res += "</ul>"
