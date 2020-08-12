@@ -741,6 +741,7 @@ class WbBlock(WbObject):
         self.id_val = zlib.crc32(bytes(self.name.encode('utf-8')))
         self.desc = el.get('desc', '')
         self.ignore = el.get('ignore','')
+        self.reserved = ex.exprval(el.get('reserved','0'))
         # We check if the outputs from the registers should be aggregated
         self.aggregate_outs = el.get('aggr_outs','0')
         # We prepare the list of address areas
@@ -819,29 +820,41 @@ class WbBlock(WbObject):
                 self.areas.append(WbArea(addr_size, sblk.get('name'), b_l, reps, ignore, force_vec))
             else:
                 raise Exception("Unknown type of subblock")
-        # Now we can calculate the total length of address space
+        # In that version we use a more complex address allocation scheme
+        # 1. The total size of the address space is allocated (including the reserved area)
+        #    The calculated size of the address space is adjusted to the 2^N
+        # 2. The registers are allocated at the begining of the address space, 
+        #    after the reserved area.
+        # 3. The blocks are allocated starting freom the end of the address 
+        #
+        # First calculate the total length of address space
+	#
         # We use the simplest algorithm - all blocks are sorted,
         # their size is rounded up to the nearest power of 2
         # They are allocated in order.
-        cur_base = 0
+        cur_size = self.reserved
         self.areas.sort(key=WbArea.sort_key, reverse=True)
         for a_r in self.areas:
-            if a_r.obj is None:
-                # This is the register block
-                self.reg_base = cur_base
-            a_r.adr = cur_base
             a_r.adr_bits = (a_r.size-1).bit_length()
             a_r.total_size = 1 << a_r.adr_bits
             # Now we shift the position of the next block
-            cur_base += a_r.total_size
+            cur_size += a_r.total_size
             print("added size:"+str(a_r.total_size))
-        self.addr_size = cur_base
         # We must adjust the address space to the power of two
-        self.adr_bits = (self.addr_size-1).bit_length()
+        self.adr_bits = (cur_size-1).bit_length()
         self.addr_size = 1 << self.adr_bits
+        # Now we allocate the base addresses        
+        cur_top = self.addr_size
+        for a_r in self.areas:
+            if a_r.obj is None:
+                # This is the register block, so we allocate it at the begining, after the reserved area
+                self.reg_base = self.reserved
+                a_r.adr = self.reserved
+            else:
+                cur_top -= a_r.total_size
+                a_r.adr = cur_top
         self.used = True
         # In fact, here we should be able to generate the HDL code
-
         print('analyze: '+self.name+" addr_size:"+str(self.addr_size))
 
     def add_templ(self, templ_key, value, indent):
@@ -1169,6 +1182,8 @@ class WbBlock(WbObject):
         res += "<details><summary>Areas"
         res += "</summary>"
         res += "<ul>"
+        # The areas must be sorted by increasing address
+        self.areas.sort(key=WbArea.sort_adr)
         for a_r in self.areas: # We assume that they are sorted by increasing base address
             if a_r.obj is None:
                 area_name = "Registers"
