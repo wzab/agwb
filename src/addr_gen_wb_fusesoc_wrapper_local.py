@@ -29,42 +29,42 @@ if __name__ == "__main__":
     try:
         hdl = files_root + config['parameters']['hdl']
         args += ['--hdl', hdl]
-        os.mkdir(hdl)
+        os.makedirs(hdl)
     except:
         pass
         
     try:
         ipbus = files_root + str(config['parameters']['ipbus'])
         args += ['--ipbus', ipbus]
-        os.mkdir(ipbus)
+        os.makedirs(ipbus)
     except:
         pass
     
     try:
         header = files_root + str(config['parameters']['header'])
         args += ['--header', header]
-        os.mkdir(header)
+        os.makedirs(header)
     except:
         pass
 
     try:
         fs = files_root + str(config['parameters']['fs'])
         args += ['--fs', fs]
-        os.mkdir(fs)
+        os.makedirs(fs)
     except:
         pass
 
     try:
         python = files_root + str(config['parameters']['python'])
         args += ['--python', python]
-        os.mkdir(python)
+        os.makedirs(python)
     except:
         pass
     
     try:
         html = files_root + config['parameters']['html']
         args += ['--html', html]
-        os.mkdir(html)
+        os.makedirs(html)
     except:
         pass
 
