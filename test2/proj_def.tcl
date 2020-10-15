@@ -12,4 +12,4 @@ set eprj_synth_strategy "Flow_PerfOptimized_high"
 set eprj_impl_flow "Vivado Implementation 2017"
 set eprj_impl_strategy "Performance_Retiming"
 set eprj_vivado_version "2017.4"
-set eprj_vivado_version_allow_upgrade false
+set eprj_vivado_version_allow_upgrade true

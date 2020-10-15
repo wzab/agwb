@@ -18,7 +18,7 @@ if {$master_clk == ""} {
 
 if {$slave_clk != $master_clk} {
    set_false_path -to [get_cells resp_s0*_reg*]
-   set_false_path -to [get_cells req_m0*_reg*]
+   set_max_delay -from $master_clk -to [get_cells req_m0*_reg*] $master_clk_period -datapath_only
    set_max_delay -from $slave_clk -to [get_cells master_o*_reg*] $master_clk_period -datapath_only
    set_max_delay -from $master_clk -to [get_cells slave_o*_reg*] $slave_clk_period -datapath_only
 } elseif {$src_clk != "" && $dest_clk != ""} {
