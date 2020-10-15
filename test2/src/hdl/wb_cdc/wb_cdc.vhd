@@ -6,7 +6,7 @@
 -- Author     : Wojciech Zabolotny  <wzab01@gmail.com> or <wzab@ise.pw.edu.pl>
 -- Company    : 
 -- Created    : 2018-03-11
--- Last update: 2019-02-20
+-- Last update: 2020-10-15
 -- Platform   :
 -- Standard   : VHDL'93/02
 -- License    : PUBLIC DOMAIN or Creative Commons CC0
@@ -126,12 +126,21 @@ begin  -- architecture rtl
               req      <= not req;
             end if;
           when ST_CYCLE =>
-            if (slave_i.cyc = '1') and (slave_i.stb = '1') and (resp = req) then
-              slave_o.dat <= dat_m;
-              slave_o.ack <= ack_m;
-              slave_o.err <= err_m;
-              slave_o.rty <= rty_m;
-              ms_state    <= ST_TERM;
+            if (resp = req) then
+	      if (slave_i.cyc = '1') and (slave_i.stb = '1') then
+		-- Cycle completed
+		slave_o.dat <= dat_m;
+		slave_o.ack <= ack_m;
+		slave_o.err <= err_m;
+		slave_o.rty <= rty_m;
+		ms_state    <= ST_TERM;
+	      else
+		-- Cycle terminated by the master
+		slave_o.dat <= dat_m;
+		slave_o.ack <= '0';
+		slave_o.err <= '0';
+		slave_o.rty <= '0';		
+	      end if;
             end if;
           when ST_TERM =>
             ms_state <= ST_IDLE;

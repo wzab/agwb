@@ -6,7 +6,7 @@
 -- Author     : Wojciech Zabolotny  <wzab01@gmail.com> or <wzab@ise.pw.edu.pl>
 -- Company    : 
 -- Created    : 2018-03-11
--- Last update: 2018-12-02
+-- Last update: 2019-02-20
 -- Platform   :
 -- Standard   : VHDL'93/02
 -- License    : PUBLIC DOMAIN or Creative Commons CC0
@@ -56,8 +56,12 @@ end entity wb_cdc;
 
 architecture rtl of wb_cdc is
 
-  signal req, req_m0, req_m1, req_m               : std_logic := '0';
-  signal resp, resp_s0, resp_s1, resp_m : std_logic := '0';
+  attribute ASYNC_REG : string;
+
+  signal req, req_m0, req_m1, req_m       : std_logic := '0';
+  attribute ASYNC_REG of req_m0, req_m1   : signal is "TRUE";
+  signal resp, resp_s0, resp_s1, resp_m   : std_logic := '0';
+  attribute ASYNC_REG of resp_s0, resp_s1 : signal is "TRUE";
 
   signal rst_sl_0, rst_sl_p, rst_ms_0, rst_ms_p : std_logic                          := '1';
   signal dat_m                                  : std_logic_vector(width-1 downto 0) := (others => '0');
@@ -69,29 +73,33 @@ architecture rtl of wb_cdc is
 begin  -- architecture rtl
 
   -- Synchronization of reset for slave side
-  r1 : process (slave_clk_i, slave_rst_n_i) is
-  begin  -- process r1
-    if slave_rst_n_i = '0' then         -- asynchronous reset (active high)
-      rst_sl_0 <= '1';
-      rst_sl_p <= '1';
-    elsif slave_clk_i'event and slave_clk_i = '1' then  -- rising clock edge
-      rst_sl_p <= rst_sl_0;
-      rst_sl_0 <= '0';
-    end if;
-  end process r1;
+  --r1 : process (slave_clk_i, slave_rst_n_i) is
+  --begin  -- process r1
+  --  if slave_rst_n_i = '0' then         -- asynchronous reset (active high)
+  --    rst_sl_0 <= '1';
+  --    rst_sl_p <= '1';
+  --  elsif slave_clk_i'event and slave_clk_i = '1' then  -- rising clock edge
+  --    rst_sl_p <= rst_sl_0;
+  --    rst_sl_0 <= '0';
+  --  end if;
+  --end process r1;
 
+  rst_ms_p <= not master_rst_n_i;
+  
   -- Synchronization of reset for master side
-  r2 : process (master_clk_i, master_rst_n_i) is
-  begin  -- process r1
-    if master_rst_n_i = '0' then        -- asynchronous reset (active high)
-      rst_ms_0 <= '1';
-      rst_ms_p <= '1';
-    elsif master_clk_i'event and master_clk_i = '1' then  -- rising clock edge
-      rst_ms_p <= rst_ms_0;
-      rst_ms_p <= '0';
-    end if;
-  end process r2;
+  -- r2 : process (master_clk_i, master_rst_n_i) is
+  -- begin  -- process r1
+  --   if master_rst_n_i = '0' then        -- asynchronous reset (active high)
+  --     rst_ms_0 <= '1';
+  --     rst_ms_p <= '1';
+  --   elsif master_clk_i'event and master_clk_i = '1' then  -- rising clock edge
+  --     rst_ms_p <= rst_ms_0;
+  --     rst_ms_p <= '0';
+  --   end if;
+  -- end process r2;
 
+  rst_sl_p <= not slave_rst_n_i;
+  
   -- How does it work
   -- If on the slave side we find that cyc&stb changed its state from 0 to 1,
   -- We trigger access, by toggling the request line.
@@ -99,7 +107,7 @@ begin  -- architecture rtl
   sync_s1 : process (slave_clk_i) is
   begin  -- process sync_s1
     if slave_clk_i'event and slave_clk_i = '1' then  -- rising clock edge
-      if rst_ms_p = '1' then            -- synchronous reset (active high)
+      if rst_sl_p = '1' then            -- synchronous reset (active high)
         req         <= '0';
         resp        <= '0';
         resp_s1     <= '0';
