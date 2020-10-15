@@ -151,8 +151,7 @@ def templ_wb(nof_masters):
           int_regs_wb_m_i.err <= '0';
 {signals_idle}
           if (int_regs_wb_m_o.cyc = '1') and (int_regs_wb_m_o.stb = '1')
-              and (int_regs_wb_m_i.err = '0') and (int_regs_wb_m_i.rty = '0')
-              and (int_regs_wb_m_i.ack = '0') then
+              and (int_regs_wb_m_i.err = '0') and (int_regs_wb_m_i.rty = '0') then
             int_regs_wb_m_i.err <= '1'; -- in case of missed address
             -- Access, now we handle consecutive registers
             case int_addr is
@@ -498,17 +497,19 @@ class WbReg(WbObject):
                 d_t += "   int_regs_wb_m_i.dat("+str(self.width-1)+" downto 0) <= "+conv_fun+"(int_"+self.name+"_o"+ind+");\n"
             # Write access
             if self.regtype == 'creg':
-                d_t += "   if int_regs_wb_m_o.we = '1' then\n"
+                d_t += "   if int_regs_wb_m_o.we = '1' and int_regs_wb_m_i.ack = \'1\' then\n"
                 d_t += "     int_"+self.name+"_o"+ind+" <= "+iconv_fun+"(int_regs_wb_m_o.dat("+str(self.width-1)+" downto 0));\n"
                 if self.stb == 1:
-                    d_t += "   if int_regs_wb_m_i.ack = \'0\' then\n"
+                    d_t += "     if int_regs_wb_m_i.ack = \'0\' then\n"
                     # We shorten the STB to a single clock
-                    d_t += "      int_"+self.name+sfx+"_stb" + ind + " <= '1';\n"
-                    d_t += "   end if;\n"
+                    d_t += "        int_"+self.name+sfx+"_stb" + ind + " <= '1';\n"
+                    d_t += "     end if;\n"
                     # Add clearing of STB signal at the begining of the process
                     d_i += "int_"+self.name+sfx+"_stb" + ind + " <= '0';\n"
                 d_t += "   end if;\n"
-            d_t += "   int_regs_wb_m_i.ack <= '1';\n"
+            d_t += "   if int_regs_wb_m_i.ack = \'0\' then\n"
+            d_t += "     int_regs_wb_m_i.ack <= '1';\n"
+            d_t += "   end if;\n"
             d_t += "   int_regs_wb_m_i.err <= '0';\n"
             parent.add_templ('register_access', d_t, 12)
             parent.add_templ('signals_idle', d_i, 10)
