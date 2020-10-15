@@ -150,7 +150,9 @@ def templ_wb(nof_masters):
           int_regs_wb_m_i.ack <= '0';
           int_regs_wb_m_i.err <= '0';
 {signals_idle}
-          if (int_regs_wb_m_o.cyc = '1') and (int_regs_wb_m_o.stb = '1') then
+          if (int_regs_wb_m_o.cyc = '1') and (int_regs_wb_m_o.stb = '1')
+              and (int_regs_wb_m_i.err = '0') and (int_regs_wb_m_i.rty = '0')
+              and (int_regs_wb_m_i.ack = '0') then
             int_regs_wb_m_i.err <= '1'; -- in case of missed address
             -- Access, now we handle consecutive registers
             case int_addr is
