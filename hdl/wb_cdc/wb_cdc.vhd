@@ -140,14 +140,20 @@ begin  -- architecture rtl
         slave_o.err <= '0';
         slave_o.rty <= '0';
         -- Check if the cycle is even or odd
-        ncycle      := '1' when (req = "01") or (req = "11") else '0';
+        ncycle := '0';
+        if (req = "01") or (req = "11") then
+          ncycle := '0';
+        end if;
         case ms_state is
           when ST_IDLE =>
             if (slave_i.cyc = '1') and (slave_i.stb = '1') then
               ms_state <= ST_CYCLE;
               -- send request to the master part
-              req      <= "01" when req = "00" else
-                     "10" when req = "11";
+              if req = "00" then
+                req <= "01";
+              elsif req = "11" then
+                req <= "10";
+              end if;
             end if;
           when ST_CYCLE =>
             if (slave_i.cyc = '1') and (slave_i.stb = '1') then
@@ -159,15 +165,21 @@ begin  -- architecture rtl
                 slave_o.err <= err_m;
                 slave_o.rty <= rty_m;
                 -- send termination to our master part
-                req         <= "11" when req = "01" else
-                       "00" when req = "10";
+                if req = "01" then
+                  req <= "11";
+                elsif req = "10" then
+                  req <= "00";
+                end if;
                 ms_state <= ST_TERM;
               end if;
             else
               -- Cycle terminated by the master
               -- send termination to our master part
-              req <= "11" when req = "01" else
-                     "00" when req = "10";
+              if req = "01" then
+                req <= "11";
+              elsif req = "10" then
+                req <= "00";
+              end if;
               slave_o.dat <= dat_m;
               slave_o.ack <= '0';
               slave_o.err <= '0';
@@ -202,9 +214,9 @@ begin  -- architecture rtl
   begin  -- process sync_m1
     if master_clk_i'event and master_clk_i = '1' then  -- rising clock edge
       if rst_ms_p = '1' then            -- synchronous reset (active high)
-        req_m0 <= '0';
-        req_m1 <= '0';
-        req_m  <= '0';
+        req_m0 <= "00";
+        req_m1 <= "00";
+        req_m  <= "00";
         dat_m  <= (others => '0');
         ack_m  <= '0';
         rty_m  <= '0';
@@ -214,12 +226,23 @@ begin  -- architecture rtl
         req_m1 <= req_m0;
         req_m  <= req_m1;
         -- Check if the cycle is even or odd
-        ncycle := '1' when (req = "01") or (req = "11") else '0';
+        ncycle := '0';
+        if (req = "01") or (req = "11") then
+          ncycle := '1';
+        end if;
         -- Check if the cycle is active or not
-        active := '0' when ncycle = resp_m              else '1';
-        cancel := '1' when req(0) = req(1)              else '0';
+        if ncycle = resp_m then
+          active := '0';
+        else
+          active := '1';
+        end if;
+        if req(0) = req(1) then
+          cancel := '1';
+        else
+          cancel := '0';
+        end if;
         if active = '1' then
-          if cancel = 0 then
+          if cancel = '0' then
             -- Copy address, data and WE
             master_o.adr <= slave_i.adr;
             master_o.dat <= slave_i.dat;
