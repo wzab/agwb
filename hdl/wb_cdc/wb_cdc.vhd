@@ -142,7 +142,7 @@ begin  -- architecture rtl
         -- Check if the cycle is even or odd
         ncycle := '0';
         if (req = "01") or (req = "11") then
-          ncycle := '0';
+          ncycle := '1';
         end if;
         case ms_state is
           when ST_IDLE =>
