@@ -19,6 +19,24 @@
 --    from SLAVE to MASTER side.
 -- 2) the bus skew between the data, ACK, ERR, and RTY lines for
 --    transmission from MASTER to SLAVE.
+--
+-- New synchronization developed by Piotr Miedzik & Wojciech Zabolotny
+-- supports cancelation of transfer cycle by the master
+--
+-- The request/termination of the cycle from the master is coded in "req" as follows:
+-- "01" - start of even request
+-- "11" - termination of even request
+-- "10" - start of odd request
+-- "00" - termination of odd request
+--
+-- The master must send termination for at least one cycle, even if request
+-- was completed correctly
+-- 
+-- Status of execution of access cycle by the host is encoded in a single
+-- signal "resp" as follows:
+-- "1" - even request terminated (completed or aborted)
+-- "0" - odd request terninated (completed or aborted)
+--
 -------------------------------------------------------------------------------
 -- Copyright (c) 2018 
 -------------------------------------------------------------------------------
@@ -58,7 +76,7 @@ architecture rtl of wb_cdc is
 
   attribute ASYNC_REG : string;
 
-  signal req, req_m0, req_m1, req_m       : std_logic := '0';
+  signal req, req_m0, req_m1, req_m       : std_logic_vector(1 downto 0) := "00";
   attribute ASYNC_REG of req_m0, req_m1   : signal is "TRUE";
   signal resp, resp_s0, resp_s1, resp_m   : std_logic := '0';
   attribute ASYNC_REG of resp_s0, resp_s1 : signal is "TRUE";
