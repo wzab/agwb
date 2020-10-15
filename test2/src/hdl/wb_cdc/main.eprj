@@ -1,4 +1,0 @@
-vhdl work wb_cdc.vhd
-xdc wb_cdc.tcl
-prop "file_type" "TCL"
-prop "scoped_to_ref" "wb_cdc"
