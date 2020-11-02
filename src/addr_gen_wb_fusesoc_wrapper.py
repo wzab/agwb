@@ -58,4 +58,6 @@ if __name__ == "__main__":
     except:
         pass
 
-    subprocess.run(args)
+    ret = subprocess.run(args)
+    if ret.returncode != 0:
+        exit(ret.returncode)
