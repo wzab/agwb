@@ -631,9 +631,9 @@ class WbReg(WbObject):
             # Vector of registers
             res += sp8+"'"+self.name+"':("+hex(reg_base+self.base)+","+str(self.size)+",("
         if self.regtype == "sreg":
-            res += "AwSreg,"
+            res += "agwb.StatusRegister,"
         elif self.regtype == "creg":
-            res += "AwCreg,"
+            res += "agwb.ControlRegister,"
         else:
             raise Exception("Incorrect type of register:"+self.regtype)
         if not self.fields:
@@ -643,7 +643,7 @@ class WbReg(WbObject):
             # Handle bitfields
             res += "\n"+sp8+"{\\\n"
             for f_l in self.fields:
-                res += sp12+"'"+f_l.name+"':AwBfd("+str(f_l.msb)+","+str(f_l.lsb)+","
+                res += sp12+"'"+f_l.name+"':agwb.BitField("+str(f_l.msb)+","+str(f_l.lsb)+","
                 if self.type == "signed":
                     res += "True"
                 else:
@@ -718,11 +718,11 @@ class WbBlackBox(WbObject):
         """
         sp4 = 4*" "
         sp8 = 8*" "
-        res = "class Agwb_"+self.name+"(AwObj):\n"
+        res = "class Agwb_"+self.name+"(agwb.Block):\n"
         res += sp4+"x__size = "+str(self.addr_size)+"\n"
         res += sp4+"x__fields = {\n"
         res += sp8+"'reg':("+hex(0)+","+\
-            str(self.addr_size)+",(AwCreg,))\n"
+            str(self.addr_size)+",(agwb.ControlRegister,))\n"
         res += sp4+"}\n"
         return res
 
@@ -1146,7 +1146,7 @@ class WbBlock(WbObject):
         to the block from the Python code"""
         sp4 = 4*" "
         sp8 = 8*" "
-        res = "class Agwb_"+self.name+"(AwObj):\n"
+        res = "class Agwb_"+self.name+"(agwb.Block):\n"
         res += sp4+"x__size = "+str(self.addr_size)+"\n"
         res += sp4+"x__id = "+hex(self.id_val)+"\n"
         res += sp4+"x__ver = "+hex(GLB.VER_ID)+"\n"
@@ -1156,8 +1156,8 @@ class WbBlock(WbObject):
                 # Registers area
                 # Add two standard register - ID and VER
                 adr = a_r.adr
-                res += sp8+"'ID':("+hex(adr)+",(AwSreg,)),\\\n"
-                res += sp8+"'VER':("+hex(adr+1)+",(AwSreg,)),\\\n"
+                res += sp8+"'ID':("+hex(adr)+",(agwb.StatusRegister,)),\\\n"
+                res += sp8+"'VER':("+hex(adr+1)+",(agwb.StatusRegister,)),\\\n"
                 for reg in self.regs:
                     res += reg.gen_python(adr)
             else:

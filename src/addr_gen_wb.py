@@ -144,7 +144,7 @@ if wb.GLB.VHDL_PATH:
             BL.gen_vhdl()
 # Now we generate the Python access code
 if wb.GLB.PYTHON_PATH:
-    res = "from agwb import AwObj,AwSreg,AwCreg,AwBfd\n"
+    res = "import agwb\n\n"
     for key, BL in wb.blackboxes().items():
         res += BL.gen_python()
     for key, BL in wb.blocks().items():
