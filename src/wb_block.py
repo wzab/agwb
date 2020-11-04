@@ -718,12 +718,12 @@ class WbBlackBox(WbObject):
         """
         sp4 = 4*" "
         sp8 = 8*" "
-        res = "class Agwb_"+self.name+"(agwb.Block):\n"
+        res = "\nclass Agwb_"+self.name+"(agwb.Block):\n"
         res += sp4+"x__size = "+str(self.addr_size)+"\n"
         res += sp4+"x__fields = {\n"
         res += sp8+"'reg':("+hex(0)+","+\
             str(self.addr_size)+",(agwb.ControlRegister,))\n"
-        res += sp4+"}\n"
+        res += sp4+"}\n\n"
         return res
 
     def gen_html(self, base, name):
@@ -1146,7 +1146,7 @@ class WbBlock(WbObject):
         to the block from the Python code"""
         sp4 = 4*" "
         sp8 = 8*" "
-        res = "class Agwb_"+self.name+"(agwb.Block):\n"
+        res = "\nclass Agwb_"+self.name+"(agwb.Block):\n"
         res += sp4+"x__size = "+str(self.addr_size)+"\n"
         res += sp4+"x__id = "+hex(self.id_val)+"\n"
         res += sp4+"x__ver = "+hex(GLB.VER_ID)+"\n"
@@ -1169,7 +1169,7 @@ class WbBlock(WbObject):
                     # Vector of subblocks
                     res += sp8+"'"+a_r.name+"':("+hex(a_r.adr)+","+ \
                     str(a_r.reps)+",(Agwb_"+a_r.obj.name+",)),\\\n"
-        res += sp4+"}\n"
+        res += sp4+"}\n\n"
         return res
 
     def gen_html(self, base, mname):

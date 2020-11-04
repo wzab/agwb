@@ -144,7 +144,13 @@ if wb.GLB.VHDL_PATH:
             BL.gen_vhdl()
 # Now we generate the Python access code
 if wb.GLB.PYTHON_PATH:
-    res = "import agwb\n\n"
+    res = """\"\"\"
+This file has been automatically generated
+by the agwb (https://github.com/wzab/addr_gen_wb).
+Do not modify it by hand.
+\"\"\"\n
+"""
+    res += "import agwb\n\n"
     for key, BL in wb.blackboxes().items():
         res += BL.gen_python()
     for key, BL in wb.blocks().items():
