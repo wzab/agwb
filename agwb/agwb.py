@@ -110,6 +110,7 @@ class Block(object):
     The Python backend generates derived classes, with class fields
     corresponding to subblocks or registers.
     """
+    x__is_blackbox = False
     x__size = 1
     x__fields = {}
 

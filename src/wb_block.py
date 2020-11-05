@@ -719,6 +719,7 @@ class WbBlackBox(WbObject):
         sp4 = 4*" "
         sp8 = 8*" "
         res = "\nclass Agwb_"+self.name+"(agwb.Block):\n"
+        res += sp4+"x__is_blackbox = True\n"
         res += sp4+"x__size = "+str(self.addr_size)+"\n"
         res += sp4+"x__fields = {\n"
         res += sp8+"'reg':("+hex(0)+","+\
@@ -830,7 +831,7 @@ class WbBlock(WbObject):
         # 3. The blocks are allocated starting freom the end of the address 
         #
         # First calculate the total length of address space
-	#
+        #
         # We use the simplest algorithm - all blocks are sorted,
         # their size is rounded up to the nearest power of 2
         # They are allocated in order.
