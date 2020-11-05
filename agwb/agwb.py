@@ -105,7 +105,7 @@ class Vector(object):
 
 
 class Block(object):
-    """ Class describing the blocks handled by addr_gen_wb-gnerated code.
+    """Class describing the blocks handled by addr_gen_wb-gnerated code.
 
     The Python backend generates derived classes, with class fields
     corresponding to subblocks or registers.
@@ -131,6 +131,33 @@ class Block(object):
                 return f_i[1][0](self.x__iface, self.x__base+f_i[0])
             # pass addititional argument to the constructor
             return f_i[1][0](self.x__iface, self.x__base+f_i[0], f_i[1][1])
+
+    def _verify_id(self):
+        id = self.ID.read()
+        if id != self.x__id:
+            raise Exception(f"{self.__class__.__name__} has ID {hex(self.x__id)}, read ID {hex(id)}")
+
+    def _verify_ver(self):
+        ver = self.VER.read()
+        if ver != self.x__ver:
+            raise Exception(f"{self.__class__.__name__} has VER {hex(self.x__ver)}, read VER {hex(ver)}")
+
+    def verify_id_and_version(self):
+        """Read and verify id (ID) and version (VER) registers values.
+
+        This function reads and verifies ID and VER register values
+        in a recursive way for all non black box blocks.
+        It raises the exception if read values differ as it indicates,
+        that software and firmware versions differ.
+        """
+        for k in self.x__fields.keys():
+            subblock = getattr(self, k)
+            if not issubclass(type(subblock), Block):
+                continue
+
+        if self.x__is_blackbox == False:
+            self._verify_id()
+            self._verify_ver()
 
 
 class _Register(object):
