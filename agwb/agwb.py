@@ -16,10 +16,9 @@ write(self,address,value) that writes such a value
 """
 
 class BitField(object):
-    """
-    BitField class delivers an object used
-    to describe the bitfield. Its fields contain
-    certain precalculated values supporting quick
+    """Class delivering an object used to describe the bitfield.
+
+    Its fields contain certain precalculated values supporting quick
     handling of read and write access to the field.
     That class does not provide any methods.
     Only fields are used.
@@ -39,9 +38,8 @@ class BitField(object):
 
 
 class _BitFieldAccess(object):
-    """
-    _BitFieldAccess class provides a versatile object supporting
-    read/write access to any bitfield.
+    """Class providing a versatile object supporting  read/write access to any bitfield.
+
     The details of the particular bitfield are hidden in the
     BitField object passed via bf argument.
     """
@@ -81,12 +79,10 @@ class _BitFieldAccess(object):
 
 
 class Vector(object):
-    """
-    Vector class describes the vectors of registers
-    or subblocks. It provides only a __getitem__ method
-    that allows to access the particular object
-    in a vector (the object is created on the fly,
-    when it is needed)
+    """Class describing the vector of registers or subblocks.
+
+    It provides only a __getitem__ method that allows to access the particular object
+    in a vector (the object is created on the fly, when it is needed).
     """
     def __init__(self, iface, base, nitems, margs):
         self.iface = iface
@@ -109,18 +105,18 @@ class Vector(object):
 
 
 class Block(object):
+    """ Class describing the blocks handled by addr_gen_wb-gnerated code.
+
+    The Python backend generates derived classes, with class fields
+    corresponding to subblocks or registers.
     """
-    Block is the main class describing the blocks
-    handled by addr_gen_wb-gnerated code. The Python backend
-    generates derived classes, with class fields corresponding to
-    subblocks or registers.
-    """
-    def __init__(self, iface, base):
-        self.x__base = base
-        self.x__iface = iface
-        # Each created object must have its base
     x__size = 1
     x__fields = {}
+
+    def __init__(self, iface, base):
+        """base is the base address for the given block. """
+        self.x__base = base
+        self.x__iface = iface
 
     def __dir__(self):
         return self.x__fields.keys()
@@ -137,9 +133,7 @@ class Block(object):
 
 
 class _Register(object):
-    """
-    _Register class is the base class supporting access to the register.
-    """
+    """Base class supporting access to the register."""
     x__size = 1
 
     def __init__(self, iface, base, bfields={}):
@@ -164,9 +158,9 @@ ControlRegister = _Register # The control register is just the generic register
 
 
 class StatusRegister(_Register):
-    """
-    StatusRegister is the base class supporting access to the
-    read-only (status) register. The write method throws an exception.
+    """Class supporting access to the read-only (status) register.
+
+    The write method throws an exception.
     """
     def write(self, value):
         raise Exception("Status register at "+hex(self.x__base)+" can't be written")
