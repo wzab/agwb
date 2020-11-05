@@ -15,6 +15,7 @@ read(self,address) that returns 32-bit value
 write(self,address,value) that writes such a value
 """
 
+
 class BitField(object):
     """Class delivering an object used to describe the bitfield.
 
@@ -23,18 +24,19 @@ class BitField(object):
     That class does not provide any methods.
     Only fields are used.
     """
+
     def __init__(self, msb, lsb, is_signed):
         self.lsb = lsb
         self.msb = msb
         if is_signed:
-            self.sign_mask = 1 << (msb-lsb)
+            self.sign_mask = 1 << (msb - lsb)
             self.vmin = -self.sign_mask
-            self.vmax = self.sign_mask-1
+            self.vmax = self.sign_mask - 1
         else:
             self.vmin = 0
-            self.vmax = (1 << (msb-lsb+1))-1
+            self.vmax = (1 << (msb - lsb + 1)) - 1
             self.sign_mask = 0
-        self.mask = ((1 << (msb+1)) - 1) ^ ((1<<lsb)-1)
+        self.mask = ((1 << (msb + 1)) - 1) ^ ((1 << lsb) - 1)
 
 
 class _BitFieldAccess(object):
@@ -43,6 +45,7 @@ class _BitFieldAccess(object):
     The details of the particular bitfield are hidden in the
     BitField object passed via bf argument.
     """
+
     def __init__(self, iface, base, bf):
         self.x__iface = iface
         self.x__base = base
@@ -54,7 +57,7 @@ class _BitFieldAccess(object):
         rval >>= self.x__bf.lsb
         if self.x__bf.sign_mask:
             if rval & self.x__bf.sign_mask:
-                rval -= (self.x__bf.sign_mask << 1)
+                rval -= self.x__bf.sign_mask << 1
         return rval
 
     def write(self, value):
@@ -64,8 +67,8 @@ class _BitFieldAccess(object):
         # If the bitfield is signed, convert the negative values
         if self.x__bf.sign_mask:
             if value < 0:
-                value += (self.x__bf.sign_mask << 1)
-                print("final value: "+str(value))
+                value += self.x__bf.sign_mask << 1
+                print("final value: " + str(value))
         # Read the whole register
         rval = self.x__iface.read(self.x__base)
         # Mask the bitfield
@@ -84,6 +87,7 @@ class Vector(object):
     It provides only a __getitem__ method that allows to access the particular object
     in a vector (the object is created on the fly, when it is needed).
     """
+
     def __init__(self, iface, base, nitems, margs):
         self.iface = iface
         self.base = base
@@ -98,10 +102,9 @@ class Vector(object):
             raise Exception("Access outside the vector")
         if self.args != None:
             return self.mclass(
-                self.iface, \
-                self.base+key*self.mclass.x__size, \
-                self.args)
-        return self.mclass(self.iface, self.base+key*self.mclass.x__size)
+                self.iface, self.base + key * self.mclass.x__size, self.args
+            )
+        return self.mclass(self.iface, self.base + key * self.mclass.x__size)
 
 
 class Block(object):
@@ -110,6 +113,7 @@ class Block(object):
     The Python backend generates derived classes, with class fields
     corresponding to subblocks or registers.
     """
+
     x__is_blackbox = False
     x__size = 1
     x__fields = {}
@@ -125,22 +129,26 @@ class Block(object):
     def __getattr__(self, name):
         f_i = self.x__fields[name]
         if len(f_i) == 3:
-            return Vector(self.x__iface, self.x__base+f_i[0], f_i[1], f_i[2])
+            return Vector(self.x__iface, self.x__base + f_i[0], f_i[1], f_i[2])
         elif len(f_i) == 2:
             if len(f_i[1]) == 1:
-                return f_i[1][0](self.x__iface, self.x__base+f_i[0])
+                return f_i[1][0](self.x__iface, self.x__base + f_i[0])
             # pass addititional argument to the constructor
-            return f_i[1][0](self.x__iface, self.x__base+f_i[0], f_i[1][1])
+            return f_i[1][0](self.x__iface, self.x__base + f_i[0], f_i[1][1])
 
     def _verify_id(self):
         id = self.ID.read()
         if id != self.x__id:
-            raise Exception(f"{self.__class__.__name__} has ID {hex(self.x__id)}, read ID {hex(id)}")
+            raise Exception(
+                f"{self.__class__.__name__} has ID {hex(self.x__id)}, read ID {hex(id)}"
+            )
 
     def _verify_ver(self):
         ver = self.VER.read()
         if ver != self.x__ver:
-            raise Exception(f"{self.__class__.__name__} has VER {hex(self.x__ver)}, read VER {hex(ver)}")
+            raise Exception(
+                f"{self.__class__.__name__} has VER {hex(self.x__ver)}, read VER {hex(ver)}"
+            )
 
     def verify_id_and_version(self):
         """Read and verify id (ID) and version (VER) registers values.
@@ -162,6 +170,7 @@ class Block(object):
 
 class _Register(object):
     """Base class supporting access to the register."""
+
     x__size = 1
 
     def __init__(self, iface, base, bfields={}):
@@ -182,7 +191,7 @@ class _Register(object):
         return _BitFieldAccess(self.x__iface, self.x__base, self.x__bfields[name])
 
 
-ControlRegister = _Register # The control register is just the generic register
+ControlRegister = _Register  # The control register is just the generic register
 
 
 class StatusRegister(_Register):
@@ -190,48 +199,52 @@ class StatusRegister(_Register):
 
     The write method throws an exception.
     """
+
     def write(self, value):
-        raise Exception("Status register at "+hex(self.x__base)+" can't be written")
+        raise Exception("Status register at " + hex(self.x__base) + " can't be written")
 
 
 """
 Below is the demo code, showing an example how we may access the registers
 via an emulated interface.
 """
-if __name__ == '__main__':
+if __name__ == "__main__":
     # Table emulating the register file
-    rf = 1024 * [int(0),]
+    rf = 1024 * [
+        int(0),
+    ]
 
     # The class iface provides just two methods
     # read(address) and write(address,value)
     class DemoIface(object):
         def __init__(self):
             pass
+
         def read(self, addr):
             global rf
-            print("reading from address:"+hex(addr)+" val="+hex(rf[addr]))
+            print("reading from address:" + hex(addr) + " val=" + hex(rf[addr]))
             return rf[addr]
+
         def write(self, addr, val):
             global rf
-            print("writing "+hex(val)+" to address "+hex(addr))
+            print("writing " + hex(val) + " to address " + hex(addr))
             rf[addr] = val
 
     class c2(Block):
         x__size = 3
         x__fields = {
-            'r1':(1, (StatusRegister,
-                      { \
-                       't1':BitField(3, 1, False), \
-                       't2':BitField(9, 4, True), \
-                     }))
+            "r1": (
+                1,
+                (
+                    StatusRegister,
+                    {"t1": BitField(3, 1, False), "t2": BitField(9, 4, True),},
+                ),
+            )
         }
+
     class c1(Block):
         x__size = 100
-        x__fields = {
-            'f1':(0, 10, (c2,)), \
-            'f2':(11, (c2,)), \
-            'size':(32, (c2,))
-        }
+        x__fields = {"f1": (0, 10, (c2,)), "f2": (11, (c2,)), "size": (32, (c2,))}
 
     mf = DemoIface()
     a = c1(mf, 12)
