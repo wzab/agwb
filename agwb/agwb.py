@@ -184,6 +184,9 @@ class _Register(object):
     def read(self):
         return self.x__iface.read(self.x__base)
 
+    def read_fifo(self, count):
+        return self.x__iface.read_fifo(self.x__base, count)
+
     def write(self, value):
         self.x__iface.write(self.x__base, value)
 
