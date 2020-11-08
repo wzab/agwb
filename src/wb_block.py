@@ -328,9 +328,9 @@ class WbReg(WbObject):
                 self.default = ""
             if self.fields:
                 if self.stype is not None:
-                    self.default += "stlv2" + self.stype + "("
+                    self.default += "to_" + self.stype + "("
                 else:
-                    self.default += "stlv2t_" + self.name + "("
+                    self.default += "to_" + self.name + "("
             if self.type == "unsigned":
                 self.default += (
                     "to_unsigned(" + str(self.default_val) + "," + str(self.width) + ")"
@@ -411,14 +411,14 @@ class WbReg(WbObject):
 
             # Conversion function stlv to record
             d_t += (
-                "function stlv2"
+                "function to_"
                 + tname
                 + "(x : std_logic_vector) return "
                 + tname
                 + ";\n"
             )
             d_b += (
-                "function stlv2"
+                "function to_"
                 + tname
                 + "(x : std_logic_vector) return "
                 + tname
@@ -439,7 +439,7 @@ class WbReg(WbObject):
                     + "));\n"
                 )
             d_b += "  return res;\n"
-            d_b += "end stlv2" + tname + ";\n\n"
+            d_b += "end function;\n\n"
 
             # Conversion function record to std_logic_vector
             d_t += "function to_slv(x : " + tname + ") return std_logic_vector;\n"
@@ -628,11 +628,11 @@ class WbReg(WbObject):
                 conv_fun = "std_logic_vector"
                 iconv_fun = self.type
             elif self.stype is not None:
-                conv_fun = self.stype + "2stlv"
-                iconv_fun = "stlv2" + self.stype
+                conv_fun = "to_slv"
+                iconv_fun = "to_" + self.stype
             else:
-                conv_fun = "t_" + self.name + "2stlv"
-                iconv_fun = "stlv2t_" + self.name
+                conv_fun = "to_slv"
+                iconv_fun = "to_" + self.name
             # Read access
             if self.regtype == "sreg":
                 # First initialize the whole retun value with zeroes
