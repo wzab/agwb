@@ -1321,7 +1321,7 @@ class WbBlock(WbObject):
         self.add_templ("p_registered", "false", 0)
         self.add_templ("nof_subblks", str(n_ports), 0)
         self.add_templ("nof_masters", str(self.N_MASTERS), 0)
-        self.add_templ("p_entity", "agwb_" + self.name + "_wb", 0)
+        self.add_templ("p_entity", self.name + "_wb", 0)
         # If block has aggregated outputs, close the record definition
         # and add the output record to the entity ports
         if self.out_type is not None:
@@ -1330,11 +1330,11 @@ class WbBlock(WbObject):
                 "signal_ports", self.out_name + " : out " + self.out_type + ";\n", 6
             )
         # All template is filled, so we can now generate the files
-        wb_vhdl_pkg_file = GLB.VHDL_PATH + "/agwb_" + self.name + "_wb_pkg.vhd"
+        wb_vhdl_pkg_file = GLB.VHDL_PATH + "/" + self.name + "_wb_pkg.vhd"
         with open(wb_vhdl_pkg_file, "w") as f_o:
             f_o.write(TEMPL_PKG.format(**self.templ_dict))
             created_files["vhdl"].append(wb_vhdl_pkg_file)
-        wb_vhdl_file = GLB.VHDL_PATH + "/agwb_" + self.name + "_wb.vhd"
+        wb_vhdl_file = GLB.VHDL_PATH + "/" + self.name + "_wb.vhd"
         with open(wb_vhdl_file, "w") as f_o:
             f_o.write(templ_wb(self.N_MASTERS).format(**self.templ_dict))
             created_files["vhdl"].append(wb_vhdl_file)

@@ -94,7 +94,7 @@ for el in EL_ROOT.findall("constant"):
 # We prepare the packages with constants for different backends
 # For VHDL
 if wb.GLB.VHDL_PATH:
-    with open(wb.GLB.VHDL_PATH + "/agwb_" + TOP_NAME + "_const_pkg.vhd", "w") as fo:
+    with open(wb.GLB.VHDL_PATH + "/" + TOP_NAME + "_const_pkg.vhd", "w") as fo:
         fo.write(
             """library ieee;
 use ieee.std_logic_1164.all;
@@ -102,7 +102,7 @@ use ieee.numeric_std.all;
 library work;
 """
         )
-        fo.write("package agwb_" + TOP_NAME + "_const_pkg is\n")
+        fo.write("package " + TOP_NAME + "_const_pkg is\n")
         for cnst in ex.defines:
             fo.write(
                 "constant "
@@ -113,7 +113,7 @@ library work;
                 + ex.comments[cnst]
                 + "\n"
             )
-        fo.write("end agwb_" + TOP_NAME + "_const_pkg;\n")
+        fo.write("end package;\n")
 # For C
 if wb.GLB.C_HEADER_PATH:
     with open(wb.GLB.C_HEADER_PATH + "/agwb_" + TOP_NAME + "_const.h", "w") as fo:
@@ -232,7 +232,7 @@ if ARGS.fusesoc:
         }
 
         created_files = wb.created_files["vhdl"]
-        created_files.append(wb.GLB.VHDL_PATH + "/agwb_" + TOP_NAME + "_const_pkg.vhd")
+        created_files.append(wb.GLB.VHDL_PATH + "/" + TOP_NAME + "_const_pkg.vhd")
         coredata["filesets"] = {
             "rtl": {
                 "files": created_files,
