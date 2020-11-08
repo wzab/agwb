@@ -441,21 +441,9 @@ class WbReg(WbObject):
             d_b += "  return res;\n"
             d_b += "end stlv2" + tname + ";\n\n"
 
-            # conversion function record to stlv
-            d_t += (
-                "function "
-                + tname
-                + "2stlv(x : "
-                + tname
-                + ") return std_logic_vector;\n"
-            )
-            d_b += (
-                "function "
-                + tname
-                + "2stlv(x : "
-                + tname
-                + ") return std_logic_vector is\n"
-            )
+            # Conversion function record to std_logic_vector
+            d_t += "function to_slv(x : " + tname + ") return std_logic_vector;\n"
+            d_b += "function to_slv(x : " + tname + ") return std_logic_vector is\n"
             d_b += (
                 "variable res : std_logic_vector("
                 + str(self.width - 1)
@@ -474,7 +462,7 @@ class WbReg(WbObject):
                     + ");\n"
                 )
             d_b += "  return res;\n"
-            d_b += "end " + tname + "2stlv;\n\n"
+            d_b += "end function;\n\n"
         # If this is a vector of registers, create the array type
         if self.size > 1:
             d_t += (
