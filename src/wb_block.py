@@ -412,14 +412,14 @@ class WbReg(WbObject):
             # Conversion function stlv to record
             d_t += (
                 "function to_"
-                + tname
+                + tname[2:] # Discard "t_"
                 + "(x : std_logic_vector) return "
                 + tname
                 + ";\n"
             )
             d_b += (
                 "function to_"
-                + tname
+                + tname[2:] # Discard "t_"
                 + "(x : std_logic_vector) return "
                 + tname
                 + " is\n"
@@ -629,7 +629,7 @@ class WbReg(WbObject):
                 iconv_fun = self.type
             elif self.stype is not None:
                 conv_fun = "to_slv"
-                iconv_fun = "to_" + self.stype
+                iconv_fun = "to_" + self.stype[2:] # Discard "t_"
             else:
                 conv_fun = "to_slv"
                 iconv_fun = "to_" + self.name
