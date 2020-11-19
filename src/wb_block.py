@@ -274,12 +274,18 @@ class WbReg(WbObject):
         """
         The constructor gets the XML node defining the register
         """
-        nregs = ex.exprval(el.get("reps", "1"))
+        reps = el.get("reps")
+        if reps is None:
+            self.size = 1
+            self.force_vec = False
+        else:
+            self.size = ex.exprval(reps)
+            self.force_vec = True
+
         self.regtype = el.tag
         self.type = el.get("type", "std_logic_vector")
         self.stype = el.get("stype", None)
         self.base = adr
-        self.size = nregs
         self.name = el.attrib["name"]
         self.mode = el.get("mode", "")
         self.ignore = el.get("ignore", "")
@@ -464,7 +470,7 @@ class WbReg(WbObject):
             d_b += "  return res;\n"
             d_b += "end function;\n\n"
         # If this is a vector of registers, create the array type
-        if self.size > 1:
+        if self.force_vec:
             d_t += (
                 "type "
                 + tname
@@ -508,15 +514,13 @@ class WbReg(WbObject):
         if self.regtype == "creg":
             sfx = "_o"
             sdir = "out "
-        if self.size == 1:
-            d_t = self.name + sfx + " : " + sdir + " " + tname + ";\n"
-        else:
+        if self.force_vec:
             d_t = self.name + sfx + " : " + sdir + " " + tname + "_array;\n"
+        else:
+            d_t = self.name + sfx + " : " + sdir + " " + tname + ";\n"
         # Now we generate the STB or ACK ports (if required)
         if self.regtype == "creg" and self.stb == 1:
-            if self.size == 1:
-                d_t += self.name + sfx + "_stb : out std_logic;\n"
-            else:
+            if self.force_vec:
                 d_t += (
                     self.name
                     + sfx
@@ -524,10 +528,10 @@ class WbReg(WbObject):
                     + str(self.size - 1)
                     + " downto 0);\n"
                 )
-        if self.regtype == "sreg" and self.ack == 1:
-            if self.size == 1:
-                d_t += self.name + sfx + "_ack : out std_logic;\n"
             else:
+                d_t += self.name + sfx + "_stb : out std_logic;\n"
+        if self.regtype == "sreg" and self.ack == 1:
+            if self.force_vec:
                 d_t += (
                     self.name
                     + sfx
@@ -535,6 +539,8 @@ class WbReg(WbObject):
                     + str(self.size - 1)
                     + " downto 0);\n"
                 )
+            else:
+                d_t += self.name + sfx + "_ack : out std_logic;\n"
         if self.regtype != "creg" or parent.out_type is None:
             parent.add_templ("signal_ports", d_t, 6)
         # Generate the intermediate signals for output ports
@@ -543,10 +549,10 @@ class WbReg(WbObject):
         # the fields in output record (with output aggregation)
         if self.regtype == "creg":
             # Create the intermediate readable signal
-            if self.size == 1:
-                d_t = "signal int_" + self.name + sfx + " : " + tname
-            else:
+            if self.force_vec:
                 d_t = "signal int_" + self.name + sfx + " : " + tname + "_array"
+            else:
+                d_t = "signal int_" + self.name + sfx + " : " + tname
             if self.default is not None:
                 d_t += " := " + self.default
             d_t += ";"
@@ -567,9 +573,7 @@ class WbReg(WbObject):
                 )
             # Create intermediate signals for strobes
             if self.stb == 1:
-                if self.size == 1:
-                    d_t += "signal int_" + self.name + sfx + "_stb : std_logic;\n"
-                else:
+                if self.force_vec:
                     d_t += (
                         "signal int_"
                         + self.name
@@ -578,6 +582,8 @@ class WbReg(WbObject):
                         + str(self.size - 1)
                         + " downto 0);\n"
                     )
+                else:
+                    d_t += "signal int_" + self.name + sfx + "_stb : std_logic;\n"
                 if parent.out_type is None:
                     dt2 += (
                         self.name + sfx + "_stb <= int_" + self.name + sfx + "_stb;\n"
@@ -611,7 +617,7 @@ class WbReg(WbObject):
         # Generate the signal assignment in the process
         for i in range(0, self.size):
             # We prepare the index string used in case if this is a vector of registers
-            if self.size > 1:
+            if self.force_vec:
                 ind = "(" + str(i) + ")"
             else:
                 ind = ""
@@ -704,10 +710,10 @@ class WbReg(WbObject):
         for r_n in range(0, self.size):
             adr = reg_base + self.base + r_n
             # The name format depends whether its a single register or an item in a vector
-            if self.size == 1:
-                rname = self.name
-            else:
+            if self.force_vec:
                 rname = self.name + "[" + str(r_n) + "]"
+            else:
+                rname = self.name
             # Set permissions
             if self.regtype == "creg":
                 perms = "rw"
@@ -843,7 +849,7 @@ class WbReg(WbObject):
                     )
                     head += "};\n"
         # The generated code depends on the fact it is a single register or the vector of registers
-        if self.size > 1:
+        if self.force_vec:
             res += "[" + str(self.size) + "];\n"
         else:
             res += ";\n"
@@ -856,12 +862,12 @@ class WbReg(WbObject):
             return cdefs
         adr = reg_base + self.base
         # The name format depends whether its a single register or an item in a vector
-        if self.size == 1:
-            node = parent + "_" + self.name
-            cdefs += ": " + node + " " + parent + " $" + format(adr, "x") + " + ;\n"
-        else:
+        if self.force_vec:
             node = parent + "#" + self.name
             cdefs += ": " + node + " " + parent + " + $" + format(adr, "x") + " + ;\n"
+        else:
+            node = parent + "_" + self.name
+            cdefs += ": " + node + " " + parent + " $" + format(adr, "x") + " + ;\n"
         if self.fields:
             for b_f in self.fields:
                 maskval = ((1 << (b_f.msb + 1)) - 1) ^ ((1 << b_f.lsb) - 1)
@@ -884,10 +890,7 @@ class WbReg(WbObject):
         sp8 = 8 * " "
         sp12 = 12 * " "
         res = ""
-        if self.size == 1:
-            # Single register
-            res += sp8 + "'" + self.name + "':(" + hex(reg_base + self.base) + ",("
-        else:
+        if self.force_vec:
             # Vector of registers
             res += (
                 sp8
@@ -899,6 +902,9 @@ class WbReg(WbObject):
                 + str(self.size)
                 + ",("
             )
+        else:
+            # Single register
+            res += sp8 + "'" + self.name + "':(" + hex(reg_base + self.base) + ",("
         if self.regtype == "sreg":
             res += "agwb.StatusRegister,"
         elif self.regtype == "creg":
