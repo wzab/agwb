@@ -971,7 +971,7 @@ class WbArea(WbObject):
     """ The class representing the address area
     """
 
-    def __init__(self, size, name, obj, reps, ignore="", force_vec=0):
+    def __init__(self, size, name, obj, reps, ignore="", force_vec=False):
         self.name = name
         self.size = size
         self.obj = obj
@@ -1096,7 +1096,7 @@ class WbBlock(WbObject):
 
     def analyze(self):
         # Add the length of the local addresses to the list of areas
-        self.areas.append(WbArea(self.free_reg_addr, "int_regs", None, 1))
+        self.areas.append(WbArea(self.free_reg_addr, "int_regs", None, True))
         # Scan the subblocks
         for sblk in self.subblks:
             if sblk.tag == "subblock":
@@ -1110,11 +1110,14 @@ class WbBlock(WbObject):
                     # Now we can be sure, that it is analyzed, so we can
                     # add its address space to ours.
                 # Check if this is a vector of subblocks
-                reps = ex.exprval(sblk.get("reps", "1"))
+                reps = sblk.get("reps")
+                if reps is None:
+                    reps = 1
+                    force_vec = False
+                else:
+                    reps = ex.exprval(reps)
+                    force_vec = True
                 ignore = sblk.get("ignore", "")
-                force_vec = ex.exprval(sblk.get("force_vec", "0"))
-                print("force:" + str(force_vec))
-                print("reps:" + str(reps))
                 # Now recalculate the size of the area, considering possible
                 # block repetitions
                 addr_size = b_l.addr_size * reps
@@ -1127,11 +1130,14 @@ class WbBlock(WbObject):
                 if not sblk.attrib["type"] in GLB.blackboxes:
                     GLB.blackboxes[sblk.attrib["type"]] = WbBlackBox(sblk)
                 b_l = GLB.blackboxes[sblk.attrib["type"]]
-                reps = ex.exprval(sblk.get("reps", "1"))
-                print("reps:" + str(reps))
+                reps = sblk.get("reps")
+                if reps is None:
+                    reps = 1
+                    force_vec = False
+                else:
+                    reps = ex.exprval(reps)
+                    force_vec = True
                 ignore = sblk.get("ignore", "")
-                force_vec = ex.exprval(sblk.get("force_vec", "0"))
-                print("force:" + str(force_vec))
                 addr_size = b_l.addr_size * reps
                 self.areas.append(
                     WbArea(addr_size, sblk.get("name"), b_l, reps, ignore, force_vec)
@@ -1229,7 +1235,7 @@ class WbBlock(WbObject):
         n_ports = 0
         d_t = ""
         for a_r in self.areas:
-            if (a_r.reps == 1) and (a_r.force_vec == 0):
+            if (a_r.reps == 1) and (a_r.force_vec == False):
                 a_r.first_port = n_ports
                 a_r.last_port = n_ports
                 n_ports += 1
@@ -1380,7 +1386,7 @@ class WbBlock(WbObject):
                         xname = a_r.obj.xmlpath
                     else:
                         xname = xname + "_address.xml"
-                if (a_r.reps == 1) and (a_r.force_vec == 0):
+                if (a_r.reps == 1) and (a_r.force_vec == False):
                     # Single subblock
                     res += (
                         '  <node id="'
@@ -1458,7 +1464,7 @@ class WbBlock(WbObject):
                     cdefs += reg.gen_forth(adr, parent)
             elif not a_r.is_ignored("forth"):
                 # Subblock or vector of subblocks
-                if (a_r.reps == 1) and (a_r.force_vec == 0):
+                if (a_r.reps == 1) and (a_r.force_vec == False):
                     node = parent + "_" + a_r.name
                     # Single subblock
                     cdefs += (
@@ -1548,7 +1554,7 @@ class WbBlock(WbObject):
                 # Subblock or vector of subblocks
                 # Add the related header
                 head += "#include <agwb_" + a_r.obj.name + ".h>\n"
-                if (a_r.reps == 1) and (a_r.force_vec == 0):
+                if (a_r.reps == 1) and (a_r.force_vec == False):
                     # Single subblock
                     res += "  agwb_" + a_r.obj.name + " " + a_r.name + ";\n"
                 else:
@@ -1613,7 +1619,7 @@ class WbBlock(WbObject):
                     res += reg.gen_python(adr)
             else:
                 # The format depends on whether this is a block or vector of blocks
-                if (a_r.reps == 1) and (a_r.force_vec == 0):
+                if (a_r.reps == 1) and (a_r.force_vec == False):
                     # Single subblock
                     res += (
                         sp8
@@ -1701,7 +1707,7 @@ class WbBlock(WbObject):
                     res += reg.gen_html(base + a_r.adr, mname)
             else:
                 # Blocks or vectors of blocks
-                if (a_r.reps == 1) and (a_r.force_vec == 0):
+                if (a_r.reps == 1) and (a_r.force_vec == False):
                     # Single block
                     res += a_r.obj.gen_html(base + a_r.adr, mname + "." + a_r.name)
                 else:
