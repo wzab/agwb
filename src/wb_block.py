@@ -14,6 +14,7 @@ The code is published under LGPL V2 license
 
 This file implements the class handling a Wishbone connected block
 """
+import logging as log
 import re
 import zlib
 import expressions as ex
@@ -1004,7 +1005,7 @@ class WbBlackBox(WbObject):
 
     def gen_c_header(self):
         # Here we need to create a dummy header, that just fills the generated structure
-        print("Creating C header:" + self.name + "\n")
+        log.debug("Creating C header:" + self.name + "\n")
         res = "#ifndef __" + self.name + "__INC_H\n"
         res += "#define __" + self.name + "__INC_H\n"
         res += "typedef struct {\n"
@@ -1163,7 +1164,7 @@ class WbBlock(WbObject):
             a_r.total_size = 1 << a_r.adr_bits
             # Now we shift the position of the next block
             cur_size += a_r.total_size
-            print("added size:" + str(a_r.total_size))
+            log.debug("added size:" + str(a_r.total_size))
         # We must adjust the address space to the power of two
         self.adr_bits = (cur_size - 1).bit_length()
         self.addr_size = 1 << self.adr_bits
@@ -1179,7 +1180,7 @@ class WbBlock(WbObject):
                 a_r.adr = cur_top
         self.used = True
         # In fact, here we should be able to generate the HDL code
-        print("analyze: " + self.name + " addr_size:" + str(self.addr_size))
+        log.debug("analyze: " + self.name + " addr_size:" + str(self.addr_size))
 
     def add_templ(self, templ_key, value, indent):
         """ That function adds the new text to the dictionary
@@ -1218,7 +1219,7 @@ class WbBlock(WbObject):
         self.add_templ("out_record", "", 0)
         # If the outputs must be aggregated in a single record,
         # we will generate a type for that record instead of output ports
-        print(self, self.name)
+        log.debug(self, self.name)
         if self.aggregate_outs != "0":
             self.out_type = "t_" + self.name + "_out_regs"
             self.add_templ("out_record", "type " + self.out_type + " is record\n", 0)
@@ -1502,7 +1503,7 @@ class WbBlock(WbObject):
         # Each block is responsible for generation of the structure, that fully
         # fills it's address space.
         #
-        print("Creating C header:" + self.name + "\n")
+        log.debug("Creating C header:" + self.name + "\n")
         head = "#ifndef __" + self.name + "__INC_H\n"
         head += "#define __" + self.name + "__INC_H\n"
         # Generate the constants with block ID and with version ID
@@ -1521,7 +1522,7 @@ class WbBlock(WbObject):
         self.areas.sort(key=WbArea.sort_adr)
         for a_r in self.areas:
             # Check if it was nessary to add a filler
-            print(a_r.name, a_r.adr, cur_addr)
+            log.debug(a_r.name, a_r.adr, cur_addr)
             if a_r.adr < cur_addr:
                 # That should never happen! It would mean that blocks are not ordered properly
                 raise Exception("Incorrect ordering of blocks!")
@@ -1568,7 +1569,7 @@ class WbBlock(WbObject):
                         + "];\n"
                     )
                 cur_addr += a_r.reps * a_r.obj.addr_size
-            print(
+            log.debug(
                 "area: "
                 + a_r.name
                 + " total_size:"
@@ -1593,7 +1594,7 @@ class WbBlock(WbObject):
         cur_addr = self.addr_size
         res += "} __attribute__((aligned(4))) agwb_" + self.name + " ;\n"
         res += "#endif\n"
-        print("block: " + self.name + " cur_addr=" + str(cur_addr))
+        log.debug("block: " + self.name + " cur_addr=" + str(cur_addr))
         with open(GLB.C_HEADER_PATH + "/agwb_" + self.name + ".h", "w") as f_o:
             f_o.write(head)
             f_o.write(res)
