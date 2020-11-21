@@ -15,6 +15,7 @@ Please note, that ghdl must be in your PATH, and it must be a decent version of 
 
 File example1.xml
 
+```xml
     <sysdef top="MAIN">
     <constant name="NEXTERNS" val="4" />
     <constant name="NSEL_BITS" val="3" />
@@ -34,10 +35,9 @@ File example1.xml
     </block>
 
     </sysdef>
-	
+```
 Included file block1.xml:
-	
-
+```xml
     <block name="SYS1">
       <creg name="CTRL" desc="Control register" stb="1">
         <field name="START" width="1" desc="Start the operation"/>
@@ -47,6 +47,4 @@ Included file block1.xml:
       <sreg name="STATUS" desc="Status register" ack="1" />
       <creg name="ENABLEs" desc="Link enable registers" reps="10" default="0x0"/>
     </block>
-
-
-
+```

@@ -21,10 +21,10 @@ if __name__ == "__main__":
         print("ERROR: Input .xml file (infile parameter) needs to be specified!")
         sys.exit(1)
     try:
-        hdl = config['parameters']['hdl']
+        hdl = files_root + config['parameters']['hdl']
     except:
-        print("ERROR: Path for HDL files (hdl parameter) needs to be specified!")
-        sys.exit(1)
+        # If path for HDL files is not specified generate them in FuseSoc cache.
+        hdl = "."
 
     args = ['python3', os.path.dirname(__file__) + '/addr_gen_wb.py',
             '--fusesoc',
@@ -58,4 +58,6 @@ if __name__ == "__main__":
     except:
         pass
 
-    subprocess.run(args)
+    ret = subprocess.run(args)
+    if ret.returncode != 0:
+        exit(ret.returncode)
