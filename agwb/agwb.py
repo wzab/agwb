@@ -140,14 +140,14 @@ class Block(object):
         id = self.ID.read()
         if id != self.x__id:
             raise Exception(
-                f"{self.__class__.__name__} has ID {hex(self.x__id)}, read ID {hex(id)}"
+                self.__class__.__name__ + " has ID " + hex(self.x__id) + ", read ID " + hex(id)
             )
 
     def _verify_ver(self):
         ver = self.VER.read()
         if ver != self.x__ver:
             raise Exception(
-                f"{self.__class__.__name__} has VER {hex(self.x__ver)}, read VER {hex(ver)}"
+                self.__class__.__name__ + " has VER " + hex(self.x__ver) + ", read VER " + hex(ver)
             )
 
     def verify_id_and_version(self):
