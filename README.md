@@ -1,4 +1,4 @@
-# addr\_gen\_wb (AGWB) - register access for hierarchical Wishbone connected systems #
+# AGWB (Address Generator for WishBone) - register access for hierarchical Wishbone connected systems
 There is a paper describing the version of AGWB from June 2019 - https://doi.org/10.1117/12.2536259 . If you use AGWB in your work and publish results, please consider quoting that paper.
 
 The [wbgen2](https://www.ohwr.org/projects/wishbone-gen/wiki/wbgen2-documentation) is a very nice tool. However, it has certain limitations that were critical for me. Namely it does not support arrays of registers, and does not support nested blocks. Probably it can be extended to support those features, but I definitely prefere to write code generators in Python than in Lua. Therefore I decided to try to write adr\_gen\_wb.py in Python, almost from scratch.
