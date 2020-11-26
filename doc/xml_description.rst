@@ -227,3 +227,20 @@ The :code:`reps` attribute is used for defining vectors of blocks/registers.
 It enforces the implementation of the particular instance to be treated as a vector even if the value equals 1.
 This is useful for parametrized designs, when sometimes the parameter describing the number of implemented blocks or registers may equal 1, and sometimes may equal value greater than 1.
 With such approach implemented codes are very flexible and need no modification.
+
+ignore attribute
+~~~~~~~~~~~~~~~~
+The :code:`ignore` attribute is used for ignoring generation of definitions for certain blocks for particular backends.
+The atribute may be specified either in the definition of the block (igoring all its instances) or in the instantiation of the block, or in the definition of a register.
+Currently :code:`ignore` attribute has effect only in case of Forth backend.
+It is possible to extend that functionality to other backends.
+However up to now there was no need to do it.
+
+**Example**
+
+.. code-block:: xml
+
+   <block name="my_block">
+     <subblock name="links" type="sys1" reps="N_SEL_MAX" ignore="forth"/>
+     <subblock name="olinks" type="sys1"/>
+   </block>
