@@ -41,10 +41,10 @@ Mandatory attribute:
 
 .. code-block:: xml
 
-   <block name="main">
+   <block name="top">
       <blackbox name="EXTHUGE" type="HTEST" addrbits="16" />
       <subblock name="LINKS" type="SYS1" reps="NSEL_MAX"/>
-      <creg name="CTRL" desc="Control register in the main block" default="0x11">
+      <creg name="CTRL" desc="Control register in the top block" default="0x11">
          <field name="CLK_FREQ" width="4"/>
          <field name="PLL_RESET" width="1"/>
       </creg>

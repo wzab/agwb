@@ -31,11 +31,11 @@ Output products
 AGWB always generates VHDL files appropriate to the defined blocks.
 User should expect following VHDL files to be generated.
 
-#. *agwb_{top_name}_const_pkg.vhd* - package with constants defined in input *.xml* files.
-#. *agwb_{block_name}_wb_pkg.vhd* - package for given block.
+#. *{top_name}_const_pkg.vhd* - package with constants defined in input *.xml* files.
+#. *{block_name}_pkg.vhd* - package for given block.
    Packages for distinct blocks are generated into distinct files.
    These packages contain various constants, subtypes, types definitions and conversion functions related to given block. 
-#. *agwb_{block_name}_wb.vhd* - entity for given block.
+#. *{block_name}.vhd* - entity for given block.
    Entities for distinct blocks are generated into distinct files.
 
 Depending on the input arguments AGWB can also generate following helper files.

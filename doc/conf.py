@@ -17,7 +17,7 @@
 
 # -- Project information -----------------------------------------------------
 
-project = 'AGWB - register access for hierarchical Wishbone connected systems'
+project = 'AGWB - Address Generator for WishBone'
 copyright = '2020, Wojciech M. Zabolotny'
 author = 'Wojciech M. Zabolotny'
 
