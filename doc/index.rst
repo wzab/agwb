@@ -13,7 +13,8 @@ Welcome to AGWB's documentation!
    overview
    installation_and_usage
    xml_description
-
+   vhdl
+   python
 
 Indices and tables
 ==================

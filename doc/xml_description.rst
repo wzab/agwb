@@ -217,7 +217,7 @@ Optional attributes:
 
 Math within attribute value
 ###########################
-Wojtek needs to describe this.
+Wojtek has to  describe this.
 
 Notes
 #####
