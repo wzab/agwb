@@ -18,7 +18,7 @@
 # -- Project information -----------------------------------------------------
 
 project = 'AGWB - Address Generator for WishBone'
-copyright = '2020, Wojciech M. Zabolotny'
+copyright = '2020, Wojciech M. Zabolotny and contributors'
 author = 'Wojciech M. Zabolotny'
 
 # The full version, including alpha/beta/rc tags
