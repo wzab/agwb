@@ -190,6 +190,9 @@ class _Register(object):
     def write(self, value):
         self.x__iface.write(self.x__base, value)
 
+    def write_fifo(self, values):
+        self.x__iface.write(self.x__base, values)
+
     def __getattr__(self, name):
         return _BitFieldAccess(self.x__iface, self.x__base, self.x__bfields[name])
 
