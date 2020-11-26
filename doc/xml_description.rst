@@ -215,3 +215,16 @@ Optional attributes:
       <subblock name="dproc" type="data_processing" reps="2" />
    </block>
 
+Math within attribute value
+###########################
+Wojtek needs to describe this.
+
+Notes
+#####
+
+reps attribute
+~~~~~~~~~~~~~~
+The :code:`reps` attribute is used for defining vectors of blocks/registers.
+It enforces the implementation of the particular instance to be treated as a vector even if the value equals 1.
+This is useful for parametrized designs, when sometimes the parameter describing the number of implemented blocks or registers may equal 1, and sometimes may equal value greater than 1.
+With such approach implemented codes are very flexible and need no modification.
