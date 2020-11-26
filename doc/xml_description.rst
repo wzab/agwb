@@ -121,33 +121,6 @@ Each module (entity) can have its own *.xml* file with block definition related 
 
    <include path="relative/path/to/block.xml"/>
 
-
-sysdef
-~~~~~~
-:code:`sysdef` must be a root element.
-
-Mandatory attribute:
-
-#. :code:`top` - designates the block which should be used as a top level for registers generation.
-
-Optional attribute:
-
-#. :code:`masters` - number of Wishbone masters controlling the local bus (default value is 1).
-
-**Example**
-
-.. code-block:: xml
-
-   <sysdef top="foo" masters="2">
-      <block name="foo">
-         ...
-      </block>
-
-      <block name="bar">
-         ...
-      </block>
-   </sysdef>
-
 sreg
 ~~~~
 :code:`sreg` stands for *status register* and should be used to describe registers that are supposed to be read only by software.
@@ -214,6 +187,32 @@ Optional attributes:
       <subblock name="write_fifo" type="wfifo" desc="Some extra description." />
       <subblock name="dproc" type="data_processing" reps="2" />
    </block>
+
+sysdef
+~~~~~~
+:code:`sysdef` must be a root element.
+
+Mandatory attribute:
+
+#. :code:`top` - designates the block which should be used as a top level for registers generation.
+
+Optional attribute:
+
+#. :code:`masters` - number of Wishbone masters controlling the local bus (default value is 1).
+
+**Example**
+
+.. code-block:: xml
+
+   <sysdef top="foo" masters="2">
+      <block name="foo">
+         ...
+      </block>
+
+      <block name="bar">
+         ...
+      </block>
+   </sysdef>
 
 Math within attribute value
 ###########################
