@@ -2,6 +2,8 @@ Python
 ------
 
 If :code:`--python` argument is specified, AGWB generates special :code:`agwb` package, which can be used for simulation or interaction with real hardware.
+To be able to import the package it must be in the path.
+It is left for the user how it is achieved.
 
 Register interface
 ##################
