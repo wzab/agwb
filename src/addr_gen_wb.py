@@ -44,13 +44,30 @@ PARSER.add_argument("--fusesoc_vlnv", help="FuseSoc VLNV tag", default="")
 ARGS = PARSER.parse_args()
 
 INFILENAME = ARGS.infile
-wb.GLB.IPBUS_PATH = ARGS.ipbus
-wb.GLB.VHDL_PATH = ARGS.hdl
-wb.GLB.FORTH_PATH = ARGS.fs
-wb.GLB.C_HEADER_PATH = ARGS.header
-wb.GLB.PYTHON_PATH = ARGS.python
-wb.GLB.HTML_PATH = ARGS.html
 
+wb.GLB.IPBUS_PATH = ARGS.ipbus
+if wb.GLB.IPBUS_PATH:
+    os.makedirs(wb.GLB.IPBUS_PATH, exist_ok=True)
+
+wb.GLB.VHDL_PATH = ARGS.hdl
+if wb.GLB.VHDL_PATH:
+    os.makedirs(wb.GLB.VHDL_PATH, exist_ok=True)
+
+wb.GLB.FORTH_PATH = ARGS.fs
+if wb.GLB.FORTH_PATH:
+    os.makedirs(wb.GLB.FORTH_PATH, exist_ok=True)
+
+wb.GLB.C_HEADER_PATH = ARGS.header
+if wb.GLB.C_HEADER_PATH:
+    os.makedirs(wb.GLB.C_HEADER_PATH, exist_ok=True)
+
+wb.GLB.PYTHON_PATH = ARGS.python
+if wb.GLB.PYTHON_PATH:
+    os.makedirs(wb.GLB.PYTHON_PATH, exist_ok=True)
+
+wb.GLB.HTML_PATH = ARGS.html
+if wb.GLB.HTML_PATH:
+    os.makedirs(wb.GLB.HTML_PATH, exist_ok=True)
 
 # The line below reads the XML and recursively inserts included XMLs
 # it also generates the list of objects describing the origin of each line
