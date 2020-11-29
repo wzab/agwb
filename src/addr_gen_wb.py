@@ -15,7 +15,9 @@ The code is published under LGPL V2 license
 """
 import xml.etree.ElementTree as et
 import xml.parsers.expat as pe
+import os
 import sys
+import shutil
 import zlib
 import argparse
 import wb_block as wb
@@ -133,11 +135,21 @@ if wb.GLB.C_HEADER_PATH:
         fo.write("\n#endif\n")
 # For Python
 if wb.GLB.PYTHON_PATH:
-    with open(wb.GLB.PYTHON_PATH + "/agwb_" + TOP_NAME + "_const.py", "w") as fo:
+    os.makedirs(wb.GLB.PYTHON_PATH + "/agwb", exist_ok=True)
+    shutil.copytree(
+        os.path.join(os.path.dirname(__file__), "../targets/python/agwb"),
+        wb.GLB.PYTHON_PATH + "/agwb",
+        dirs_exist_ok=True
+    )
+    with open(wb.GLB.PYTHON_PATH + "/agwb/" + TOP_NAME + "_const.py", "w") as fo:
         for cnst in ex.defines:
             fo.write(
                 cnst + " = " + str(ex.defines[cnst]) + " # " + ex.comments[cnst] + "\n"
             )
+    with open(wb.GLB.PYTHON_PATH + "/agwb/" + "__init__.py", "a") as f:
+        f.write(
+                "from ." + TOP_NAME + "_const import *\n"
+        )
 # Generation of constants for Forth is added to the generation of
 # the access words
 
@@ -177,14 +189,18 @@ by the agwb (https://github.com/wzab/addr_gen_wb).
 Do not modify it by hand.
 \"\"\"\n
 """
-    res += "import agwb\n\n"
+    res += "from . import agwb\n\n"
     for key, BL in wb.blackboxes().items():
         res += BL.gen_python()
     for key, BL in wb.blocks().items():
         if BL.used:
             res += BL.gen_python()
-    with open(wb.GLB.PYTHON_PATH + "/agwb_" + TOP_NAME + ".py", "w") as fo:
+    with open(wb.GLB.PYTHON_PATH + "/agwb/" + TOP_NAME + ".py", "w") as fo:
         fo.write(res)
+    with open(wb.GLB.PYTHON_PATH + "/agwb/" + "__init__.py", "a") as f:
+        f.write(
+                "from ." + TOP_NAME + " import *\n"
+        )
 # Now we generate the IPbus address tables
 if wb.GLB.IPBUS_PATH:
     for key, BL in wb.blocks().items():

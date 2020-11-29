@@ -1023,7 +1023,7 @@ class WbBlackBox(WbObject):
         """
         sp4 = 4 * " "
         sp8 = 8 * " "
-        res = "\nclass Agwb_" + self.name + "(agwb.Block):\n"
+        res = "\nclass " + self.name + "(agwb.Block):\n"
         res += sp4 + "x__is_blackbox = True\n"
         res += sp4 + "x__size = " + str(self.addr_size) + "\n"
         res += sp4 + "x__fields = {\n"
@@ -1604,7 +1604,7 @@ class WbBlock(WbObject):
         to the block from the Python code"""
         sp4 = 4 * " "
         sp8 = 8 * " "
-        res = "\nclass Agwb_" + self.name + "(agwb.Block):\n"
+        res = "\nclass " + self.name + "(agwb.Block):\n"
         res += sp4 + "x__size = " + str(self.addr_size) + "\n"
         res += sp4 + "x__id = " + hex(self.id_val) + "\n"
         res += sp4 + "x__ver = " + hex(GLB.VER_ID) + "\n"
@@ -1628,7 +1628,7 @@ class WbBlock(WbObject):
                         + a_r.name
                         + "':("
                         + hex(a_r.adr)
-                        + ",(Agwb_"
+                        + ",("
                         + a_r.obj.name
                         + ",)),\\\n"
                     )
@@ -1642,7 +1642,7 @@ class WbBlock(WbObject):
                         + hex(a_r.adr)
                         + ","
                         + str(a_r.reps)
-                        + ",(Agwb_"
+                        + ",("
                         + a_r.obj.name
                         + ",)),\\\n"
                     )
