@@ -31,12 +31,11 @@ library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
-library general_cores;
-use general_cores.wishbone_pkg.all;
-
 library work;
 package {p_entity}_pkg is
-  constant {p_entity}_addr_bits : integer := {p_adr_bits};
+
+  constant C_{p_entity}_ADDR_BITS : integer := {p_adr_bits};
+
 {p_package}
 {out_record}
 end {p_entity}_pkg;
