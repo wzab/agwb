@@ -124,7 +124,7 @@ library work;
         fo.write("package " + TOP_NAME + "_const_pkg is\n")
         for cnst in ex.defines:
             fo.write(
-                "constant "
+                "constant C_"
                 + cnst
                 + " : integer := "
                 + str(ex.defines[cnst])
