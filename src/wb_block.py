@@ -456,7 +456,6 @@ class WbReg(WbObject):
                 + " downto 0);\n"
             )
             d_b += "begin\n"
-            d_b += "  res := (others => '0');\n"
             for f_l in self.fields:
                 d_b += (
                     "  res("
