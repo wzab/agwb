@@ -152,12 +152,11 @@ if wb.GLB.C_HEADER_PATH:
         fo.write("\n#endif\n")
 # For Python
 if wb.GLB.PYTHON_PATH:
-    os.makedirs(wb.GLB.PYTHON_PATH + "/agwb", exist_ok=True)
-    shutil.copytree(
-        os.path.join(os.path.dirname(__file__), "../targets/python/agwb"),
-        wb.GLB.PYTHON_PATH + "/agwb",
-        dirs_exist_ok=True
-    )
+    dst_path = wb.GLB.PYTHON_PATH + "/agwb"
+    os.makedirs(dst_path, exist_ok=True)
+    src_path = os.path.join(os.path.dirname(__file__), "../targets/python/agwb/")
+    shutil.copy(src_path + "__init__.py", dst_path)
+    shutil.copy(src_path + "agwb.py", dst_path)
     with open(wb.GLB.PYTHON_PATH + "/agwb/" + TOP_NAME + "_const.py", "w") as fo:
         for cnst in ex.defines:
             fo.write(
