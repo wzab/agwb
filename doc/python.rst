@@ -5,6 +5,12 @@ If :code:`--python` argument is specified, AGWB generates special :code:`agwb` p
 To be able to import the package it must be in the path.
 It is left for the user how it is achieved.
 
+The hardware-related structure of blocks and registers is represented as a nested structure of proper classes and attributes.
+The details are well abstracted from the user.
+Accessing a register feels exactly the same as accessing regular Python class attributes.
+Assume there is :code:`top` block, which contains :code:`foo` subblock, which containts :code:`bar` status register.
+After instantiating the :code:`top` class reading the :code:`bar` register can be simply done with :code:`top.foo.bar.read()`.
+
 Register interface
 ##################
 
