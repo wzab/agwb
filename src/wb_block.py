@@ -21,8 +21,8 @@ import expressions as ex
 
 # Define if "volatile" should be used in C headers (if you use _sync_synchronize()
 # it may be probably avoided with better results!
-# XVOLATILE = "volatile" # "volatile" is used
-XVOLATILE = ""  # "volatile" not used
+XVOLATILE = "volatile" # "volatile" is used
+#XVOLATILE = ""  # "volatile" not used
 
 # Template for generation of the VHDL package
 TEMPL_PKG = """\
