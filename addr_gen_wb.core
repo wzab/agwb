@@ -13,11 +13,6 @@ generators:
         command: src/addr_gen_wb_fusesoc_wrapper.py
         description: Generator for register access for hierarchical Wishbone connected systems
 
-    addr_gen_wb_local:
-        interpreter: python3
-        command: src/addr_gen_wb_fusesoc_wrapper_local.py
-        description: Generator for register access for hierarchical Wishbone connected systems
-
 targets:
     default:
         filesets:
