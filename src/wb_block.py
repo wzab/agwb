@@ -21,8 +21,8 @@ import expressions as ex
 
 # Define if "volatile" should be used in C headers (if you use _sync_synchronize()
 # it may be probably avoided with better results!
-# XVOLATILE = "volatile" # "volatile" is used
-XVOLATILE = ""  # "volatile" not used
+XVOLATILE = "volatile" # "volatile" is used
+#XVOLATILE = ""  # "volatile" not used
 
 # Template for generation of the VHDL package
 TEMPL_PKG = """\
@@ -31,12 +31,11 @@ library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
-library general_cores;
-use general_cores.wishbone_pkg.all;
-
 library work;
 package {p_entity}_pkg is
-  constant {p_entity}_addr_bits : integer := {p_adr_bits};
+
+  constant C_{p_entity}_ADDR_BITS : integer := {p_adr_bits};
+
 {p_package}
 {out_record}
 end {p_entity}_pkg;
@@ -457,7 +456,6 @@ class WbReg(WbObject):
                 + " downto 0);\n"
             )
             d_b += "begin\n"
-            d_b += "  res := (others => '0');\n"
             for f_l in self.fields:
                 d_b += (
                     "  res("
@@ -1023,7 +1021,7 @@ class WbBlackBox(WbObject):
         """
         sp4 = 4 * " "
         sp8 = 8 * " "
-        res = "\nclass Agwb_" + self.name + "(agwb.Block):\n"
+        res = "\nclass " + self.name + "(agwb.Block):\n"
         res += sp4 + "x__is_blackbox = True\n"
         res += sp4 + "x__size = " + str(self.addr_size) + "\n"
         res += sp4 + "x__fields = {\n"
@@ -1604,7 +1602,7 @@ class WbBlock(WbObject):
         to the block from the Python code"""
         sp4 = 4 * " "
         sp8 = 8 * " "
-        res = "\nclass Agwb_" + self.name + "(agwb.Block):\n"
+        res = "\nclass " + self.name + "(agwb.Block):\n"
         res += sp4 + "x__size = " + str(self.addr_size) + "\n"
         res += sp4 + "x__id = " + hex(self.id_val) + "\n"
         res += sp4 + "x__ver = " + hex(GLB.VER_ID) + "\n"
@@ -1628,7 +1626,7 @@ class WbBlock(WbObject):
                         + a_r.name
                         + "':("
                         + hex(a_r.adr)
-                        + ",(Agwb_"
+                        + ",("
                         + a_r.obj.name
                         + ",)),\\\n"
                     )
@@ -1642,7 +1640,7 @@ class WbBlock(WbObject):
                         + hex(a_r.adr)
                         + ","
                         + str(a_r.reps)
-                        + ",(Agwb_"
+                        + ",("
                         + a_r.obj.name
                         + ",)),\\\n"
                     )

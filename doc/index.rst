@@ -3,7 +3,7 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Welcome to agwb's documentation!
+Welcome to AGWB's documentation!
 ================================
 
 .. toctree::
@@ -13,7 +13,8 @@ Welcome to agwb's documentation!
    overview
    installation_and_usage
    xml_description
-
+   vhdl
+   python
 
 Indices and tables
 ==================

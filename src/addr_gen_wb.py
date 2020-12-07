@@ -15,7 +15,9 @@ The code is published under LGPL V2 license
 """
 import xml.etree.ElementTree as et
 import xml.parsers.expat as pe
+import os
 import sys
+import shutil
 import zlib
 import argparse
 import wb_block as wb
@@ -42,13 +44,30 @@ PARSER.add_argument("--fusesoc_vlnv", help="FuseSoc VLNV tag", default="")
 ARGS = PARSER.parse_args()
 
 INFILENAME = ARGS.infile
-wb.GLB.IPBUS_PATH = ARGS.ipbus
-wb.GLB.VHDL_PATH = ARGS.hdl
-wb.GLB.FORTH_PATH = ARGS.fs
-wb.GLB.C_HEADER_PATH = ARGS.header
-wb.GLB.PYTHON_PATH = ARGS.python
-wb.GLB.HTML_PATH = ARGS.html
 
+wb.GLB.IPBUS_PATH = ARGS.ipbus
+if wb.GLB.IPBUS_PATH:
+    os.makedirs(wb.GLB.IPBUS_PATH, exist_ok=True)
+
+wb.GLB.VHDL_PATH = ARGS.hdl
+if wb.GLB.VHDL_PATH:
+    os.makedirs(wb.GLB.VHDL_PATH, exist_ok=True)
+
+wb.GLB.FORTH_PATH = ARGS.fs
+if wb.GLB.FORTH_PATH:
+    os.makedirs(wb.GLB.FORTH_PATH, exist_ok=True)
+
+wb.GLB.C_HEADER_PATH = ARGS.header
+if wb.GLB.C_HEADER_PATH:
+    os.makedirs(wb.GLB.C_HEADER_PATH, exist_ok=True)
+
+wb.GLB.PYTHON_PATH = ARGS.python
+if wb.GLB.PYTHON_PATH:
+    os.makedirs(wb.GLB.PYTHON_PATH, exist_ok=True)
+
+wb.GLB.HTML_PATH = ARGS.html
+if wb.GLB.HTML_PATH:
+    os.makedirs(wb.GLB.HTML_PATH, exist_ok=True)
 
 # The line below reads the XML and recursively inserts included XMLs
 # it also generates the list of objects describing the origin of each line
@@ -105,7 +124,7 @@ library work;
         fo.write("package " + TOP_NAME + "_const_pkg is\n")
         for cnst in ex.defines:
             fo.write(
-                "constant "
+                "constant C_"
                 + cnst
                 + " : integer := "
                 + str(ex.defines[cnst])
@@ -133,11 +152,20 @@ if wb.GLB.C_HEADER_PATH:
         fo.write("\n#endif\n")
 # For Python
 if wb.GLB.PYTHON_PATH:
-    with open(wb.GLB.PYTHON_PATH + "/agwb_" + TOP_NAME + "_const.py", "w") as fo:
+    dst_path = wb.GLB.PYTHON_PATH + "/agwb"
+    os.makedirs(dst_path, exist_ok=True)
+    src_path = os.path.join(os.path.dirname(__file__), "../targets/python/agwb/")
+    shutil.copy(src_path + "__init__.py", dst_path)
+    shutil.copy(src_path + "agwb.py", dst_path)
+    with open(wb.GLB.PYTHON_PATH + "/agwb/" + TOP_NAME + "_const.py", "w") as fo:
         for cnst in ex.defines:
             fo.write(
                 cnst + " = " + str(ex.defines[cnst]) + " # " + ex.comments[cnst] + "\n"
             )
+    with open(wb.GLB.PYTHON_PATH + "/agwb/" + "__init__.py", "a") as f:
+        f.write(
+                "from ." + TOP_NAME + "_const import *\n"
+        )
 # Generation of constants for Forth is added to the generation of
 # the access words
 
@@ -177,14 +205,18 @@ by the agwb (https://github.com/wzab/addr_gen_wb).
 Do not modify it by hand.
 \"\"\"\n
 """
-    res += "import agwb\n\n"
+    res += "from . import agwb\n\n"
     for key, BL in wb.blackboxes().items():
         res += BL.gen_python()
     for key, BL in wb.blocks().items():
         if BL.used:
             res += BL.gen_python()
-    with open(wb.GLB.PYTHON_PATH + "/agwb_" + TOP_NAME + ".py", "w") as fo:
+    with open(wb.GLB.PYTHON_PATH + "/agwb/" + TOP_NAME + ".py", "w") as fo:
         fo.write(res)
+    with open(wb.GLB.PYTHON_PATH + "/agwb/" + "__init__.py", "a") as f:
+        f.write(
+                "from ." + TOP_NAME + " import *\n"
+        )
 # Now we generate the IPbus address tables
 if wb.GLB.IPBUS_PATH:
     for key, BL in wb.blocks().items():

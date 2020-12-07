@@ -3,6 +3,17 @@ Overview
 
 Address Generator for WishBone (AGWB) is a tool for automatic management of local bus address space in complex FPGA systems.
 Its main advantage, comparing to other open source solutions, is the support for complex hierarchical systems.
+:numref:`fig_example_hierarchical_system` shows an example of a hierarchical system.
+
+.. figure:: images/example_hierarchical_system.png
+   :name: fig_example_hierarchical_system
+   :alt: Example of a hierarchical system.
+   :align: center
+   :scale: 50
+
+   The block diagram of an example design built in the FPGA using the AGWB.
+   The CDC block provides the clock domain crossing functionality.
+   It allows subblocks D and D_E to run with another clock than the rest of the system.
 
 Local bus
 #########
@@ -31,11 +42,11 @@ Output products
 AGWB always generates VHDL files appropriate to the defined blocks.
 User should expect following VHDL files to be generated.
 
-#. *agwb_{top_name}_const_pkg.vhd* - package with constants defined in input *.xml* files.
-#. *agwb_{block_name}_wb_pkg.vhd* - package for given block.
+#. *{top_name}_const_pkg.vhd* - package with constants defined in input *.xml* files.
+#. *{block_name}_pkg.vhd* - package for given block.
    Packages for distinct blocks are generated into distinct files.
    These packages contain various constants, subtypes, types definitions and conversion functions related to given block. 
-#. *agwb_{block_name}_wb.vhd* - entity for given block.
+#. *{block_name}.vhd* - entity for given block.
    Entities for distinct blocks are generated into distinct files.
 
 Depending on the input arguments AGWB can also generate following helper files.

@@ -140,14 +140,14 @@ class Block(object):
         id = self.ID.read()
         if id != self.x__id:
             raise Exception(
-                f"{self.__class__.__name__} has ID {hex(self.x__id)}, read ID {hex(id)}"
+                self.__class__.__name__ + " has ID " + hex(self.x__id) + ", read ID " + hex(id)
             )
 
     def _verify_ver(self):
         ver = self.VER.read()
         if ver != self.x__ver:
             raise Exception(
-                f"{self.__class__.__name__} has VER {hex(self.x__ver)}, read VER {hex(ver)}"
+                self.__class__.__name__ + " has VER " + hex(self.x__ver) + ", read VER " + hex(ver)
             )
 
     def verify_id_and_version(self):
@@ -189,6 +189,9 @@ class _Register(object):
 
     def write(self, value):
         self.x__iface.write(self.x__base, value)
+
+    def write_fifo(self, values):
+        self.x__iface.write(self.x__base, values)
 
     def __getattr__(self, name):
         return _BitFieldAccess(self.x__iface, self.x__base, self.x__bfields[name])

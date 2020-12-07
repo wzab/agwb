@@ -21,30 +21,37 @@ Following snippet from *.core* file can serve as an example.
 
    CAPI=2:
    
-   name: ::dpb_agwb
+   # Choose whatever name you want.
+   # If you have only single AGWB description of the system
+   # within your design, then it is good to use 'agwb' name.
+   name: ::agwb
    
    filesets:
-      agwb_dep:
-         depend:
-            - wzab::addr_gen_wb
+     agwb_dep:
+       depend:
+         - wzab::addr_gen_wb
    
    targets:
-      default:
-         generate:
-            - agwb_regs
-         filesets:
-            - agwb_dep
+     default:
+       generate:
+         - agwb_regs
+       filesets:
+         - agwb_dep
    
    generate:
-      agwb_regs:
-         generator: addr_gen_wb
-         parameters:
-            infile: dpb_top.xml
-            hdl: . # Do not change this path, it should always be ".".
-            # Commented parameters are optional.
-            # Paths for generated output files in below parameters are relative.
-            # header: c_headers/destination
-            # html: html/destination
-            # ipbus: ipbus_outputs/destination
-            # python: python_raw/destination
-            # fs: Forth_outputs/destination
+     agwb_regs:
+       generator: addr_gen_wb
+       parameters:
+         infile: top.xml
+         # hdl parameter is optional. If you don't provide it
+         # VHDL files will be generated to the FuseSoc cache directory.
+         hdl: ./optional/relative/path/for/generated/vhdl/files
+         # Below commented parameters are programming language specific
+         # and are also optional. Unlike 'hdl' parameter, if they are not
+         # provided particular files will not be generated.
+         # Paths for generated output files in all below parameters are relative.
+         # header: c_headers/destination
+         # html: html/destination
+         # ipbus: ipbus_outputs/destination
+         # python: python_raw/destination
+         # fs: Forth_outputs/destination

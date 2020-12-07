@@ -17,8 +17,8 @@
 
 # -- Project information -----------------------------------------------------
 
-project = 'AGWB - register access for hierarchical Wishbone connected systems'
-copyright = '2020, Wojciech M. Zabolotny'
+project = 'AGWB - Address Generator for WishBone'
+copyright = '2020, Wojciech M. Zabolotny and contributors'
 author = 'Wojciech M. Zabolotny'
 
 # The full version, including alpha/beta/rc tags
@@ -46,7 +46,9 @@ exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 #
-html_theme = 'alabaster'
+import sphinx_rtd_theme
+html_theme = 'sphinx_rtd_theme'
+numfig = True
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
