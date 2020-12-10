@@ -117,25 +117,27 @@ def templ_wb(nof_masters):
        g_num_slaves  => {nof_subblks},
        g_registered  => {p_registered},
        g_address     => c_address,
-       g_mask        => c_mask)
+       g_mask        => c_mask
+    )
     port map (
        clk_sys_i => clk_sys_i,
        rst_n_i   => rst_n_i,
 """
     if nof_masters > 1:
         res += """\
-        slave_i   => slave_i,
-        slave_o   => slave_o,
+       slave_i   => slave_i,
+       slave_o   => slave_o,
 """
     else:
         res += """\
-        slave_i   => wb_up_i,
-        slave_o   => wb_up_o,
+       slave_i   => wb_up_i,
+       slave_o   => wb_up_o,
 """
     res += """\
        master_i  => wb_m_i,
        master_o  => wb_m_o,
-      sdb_sel_o => open);
+       sdb_sel_o => open
+    );
 
   -- Process for register access
     process(clk_sys_i)
