@@ -1,9 +1,9 @@
 #!/usr/bin/python3
 import cbus
-from agwb_MAIN import Agwb_MAIN
+from agwb import MAIN
 cbus.bus_delay(100)
 mif=cbus.cbus_iface()
-a=Agwb_MAIN(mif,0)
+a=MAIN(mif,0)
 print("Test the ID")
 print ("ID read:"+ hex(a.ID.read()))
 print ("VER read:"+ hex(a.VER.read()))
