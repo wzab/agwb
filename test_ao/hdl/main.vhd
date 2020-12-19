@@ -3,9 +3,10 @@ use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 library general_cores;
 use general_cores.wishbone_pkg.all;
+library agwb;
+use agwb.MAIN_const_pkg.all;
+use agwb.MAIN_pkg.all;
 library work;
-use work.agwb_MAIN_const_pkg.all;
-use work.agwb_MAIN_wb_pkg.all;
 
 entity main is
 
@@ -20,20 +21,20 @@ entity main is
 end entity main;
 
 architecture rtl of main is
-  signal LINKS_wb_m_o	: t_wishbone_master_out_array(0 to NSEL_MAX-1);
-  signal LINKS_wb_m_i	: t_wishbone_master_in_array(0 to NSEL_MAX-1);
+  signal LINKS_wb_m_o	: t_wishbone_master_out_array(0 to C_NSEL_MAX-1);
+  signal LINKS_wb_m_i	: t_wishbone_master_in_array(0 to C_NSEL_MAX-1);
   signal EXTHUGE_wb_m_o : t_wishbone_master_out;
   signal EXTHUGE_wb_m_i : t_wishbone_master_in;
-  signal EXTERN_wb_m_o	: t_wishbone_master_out_array(0 to (NEXTERNS-1));
-  signal EXTERN_wb_m_i	: t_wishbone_master_in_array(0 to (NEXTERNS-1));
-  signal CDC_wb_m_o	: t_wishbone_master_out_array(0 to (NEXTERNS-1));
-  signal CDC_wb_m_i	: t_wishbone_master_in_array(0 to (NEXTERNS-1));
+  signal EXTERN_wb_m_o	: t_wishbone_master_out_array(0 to (C_NEXTERNS-1));
+  signal EXTERN_wb_m_i	: t_wishbone_master_in_array(0 to (C_NEXTERNS-1));
+  signal CDC_wb_m_o	: t_wishbone_master_out_array(0 to (C_NEXTERNS-1));
+  signal CDC_wb_m_i	: t_wishbone_master_in_array(0 to (C_NEXTERNS-1));
   signal CTRL_o		: t_CTRL;
   signal TEST_IN_i	: t_TEST_IN_array  := (others => (others => '0'));
   signal TEST_OUT_o	: t_TEST_OUT_array := (others => (others => '0'));
 begin  -- architecture rtl
 
-  MAIN_wb_1 : entity work.agwb_MAIN_wb
+  MAIN_1 : entity agwb.MAIN
     port map (
       slave_i	     => wb_s_in,
       slave_o	     => wb_s_out,
@@ -52,7 +53,7 @@ begin  -- architecture rtl
   TEST_IN_i(0) <= x"1234";
   TEST_IN_i(1) <= x"7654";
   
-  gl0 : for i in 0 to NEXTERNS-1 generate
+  gl0 : for i in 0 to C_NEXTERNS-1 generate
     wb_cdc_1 : entity work.wb_cdc
       generic map (
 	width => 32)
@@ -90,7 +91,7 @@ begin  -- architecture rtl
       wb_s_in	=> EXTHUGE_wb_m_o,
       wb_s_out	=> EXTHUGE_wb_m_i);
 
-  gl1 : for i in 0 to NSEL_MAX-1 generate
+  gl1 : for i in 0 to C_NSEL_MAX-1 generate
 
     sys1_1 : entity work.sys1
       port map (

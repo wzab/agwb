@@ -12,13 +12,16 @@ SOURCES_GC = \
  general-cores/modules/wishbone/wishbone_pkg.vhd \
  general-cores/modules/wishbone/wb_crossbar/xwb_crossbar.vhd \
 
+SOURCES_AGWB = \
+ gen/MAIN_const_pkg.vhd \
+ gen/SYS1_pkg.vhd \
+ gen/SYS1.vhd \
+ gen/MAIN_pkg.vhd \
+ gen/MAIN.vhd \
+
+
 SOURCES = \
- gen/agwb_MAIN_const_pkg.vhd \
- gen/agwb_SYS1_wb_pkg.vhd \
- gen/agwb_SYS1_wb.vhd \
  hdl/sys1.vhd \
- gen/agwb_MAIN_wb_pkg.vhd \
- gen/agwb_MAIN_wb.vhd \
  hdl/htest.vhd \
  hdl/exttest.vhd \
  hdl/wb_cdc.vhd \
@@ -29,21 +32,25 @@ SOURCES = \
 
 OBJECTS=$(SOURCES:.vhd=.o)
 OBJECTS_GC=$(SOURCES_GC:.vhd=.o)
+OBJECTS_AGWB=$(SOURCES_AGWB:.vhd=.o)
 
 all: show
 
 $(OBJECTS): %.o : %.vhd
 	ghdl -a -g -C  --std=${VSTD} --ieee=${STD} $<
+
 $(OBJECTS_GC): %.o : %.vhd
 	ghdl -a -g --work=general_cores -C  --std=${VSTD} --ieee=${STD} $<
-#	ghdl -a -g -C --workdir=comp --std=${VSTD} --ieee=${STD} $<
+
+$(OBJECTS_AGWB): %.o : %.vhd
+	ghdl -a -g --work=agwb -C  --std=${VSTD} --ieee=${STD} $<
 
 #--trace-signals --trace-processes
 #RUN_OPTIONS= 
 #--trace-processes
 show:   ${ENTITY} ${ENTITY}.ghw
 	gtkwave ${ENTITY}.ghw ${ENTITY}.sav
-${ENTITY}: ${OBJECTS_GC} ${OBJECTS}
+${ENTITY}: ${OBJECTS_GC} ${OBJECTS_AGWB} ${OBJECTS}
 #	vhdlp -work fmf fmf/*.vhd
 #	ghdl -e -g --mb-comments --workdir=comp --std=${VSTD} -fexplicit --ieee=${STD} ${ENTITY}
 	ghdl -e -g --mb-comments  --std=${VSTD} -fexplicit --ieee=${STD} ${ENTITY}
