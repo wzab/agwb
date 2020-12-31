@@ -39,6 +39,8 @@ package {p_entity}_pkg is
 
   constant C_{p_entity}_ADDR_BITS : integer := {p_adr_bits};
 
+{p_generics_consts}
+
 {p_package}
 {out_record}
 end {p_entity}_pkg;
@@ -67,6 +69,9 @@ def templ_wb(nof_masters):
   use work.{p_entity}_pkg.all;
 
   entity {p_entity} is
+    generic (
+{p_generics}
+    );
     port (
 """
     if nof_masters > 1:
@@ -97,7 +102,7 @@ def templ_wb(nof_masters):
     signal wb_up_o : t_wishbone_slave_out_array(0 to 0);
     signal wb_up_i : t_wishbone_slave_in_array(0 to 0);
     signal wb_m_o : t_wishbone_master_out_array(0 to {nof_subblks}-1);
-    signal wb_m_i : t_wishbone_master_in_array(0 to {nof_subblks}-1);
+    signal wb_m_i : t_wishbone_master_in_array(0 to {nof_subblks}-1) := (others => c_WB_SLAVE_OUT_ERR);
 
     -- Constants
     constant c_address : t_wishbone_address_array(0 to {nof_subblks}-1) := {p_addresses};
@@ -292,6 +297,8 @@ class WbReg(WbObject):
         self.stype = el.get("stype", None)
         self.base = adr
         self.name = el.attrib["name"]
+        self.size_generic = "g_"+self.name+"_size"
+        self.size_constant = "c_"+self.name+"_size"
         self.mode = el.get("mode", "")
         self.ignore = el.get("ignore", "")
         self.desc = el.get("desc", "")
@@ -380,7 +387,8 @@ class WbReg(WbObject):
         d_t = ""
         d_b = ""
         d_i = ""
-
+        d_g = "" # definitions of generics
+        d_c = "" # Declarations of constant used as default generics values        
         d_t += (
             "constant C_"
             + self.name
@@ -388,6 +396,9 @@ class WbReg(WbObject):
             + format(self.base, "08x")
             + '";\n'
         )
+        # Generate the register describing the size of the register vector
+        d_c += "constant " + self.size_constant + " : integer := " + str(self.size) +";\n"
+        d_g += self.size_generic + " : integer := " + self.size_constant +";\n"
         # Generate the type corresponding to the register
         if self.stype is None:
             tname = "t_" + self.name
@@ -479,12 +490,14 @@ class WbReg(WbObject):
                 "type "
                 + tname
                 + "_array is array(0 to "
-                + str(self.size - 1)
-                + ") of "
+                + self.size_generic
+                + " - 1) of "
                 + tname
                 + ";\n"
             )
         # Append the generated types to the parents package section
+        parent.add_templ("p_generics", d_g, 6)
+        parent.add_templ("p_generics_consts", d_c, 2)
         parent.add_templ("p_package", d_t, 0)
         parent.add_templ("p_package_body", d_b, 0)
 
@@ -529,8 +542,8 @@ class WbReg(WbObject):
                     self.name
                     + sfx
                     + "_stb : out std_logic_vector("
-                    + str(self.size - 1)
-                    + " downto 0);\n"
+                    + self.size_generic
+                    + " - 1 downto 0);\n"
                 )
             else:
                 d_t += self.name + sfx + "_stb : out std_logic;\n"
@@ -583,8 +596,8 @@ class WbReg(WbObject):
                         + self.name
                         + sfx
                         + "_stb : std_logic_vector("
-                        + str(self.size - 1)
-                        + " downto 0);\n"
+                        + self.size_generic
+                        + " - 1 downto 0);\n"
                     )
                 else:
                     d_t += "signal int_" + self.name + sfx + "_stb : std_logic;\n"
@@ -645,11 +658,13 @@ class WbReg(WbObject):
                 iconv_fun = "to_" + self.name
             # Read access
             if self.regtype == "sreg":
+                # Check if the register is implemented
+                d_t += "   if " + str(i) + " < " + self.size_generic + " then \n" 
                 # First initialize the whole retun value with zeroes
-                d_t += "   int_regs_wb_m_i.dat <= (others => '0');\n"
+                d_t += "     int_regs_wb_m_i.dat <= (others => '0');\n"
                 # Now set the used bits with correct values
                 d_t += (
-                    "   int_regs_wb_m_i.dat("
+                    "     int_regs_wb_m_i.dat("
                     + str(self.width - 1)
                     + " downto 0) <= "
                     + conv_fun
@@ -660,18 +675,20 @@ class WbReg(WbObject):
                     + ");\n"
                 )
                 if self.ack == 1:
-                    d_t += "   if int_regs_wb_m_i.ack = '0' then\n"
+                    d_t += "     if int_regs_wb_m_i.ack = '0' then\n"
                     # We shorten the STB to a single clock
-                    d_t += "      " + self.name + sfx + "_ack" + ind + " <= '1';\n"
-                    d_t += "   end if;\n"
+                    d_t += "       " + self.name + sfx + "_ack" + ind + " <= '1';\n"
+                    d_t += "     end if;\n"
                     # Add clearing of ACK signal at the begining of the process
                     d_i += self.name + sfx + "_ack" + ind + " <= '0';\n"
             else:
+                # Check if the register is implemented
+                d_t += "   if " + str(i) + " < "+ self.size_generic + " then \n" 
                 # First initialize the whole retun value with zeroes
-                d_t += "   int_regs_wb_m_i.dat <= (others => '0');\n"
+                d_t += "     int_regs_wb_m_i.dat <= (others => '0');\n"
                 # Now set the used bits with correct values
                 d_t += (
-                    "   int_regs_wb_m_i.dat("
+                    "     int_regs_wb_m_i.dat("
                     + str(self.width - 1)
                     + " downto 0) <= "
                     + conv_fun
@@ -683,9 +700,9 @@ class WbReg(WbObject):
                 )
             # Write access
             if self.regtype == "creg":
-                d_t += "   if int_regs_wb_m_o.we = '1' then\n"
+                d_t += "     if int_regs_wb_m_o.we = '1' then\n"
                 d_t += (
-                    "     int_"
+                    "       int_"
                     + self.name
                     + "_o"
                     + ind
@@ -696,15 +713,16 @@ class WbReg(WbObject):
                     + " downto 0));\n"
                 )
                 if self.stb == 1:
-                    d_t += "   if int_regs_wb_m_i.ack = '0' then\n"
+                    d_t += "     if int_regs_wb_m_i.ack = '0' then\n"
                     # We shorten the STB to a single clock
-                    d_t += "      int_" + self.name + sfx + "_stb" + ind + " <= '1';\n"
-                    d_t += "   end if;\n"
+                    d_t += "       int_" + self.name + sfx + "_stb" + ind + " <= '1';\n"
+                    d_t += "     end if;\n"
                     # Add clearing of STB signal at the begining of the process
                     d_i += "int_" + self.name + sfx + "_stb" + ind + " <= '0';\n"
-                d_t += "   end if;\n"
-            d_t += "   int_regs_wb_m_i.ack <= '1';\n"
-            d_t += "   int_regs_wb_m_i.err <= '0';\n"
+                d_t += "     end if;\n"
+            d_t += "     int_regs_wb_m_i.ack <= '1';\n"
+            d_t += "     int_regs_wb_m_i.err <= '0';\n"
+            d_t += "    end if; -- " + self.size_generic + "\n"
             parent.add_templ("register_access", d_t, 12)
             parent.add_templ("signals_idle", d_i, 10)
 
@@ -977,6 +995,8 @@ class WbArea(WbObject):
 
     def __init__(self, size, name, obj, reps, ignore="", force_vec=False):
         self.name = name
+        self.size_generic = "g_" + self.name+ "_size"
+        self.size_constant = "c_" + self.name+ "_size"
         self.size = size
         self.obj = obj
         self.adr = 0
@@ -1211,6 +1231,8 @@ class WbBlock(WbObject):
         # First - generate code for registers
         # We give empty declaration in case if the block does not contain
         # any registers
+        self.add_templ("p_generics", "", 0)
+        self.add_templ("p_generics_consts", "", 0)
         self.add_templ("p_package", "", 0)
         self.add_templ("p_package_body", "", 0)
         self.add_templ("signal_decls", "", 0)
@@ -1242,7 +1264,13 @@ class WbBlock(WbObject):
         ar_addresses = []
         n_ports = 0
         d_t = ""
+        d_g = "" # Declarations of generics
+        d_c = "" # Declarations of constant used as default generics values
         for a_r in self.areas:
+            # Generate the size generic and constant but not for internal registers
+            if a_r.obj != None:
+                d_g += a_r.size_generic + " : integer := " + a_r.size_constant + ";\n"
+                d_c += "constant " + a_r.size_constant + " : integer := " + str(a_r.reps) + ";\n"
             if (a_r.reps == 1) and (a_r.force_vec == False):
                 a_r.first_port = n_ports
                 a_r.last_port = n_ports
@@ -1271,14 +1299,14 @@ class WbBlock(WbObject):
                 d_t = (
                     a_r.name
                     + "_wb_m_o : out t_wishbone_master_out_array(0 to "
-                    + str(a_r.last_port - a_r.first_port)
-                    + ");\n"
+                    + a_r.size_generic
+                    + " - 1 );\n"
                 )
                 d_t += (
                     a_r.name
                     + "_wb_m_i : in t_wishbone_master_in_array(0 to "
-                    + str(a_r.last_port - a_r.first_port)
-                    + ") := ( others => c_WB_SLAVE_OUT_ERR);\n"
+                    + a_r.size_generic
+                    + " - 1 ) := ( others => c_WB_SLAVE_OUT_ERR);\n"
                 )
                 self.add_templ("subblk_busses", d_t, 6)
                 # Now we have to assign addresses and masks for each subblock and connect the port
@@ -1308,6 +1336,8 @@ class WbBlock(WbObject):
                     )
                     self.add_templ("cont_assigns", d_t, 4)
                     nport += 1
+        self.add_templ("p_generics",d_g,6)
+        self.add_templ("p_generics_consts",d_c,2)
         # Now generate vectors with addresses and masks
         adrs = "("
         masks = "("
