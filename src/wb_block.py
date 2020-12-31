@@ -489,9 +489,7 @@ class WbReg(WbObject):
             d_t += (
                 "type "
                 + tname
-                + "_array is array(0 to "
-                + self.size_generic
-                + " - 1) of "
+                + "_array is array( natural range <> ) of "
                 + tname
                 + ";\n"
             )
