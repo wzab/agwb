@@ -31,6 +31,9 @@ library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
+library general_cores;
+use general_cores.wishbone_pkg.all;
+
 library work;
 package {p_entity}_pkg is
 
@@ -1217,6 +1220,10 @@ class WbBlock(WbObject):
         self.add_templ("signal_ports", "", 0)
         self.add_templ("signals_idle", "", 0)
         self.add_templ("out_record", "", 0)
+        # For busses we define the constant that signals the error on slave WB bus
+        self.add_templ("p_package","constant c_WB_SLAVE_OUT_ERR : "
+          + "t_wishbone_slave_out :=(ack => '0', err => '1', rty => '0', "
+          + "stall => '0', dat => c_DUMMY_WB_DATA);\n", 0)
         # If the outputs must be aggregated in a single record,
         # we will generate a type for that record instead of output ports
         log.debug(self, self.name)
@@ -1245,7 +1252,7 @@ class WbBlock(WbObject):
                 # generate the entity port but not for internal registers
                 if a_r.obj != None:
                     d_t = a_r.name + "_wb_m_o : out t_wishbone_master_out;\n"
-                    d_t += a_r.name + "_wb_m_i : in t_wishbone_master_in;\n"
+                    d_t += a_r.name + "_wb_m_i : in t_wishbone_master_in := c_WB_SLAVE_OUT_ERR;\n"
                     self.add_templ("subblk_busses", d_t, 6)
                 # generate the signal assignment
                 d_t = (
@@ -1271,7 +1278,7 @@ class WbBlock(WbObject):
                     a_r.name
                     + "_wb_m_i : in t_wishbone_master_in_array(0 to "
                     + str(a_r.last_port - a_r.first_port)
-                    + ");\n"
+                    + ") := ( others => c_WB_SLAVE_OUT_ERR);\n"
                 )
                 self.add_templ("subblk_busses", d_t, 6)
                 # Now we have to assign addresses and masks for each subblock and connect the port
