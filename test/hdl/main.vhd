@@ -30,8 +30,8 @@ architecture rtl of main is
   signal CDC_wb_m_o	: t_wishbone_master_out_array(0 to (C_NEXTERNS-1));
   signal CDC_wb_m_i	: t_wishbone_master_in_array(0 to (C_NEXTERNS-1));
   signal CTRL_o		: t_CTRL;
-  signal TEST_IN_i	: t_TEST_IN_array  := (others => (others => '0'));
-  signal TEST_OUT_o	: t_TEST_OUT_array := (others => (others => '0'));
+  signal TEST_IN_i	: t_TEST_IN_array(0 to c_TEST_IN_size-1)  := (others => (others => '0'));
+  signal TEST_OUT_o	: t_TEST_OUT_array(0 to c_TEST_OUT_size-1) := (others => (others => '0'));
 begin  -- architecture rtl
 
   MAIN_1 : entity agwb.MAIN

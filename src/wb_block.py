@@ -71,6 +71,7 @@ def templ_wb(nof_masters):
   entity {p_entity} is
     generic (
 {p_generics}
+     g_dummy : boolean := true -- to avoid problem with semicolon in the last line
     );
     port (
 """
@@ -530,7 +531,7 @@ class WbReg(WbObject):
             sfx = "_o"
             sdir = "out "
         if self.force_vec:
-            d_t = self.name + sfx + " : " + sdir + " " + tname + "_array;\n"
+            d_t = self.name + sfx + " : " + sdir + " " + tname + "_array(0 to " + self.size_generic + " - 1 );\n"
         else:
             d_t = self.name + sfx + " : " + sdir + " " + tname + ";\n"
         # Now we generate the STB or ACK ports (if required)
@@ -565,7 +566,7 @@ class WbReg(WbObject):
         if self.regtype == "creg":
             # Create the intermediate readable signal
             if self.force_vec:
-                d_t = "signal int_" + self.name + sfx + " : " + tname + "_array"
+                d_t = "signal int_" + self.name + sfx + " : " + tname + "_array(0 to " + self.size_generic + " - 1 )"
             else:
                 d_t = "signal int_" + self.name + sfx + " : " + tname
             if self.default is not None:
