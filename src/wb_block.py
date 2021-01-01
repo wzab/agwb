@@ -504,7 +504,7 @@ class WbReg(WbObject):
         if self.regtype == "creg" and parent.out_type is not None:
             if self.size > 1:
                 parent.add_templ(
-                    "out_record", self.name + " : " + tname + "_array ;\n", 2
+                    "out_record", self.name + " : " + tname + "_array(0 to " + self.size_constant + " - 1 );\n", 2
                 )
             else:
                 parent.add_templ("out_record", self.name + " : " + tname + ";\n", 2)
