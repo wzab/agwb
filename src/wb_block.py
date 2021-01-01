@@ -110,6 +110,8 @@ def templ_wb(nof_masters):
     constant c_mask : t_wishbone_address_array(0 to {nof_subblks}-1) := {p_masks};
 
   begin
+  
+{check_assertions}
 """
     if nof_masters == 1:
         res += """\
@@ -388,6 +390,7 @@ class WbReg(WbObject):
         d_t = ""
         d_b = ""
         d_i = ""
+        d_a = ""
         d_g = "" # definitions of generics
         d_c = "" # Declarations of constant used as default generics values        
         d_t += (
@@ -397,9 +400,13 @@ class WbReg(WbObject):
             + format(self.base, "08x")
             + '";\n'
         )
-        # Generate the register describing the size of the register vector
+        # Generate the generic and constant describing the size of the register vector
         d_c += "constant " + self.size_constant + " : integer := " + str(self.size) +";\n"
         d_g += self.size_generic + " : integer := " + self.size_constant +";\n"
+        # Create the assertion
+        d_a += "assert " + self.size_generic + " <= " + self.size_constant +\
+               " report \"" + self.size_generic + " must be not greater than " +\
+               self.size_constant + "=" + str(self.size) + "\" severity failure;\n"
         # Generate the type corresponding to the register
         if self.stype is None:
             tname = "t_" + self.name
@@ -499,6 +506,7 @@ class WbReg(WbObject):
         parent.add_templ("p_generics_consts", d_c, 2)
         parent.add_templ("p_package", d_t, 0)
         parent.add_templ("p_package_body", d_b, 0)
+        parent.add_templ("check_assertions", d_a, 4)
 
         # If the outputs are aggregated, add the type of the signal to the output record type
         if self.regtype == "creg" and parent.out_type is not None:
@@ -1234,6 +1242,7 @@ class WbBlock(WbObject):
         self.add_templ("p_generics_consts", "", 0)
         self.add_templ("p_package", "", 0)
         self.add_templ("p_package_body", "", 0)
+        self.add_templ("check_assertions", "", 0)
         self.add_templ("signal_decls", "", 0)
         self.add_templ("control_registers_reset", "", 0)
         self.add_templ("register_access", "", 0)
@@ -1263,6 +1272,7 @@ class WbBlock(WbObject):
         ar_addresses = []
         n_ports = 0
         d_t = ""
+        d_a = "" # The assertions
         d_g = "" # Declarations of generics
         d_c = "" # Declarations of constant used as default generics values
         for a_r in self.areas:
@@ -1270,6 +1280,10 @@ class WbBlock(WbObject):
             if a_r.obj != None:
                 d_g += a_r.size_generic + " : integer := " + a_r.size_constant + ";\n"
                 d_c += "constant " + a_r.size_constant + " : integer := " + str(a_r.reps) + ";\n"
+                # Create the assertion
+                d_a += "assert " + a_r.size_generic + " <= " + a_r.size_constant +\
+                   " report \"" + a_r.size_generic + " must be not greater than " +\
+                   a_r.size_constant + "=" + str(a_r.reps) + "\" severity failure;\n"
             if (a_r.reps == 1) and (a_r.force_vec == False):
                 a_r.first_port = n_ports
                 a_r.last_port = n_ports
@@ -1335,6 +1349,7 @@ class WbBlock(WbObject):
                     )
                     self.add_templ("cont_assigns", d_t, 4)
                     nport += 1
+        self.add_templ("check_assertions",d_a,4)
         self.add_templ("p_generics",d_g,6)
         self.add_templ("p_generics_consts",d_c,2)
         # Now generate vectors with addresses and masks

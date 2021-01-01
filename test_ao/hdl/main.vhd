@@ -21,6 +21,12 @@ entity main is
 end entity main;
 
 architecture rtl of main is
+
+  -- Constant used to check a possibility to reduce the length of inplemented vector
+  -- Set to 4 to check if you can reduce the length.
+  -- Set to 13 to check if the assertion checking works correctly.
+  constant real_TEST_IN_size : integer := 4 ;
+
   signal LINKS_wb_m_o	: t_wishbone_master_out_array(0 to C_NSEL_MAX-1);
   signal LINKS_wb_m_i	: t_wishbone_master_in_array(0 to C_NSEL_MAX-1);
   signal EXTHUGE_wb_m_o : t_wishbone_master_out;
@@ -30,11 +36,13 @@ architecture rtl of main is
   signal CDC_wb_m_o	: t_wishbone_master_out_array(0 to (C_NEXTERNS-1));
   signal CDC_wb_m_i	: t_wishbone_master_in_array(0 to (C_NEXTERNS-1));
   signal CTRL_o		: t_CTRL;
-  signal TEST_IN_i	: t_TEST_IN_array(0 to c_TEST_IN_size - 1)  := (others => (others => '0'));
+  signal TEST_IN_i	: t_TEST_IN_array(0 to 4 - 1)  := (others => (others => '0'));
   signal TEST_OUT_o	: t_TEST_OUT_array(0 to c_TEST_OUT_size - 1) := (others => (others => '0'));
 begin  -- architecture rtl
 
   MAIN_1 : entity agwb.MAIN
+    generic map (
+      g_TEST_IN_SIZE => 4)
     port map (
       slave_i	     => wb_s_in,
       slave_o	     => wb_s_out,
