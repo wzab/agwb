@@ -1097,6 +1097,8 @@ class WbBlock(WbObject):
         # Prepare the list of subblocks
         self.subblks = []
         self.N_MASTERS = 1
+        # Prepare the counter used for if-generate labels for sub-bus asignment
+        self.bg_nr = 0
         for child in el.findall("*"):
             # Now for registers we allocate addresses in order
             # We don't do alignment (yet)
@@ -1329,8 +1331,12 @@ class WbBlock(WbObject):
                     ar_addresses.append(base)
                     base += a_r.obj.addr_size
                     ar_adr_bits.append(a_r.obj.adr_bits)
-                    d_t = (
-                        "wb_m_i("
+                    # The bus assignment must be generated conditionally (depending on generics)
+                    # We also need to generate the if-generate label
+                    self.bg_nr += 1
+                    d_t = "bg" + str(self.bg_nr) + ": if "+str(i) + " < " + a_r.size_generic + " generate\n"
+                    d_t += (
+                        "  wb_m_i("
                         + str(nport)
                         + ") <= "
                         + a_r.name
@@ -1339,7 +1345,8 @@ class WbBlock(WbObject):
                         + ");\n"
                     )
                     d_t += (
-                        a_r.name
+                        "  "
+                        + a_r.name
                         + "_wb_m_o("
                         + str(i)
                         + ")  <= "
@@ -1347,6 +1354,7 @@ class WbBlock(WbObject):
                         + str(nport)
                         + ");\n"
                     )
+                    d_t += "end generate;\n"
                     self.add_templ("cont_assigns", d_t, 4)
                     nport += 1
         self.add_templ("check_assertions",d_a,4)
