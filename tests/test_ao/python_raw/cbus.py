@@ -9,14 +9,16 @@ def bus_write(adr,dana):
     if s.strip()=="ACK":
        return
     else:
-       raise Exception("Wrong status returned:"+s.strip())
+       print("Wrong status returned:"+s.strip())
+       return
 def bus_read(adr):
     cmd="R"+("%8.8x" % adr)+"\n"
     wrpip.write(cmd)
     wrpip.flush()
     s=rdpip.readline()
     if s.strip()=="ERR":
-       raise Exception("Error status returned")
+       print("Error status returned")
+       return 0xa5a5a5a5
     return eval("0x"+s)
 
 def bus_delay(time_ns):

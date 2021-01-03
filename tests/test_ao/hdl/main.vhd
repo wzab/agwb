@@ -27,6 +27,9 @@ architecture rtl of main is
   -- Set to 13 to check if the assertion checking works correctly.
   constant real_TEST_IN_size : integer := 4 ;
 
+  -- That constant checks if we can block a single register
+  constant real_CTRL_size : integer := 0;
+
   signal LINKS_wb_m_o	: t_wishbone_master_out_array(0 to C_NSEL_MAX-1);
   signal LINKS_wb_m_i	: t_wishbone_master_in_array(0 to C_NSEL_MAX-1);
   signal EXTHUGE_wb_m_o : t_wishbone_master_out;
@@ -42,6 +45,7 @@ begin  -- architecture rtl
 
   MAIN_1 : entity agwb.MAIN
     generic map (
+      g_CTRL_size => real_CTRL_size,
       g_TEST_IN_SIZE => real_TEST_IN_size)
     port map (
       slave_i	     => wb_s_in,

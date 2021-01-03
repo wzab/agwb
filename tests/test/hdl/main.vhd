@@ -35,6 +35,8 @@ architecture rtl of main is
 begin  -- architecture rtl
 
   MAIN_1 : entity agwb.MAIN
+    generic map(
+      g_CTRL_size => c_CTRL_size)
     port map (
       slave_i	     => wb_s_in,
       slave_o	     => wb_s_out,

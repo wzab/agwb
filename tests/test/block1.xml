@@ -5,6 +5,6 @@
     <field name="STOP" width="1" desc="Stop the operation" />
   </creg>
   <sreg name="STATUS" desc="Status register" ack="1" />
-  <creg name="ENABLEs" desc="Link enable registers" reps="10" default="0x0"/>
+  <creg name="ENABLEs" desc="Link enable registers" reps="10;5" default="0x0"/>
 </block>
 

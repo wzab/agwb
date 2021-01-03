@@ -35,6 +35,8 @@ library general_cores;
 use general_cores.wishbone_pkg.all;
 
 library work;
+use work.agwb_pkg.all;
+
 package {p_entity}_pkg is
 
   constant C_{p_entity}_ADDR_BITS : integer := {p_adr_bits};
@@ -66,6 +68,7 @@ def templ_wb(nof_masters):
   library general_cores;
   use general_cores.wishbone_pkg.all;
   library work;
+  use work.agwb_pkg.all;
   use work.{p_entity}_pkg.all;
 
   entity {p_entity} is
@@ -198,11 +201,11 @@ class GlobalVars(object):
     def __init__(self):
         self.blocks = {}
         self.blackboxes = {}
+        self.variants = 0
         self.VER_ID = 0
 
 
 GLB = GlobalVars()
-
 
 def blocks():
     return GLB.blocks
@@ -211,6 +214,42 @@ def blocks():
 def blackboxes():
     return GLB.blackboxes
 
+def get_reps(el):
+    class reps_obj():
+        def __init__(self):
+            self.force_vec = False
+            self.max_reps = 1
+            self.reps_variants = [1]
+    r = reps_obj()
+    if(el is None):
+        return r
+    reps = el.get("reps",None)
+    used = el.get("used",None)
+    if (reps is not None) and (used is not None):
+        raise Exception ("In node " + str(el) + " both \"reps\" and \"used\" are defined")
+    if (reps is None) and (used is None):
+        return r
+    if (reps is not None):
+        r.force_vec = True
+        defs = reps
+    else: # used is not None
+        r.force_vec = False
+        defs = used
+    # Now we check how many values are defined and calculate them
+    vals = [ex.exprval(v) for v in defs.split(";")]
+    r.max_reps = max(vals)
+    # In "used" the maximum value is 1
+    if used is not None:
+        if r.max_reps > 1:
+            raise Exception ("In node " + str(el) + " \"used\" has value above 1")
+    # The number of variants must be the same in all definitions
+    nvars = len(vals)
+    if nvars > 1:
+        if (GLB.variants > 1) and (nvars != GLB.variants):
+            raise Exception ("In node " + str(el) + " number of variants is " + str(nvars) + " but it was earlier set to " + str(GLB.variants))
+        GLB.variants = nvars
+    r.reps_variants = vals
+    return r    
 
 class WbObject(object):
     def is_ignored(self, mode):
@@ -287,14 +326,11 @@ class WbReg(WbObject):
         """
         The constructor gets the XML node defining the register
         """
-        reps = el.get("reps")
-        if reps is None:
-            self.size = 1
-            self.force_vec = False
-        else:
-            self.size = ex.exprval(reps)
-            self.force_vec = True
-
+        # First we must read the possible sizes of the object
+        r = get_reps(el)        
+        self.size = r.max_reps
+        self.variants = r.reps_variants
+        self.force_vec = r.force_vec
         self.regtype = el.tag
         self.type = el.get("type", "std_logic_vector")
         self.stype = el.get("stype", None)
@@ -302,6 +338,7 @@ class WbReg(WbObject):
         self.name = el.attrib["name"]
         self.size_generic = "g_"+self.name+"_size"
         self.size_constant = "c_"+self.name+"_size"
+        self.size_variants = "t_"+self.name+"_size"
         self.mode = el.get("mode", "")
         self.ignore = el.get("ignore", "")
         self.desc = el.get("desc", "")
@@ -402,6 +439,10 @@ class WbReg(WbObject):
         )
         # Generate the generic and constant describing the size of the register vector
         d_c += "constant " + self.size_constant + " : integer := " + str(self.size) +";\n"
+        # If there are multiple variants, generate the array with values
+        if len(self.variants) > 1:
+            d_c += "constant " + self.size_variants + " : t_reps_variants(0 to " + \
+                str(GLB.variants - 1) +  ") := " + str(tuple(self.variants)) + ";\n"
         d_g += self.size_generic + " : integer := " + self.size_constant +";\n"
         # Create the assertion
         d_a += "assert " + self.size_generic + " <= " + self.size_constant +\
@@ -1000,18 +1041,20 @@ class WbArea(WbObject):
     """ The class representing the address area
     """
 
-    def __init__(self, size, name, obj, reps, ignore="", force_vec=False):
+    def __init__(self, size, name, obj, oreps, ignore=""):
         self.name = name
         self.size_generic = "g_" + self.name+ "_size"
         self.size_constant = "c_" + self.name+ "_size"
+        self.size_variants = "t_" + self.name+ "_size"
         self.size = size
         self.obj = obj
         self.adr = 0
         self.mask = 0
         self.total_size = 0
-        self.reps = reps
+        self.reps = oreps.max_reps
+        self.variants = oreps.reps_variants
+        self.force_vec = oreps.force_vec
         self.ignore = ignore
-        self.force_vec = force_vec
 
     def sort_adr(self):
         return self.adr
@@ -1129,7 +1172,7 @@ class WbBlock(WbObject):
 
     def analyze(self):
         # Add the length of the local addresses to the list of areas
-        self.areas.append(WbArea(self.free_reg_addr, "int_regs", None, True))
+        self.areas.append(WbArea(self.free_reg_addr, "int_regs", None, get_reps(None)))
         # Scan the subblocks
         for sblk in self.subblks:
             if sblk.tag == "subblock":
@@ -1143,19 +1186,13 @@ class WbBlock(WbObject):
                     # Now we can be sure, that it is analyzed, so we can
                     # add its address space to ours.
                 # Check if this is a vector of subblocks
-                reps = sblk.get("reps")
-                if reps is None:
-                    reps = 1
-                    force_vec = False
-                else:
-                    reps = ex.exprval(reps)
-                    force_vec = True
+                oreps = get_reps(sblk)
                 ignore = sblk.get("ignore", "")
                 # Now recalculate the size of the area, considering possible
                 # block repetitions
-                addr_size = b_l.addr_size * reps
+                addr_size = b_l.addr_size * oreps.max_reps
                 self.areas.append(
-                    WbArea(addr_size, sblk.get("name"), b_l, reps, ignore, force_vec)
+                    WbArea(addr_size, sblk.get("name"), b_l, oreps, ignore)
                 )
             elif sblk.tag == "blackbox":
                 # We don't need to analyze the blackbox. We allready have its
@@ -1163,17 +1200,11 @@ class WbBlock(WbObject):
                 if not sblk.attrib["type"] in GLB.blackboxes:
                     GLB.blackboxes[sblk.attrib["type"]] = WbBlackBox(sblk)
                 b_l = GLB.blackboxes[sblk.attrib["type"]]
-                reps = sblk.get("reps")
-                if reps is None:
-                    reps = 1
-                    force_vec = False
-                else:
-                    reps = ex.exprval(reps)
-                    force_vec = True
+                oreps = get_reps(sblk)
                 ignore = sblk.get("ignore", "")
-                addr_size = b_l.addr_size * reps
+                addr_size = b_l.addr_size * oreps.max_reps
                 self.areas.append(
-                    WbArea(addr_size, sblk.get("name"), b_l, reps, ignore, force_vec)
+                    WbArea(addr_size, sblk.get("name"), b_l, oreps, ignore)
                 )
             else:
                 raise Exception("Unknown type of subblock")
@@ -1252,10 +1283,6 @@ class WbBlock(WbObject):
         self.add_templ("signal_ports", "", 0)
         self.add_templ("signals_idle", "", 0)
         self.add_templ("out_record", "", 0)
-        # For busses we define the constant that signals the error on slave WB bus
-        self.add_templ("p_package","constant c_WB_SLAVE_OUT_ERR : "
-          + "t_wishbone_slave_out :=(ack => '0', err => '1', rty => '0', "
-          + "stall => '0', dat => c_DUMMY_WB_DATA);\n", 0)
         # If the outputs must be aggregated in a single record,
         # we will generate a type for that record instead of output ports
         log.debug(self, self.name)
@@ -1282,6 +1309,10 @@ class WbBlock(WbObject):
             if a_r.obj != None:
                 d_g += a_r.size_generic + " : integer := " + a_r.size_constant + ";\n"
                 d_c += "constant " + a_r.size_constant + " : integer := " + str(a_r.reps) + ";\n"
+                # If there are multiple variants, generate the array with values
+                if len(a_r.variants) > 1:
+                    d_c += "constant " + a_r.size_variants + " : int_array(0 to " + \
+                        str(GLB.variants - 1) +  ") := " + str(tuple(a_r.variants)) + ";\n"
                 # Create the assertion
                 d_a += "assert " + a_r.size_generic + " <= " + a_r.size_constant +\
                    " report \"" + a_r.size_generic + " must be not greater than " +\

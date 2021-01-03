@@ -13,6 +13,7 @@ SOURCES_GC = \
  general-cores/modules/wishbone/wb_crossbar/xwb_crossbar.vhd \
 
 SOURCES_AGWB = \
+ ../../hdl/agwb_pkg.vhd \
  gen/MAIN_const_pkg.vhd \
  gen/SYS1_pkg.vhd \
  gen/SYS1.vhd \

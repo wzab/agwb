@@ -16,7 +16,8 @@ def bus_read(adr):
     wrpip.flush()
     s=rdpip.readline()
     if s.strip()=="ERR":
-       raise Exception("Error status returned")
+       print("Error status returned")
+       return 0xa5A5A5A5
     return eval("0x"+s)
 
 def bus_delay(time_ns):
