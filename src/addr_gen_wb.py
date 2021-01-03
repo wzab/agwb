@@ -201,7 +201,6 @@ BL.analyze()
 variants = [None,]
 if wb.GLB.variants > 1:
     variants = range(0,wb.GLB.variants)
-print(variants)
 
 # Now we can generate the VHDL code that implements
 # the system
