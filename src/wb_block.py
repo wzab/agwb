@@ -343,7 +343,7 @@ class WbReg(WbObject):
         self.name = el.attrib["name"]
         self.size_generic = "g_"+self.name+"_size"
         self.size_constant = "c_"+self.name+"_size"
-        self.size_variants = "t_"+self.name+"_size"
+        self.size_variants = "v_"+self.name+"_size"
         self.mode = el.get("mode", "")
         self.ignore = el.get("ignore", "")
         self.desc = el.get("desc", "")
@@ -1124,7 +1124,7 @@ class WbArea(WbObject):
         self.name = name
         self.size_generic = "g_" + self.name+ "_size"
         self.size_constant = "c_" + self.name+ "_size"
-        self.size_variants = "t_" + self.name+ "_size"
+        self.size_variants = "v_" + self.name+ "_size"
         self.size = size
         self.obj = obj
         self.adr = 0
@@ -1399,7 +1399,7 @@ class WbBlock(WbObject):
                 d_c += "constant " + a_r.size_constant + " : integer := " + str(a_r.reps) + ";\n"
                 # If there are multiple variants, generate the array with values
                 if len(a_r.variants) > 1:
-                    d_c += "constant " + a_r.size_variants + " : int_array(0 to " + \
+                    d_c += "constant " + a_r.size_variants + " : t_reps_variants(0 to " + \
                         str(GLB.variants - 1) +  ") := " + str(tuple(a_r.variants)) + ";\n"
                 # Create the assertion
                 d_a += "assert " + a_r.size_generic + " <= " + a_r.size_constant +\
