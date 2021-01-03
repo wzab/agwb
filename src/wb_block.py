@@ -774,6 +774,68 @@ class WbReg(WbObject):
             parent.add_templ("register_access", d_t, 12)
             parent.add_templ("signals_idle", d_i, 10)
 
+    def gen_amap_xml(self, reg_base):
+        # The generated code depends on the fact it is a single register or the vector of registers
+        res = ""
+        for r_n in range(0, self.size):
+            adr = reg_base + self.base + r_n
+            # The name format depends whether its a single register or an item in a vector
+            if self.force_vec:
+                rname = self.name + "[" + str(r_n) + "]"
+            else:
+                rname = self.name
+            # Set permissions
+            if self.regtype == "creg":
+                perms = "rw"
+            elif self.regtype == "sreg":
+                perms = "r"
+            else:
+                raise Exception("Unknown type of register")
+            # Pass the "mode" attribute to the generated IPbus XML
+            s_mode = ""
+            if self.mode != "":
+                s_mode = ' mode="' + self.mode + '"'
+
+            # Generate the mask for register with width below 32 bits
+            s_mask = ""
+            if self.width < 32:
+                maskval = (1 << (self.width + 1)) - 1
+                s_mask = ' mask="0x' + format(maskval, "08x") + '"'
+
+            # Finally the format of the description depends on the presence of bitfields
+            if not self.fields:
+                res += (
+                    '  <node id="'
+                    + rname
+                    + '" address="0x'
+                    + format(adr, "08x")
+                    + '" permission="'
+                    + perms
+                    + '"'
+                    + s_mode
+                    + s_mask
+                    + "/>\n"
+                )
+            else:
+                res += (
+                    '  <node id="'
+                    + rname
+                    + '" address="0x'
+                    + format(adr, "08x")
+                    + '" permission="'
+                    + perms
+                    + '"'
+                    + s_mode
+                    + ">\n"
+                )
+                for b_f in self.fields:
+                    maskval = ((1 << (b_f.msb + 1)) - 1) ^ ((1 << b_f.lsb) - 1)
+                    mask = format(maskval, "08x")
+                    res += '    <node id="' + b_f.name + '" mask="0x' + mask + '"/>\n'
+                res += "  </node>\n"
+
+        return res
+
     def gen_ipbus_xml(self, reg_base):
         # The generated code depends on the fact it is a single register or the vector of registers
         res = ""
@@ -1442,8 +1504,77 @@ class WbBlock(WbObject):
             f_o.write(templ_wb(self.N_MASTERS).format(**self.templ_dict))
             created_files["vhdl"].append(wb_vhdl_file)
 
+    def gen_amap_xml(self):
+        """ This function generates the address map in the XML format for ipbus
+
+        """
+        res = '<node id="' + self.name + '">\n'
+        # Iterate the areas, generating the addresses
+        for a_r in self.areas:
+            if a_r.obj is None:
+                # Registers area
+                # Add two standard registers - ID and VER
+                adr = a_r.adr
+                res += (
+                    '  <node id="ID" address="0x'
+                    + format(adr, "08x")
+                    + '" permission="r"/>\n'
+                )
+                res += (
+                    '  <node id="VER" address="0x'
+                    + format(adr + 1, "08x")
+                    + '" permission="r"/>\n'
+                )
+                # Now add other registers in a loop
+                for reg in self.regs:
+                    res += reg.gen_amap_xml(adr)
+            else:
+                # Subblock or vector of subblocks
+                # If it is a subblock, prefix the name of the table with "agwb_"
+                xname = a_r.obj.name
+                if isinstance(a_r.obj, WbBlock):
+                    xname = "agwb_" + xname + "_amap.xml"
+                if isinstance(a_r.obj, WbBlackBox):
+                    if a_r.obj.xmlpath:
+                        xname = a_r.obj.xmlpath
+                    else:
+                        xname = xname + "_amap.xml"
+                if (a_r.reps == 1) and (a_r.force_vec == False):
+                    # Single subblock
+                    res += (
+                        '  <node id="'
+                        + a_r.name
+                        + '"'
+                        + ' address="0x'
+                        + format(a_r.adr, "08x")
+                        + '"'
+                        + ' module="file://'
+                        + xname
+                        + '"/>\n'
+                    )
+                else:
+                    # Vector of subblocks
+                    for n_b in range(0, a_r.reps):
+                        res += (
+                            '  <node id="'
+                            + a_r.name
+                            + "["
+                            + str(n_b)
+                            + ']"'
+                            + ' address="0x'
+                            + format(a_r.adr + n_b * a_r.obj.addr_size, "08x")
+                            + '"'
+                            + ' module="file://'
+                            + xname
+                            + '"/>\n'
+                        )
+        res += "</node>\n"
+        with open(GLB.AMAPXML_PATH + "/agwb_" + self.name + "_amap.xml", "w") as f_o:
+            f_o.write(res)
+
+
     def gen_ipbus_xml(self):
-        """ This function generates the address map in the XML format
+        """ This function generates the address map in the XML format for ipbus
 
         """
         res = '<node id="' + self.name + '">\n'

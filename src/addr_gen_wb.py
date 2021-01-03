@@ -33,6 +33,7 @@ PARSER = argparse.ArgumentParser()
 PARSER.add_argument("--infile", help="Input file path", default="../example1.xml")
 PARSER.add_argument("--hdl", help="VHDL outputs destination", default="")
 PARSER.add_argument("--ipbus", help="IPbus outputs destination", default="")
+PARSER.add_argument("--amapxml", help="AMap XML outputs destination", default="")
 PARSER.add_argument("--header", help="C header outputs destination", default="")
 PARSER.add_argument("--fs", help="Forth outputs destination", default="")
 PARSER.add_argument("--python", help="Python outputs destination", default="")
@@ -48,6 +49,10 @@ INFILENAME = ARGS.infile
 wb.GLB.IPBUS_PATH = ARGS.ipbus
 if wb.GLB.IPBUS_PATH:
     os.makedirs(wb.GLB.IPBUS_PATH, exist_ok=True)
+
+wb.GLB.AMAPXML_PATH = ARGS.amapxml
+if wb.GLB.AMAPXML_PATH:
+    os.makedirs(wb.GLB.AMAPXML_PATH, exist_ok=True)
 
 wb.GLB.VHDL_PATH = ARGS.hdl
 if wb.GLB.VHDL_PATH:
@@ -222,6 +227,13 @@ if wb.GLB.IPBUS_PATH:
     for key, BL in wb.blocks().items():
         if BL.used:
             BL.gen_ipbus_xml()
+
+# Now we generate the AMAPXML address tables
+if wb.GLB.AMAPXML_PATH:
+    for key, BL in wb.blocks().items():
+        if BL.used:
+            BL.gen_amap_xml()
+
 # Now we generate the C address tables
 if wb.GLB.C_HEADER_PATH:
     for key, BL in wb.blackboxes().items():
