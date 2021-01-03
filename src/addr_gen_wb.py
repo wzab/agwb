@@ -196,6 +196,13 @@ BL = wb.blocks()[TOP_NAME]
 # overwite the number of master ports in the top module
 BL.N_MASTERS = N_MASTERS
 BL.analyze()
+
+# Create the list of variants for formats that support it
+variants = [None,]
+if wb.GLB.variants > 1:
+    variants = range(0,wb.GLB.variants)
+print(variants)
+
 # Now we can generate the VHDL code that implements
 # the system
 if wb.GLB.VHDL_PATH:
@@ -222,17 +229,19 @@ Do not modify it by hand.
         f.write(
                 "from ." + TOP_NAME + " import *\n"
         )
+        
 # Now we generate the IPbus address tables
 if wb.GLB.IPBUS_PATH:
     for key, BL in wb.blocks().items():
         if BL.used:
             BL.gen_ipbus_xml()
 
-# Now we generate the AMAPXML address tables
-if wb.GLB.AMAPXML_PATH:
-    for key, BL in wb.blocks().items():
-        if BL.used:
-            BL.gen_amap_xml()
+# Now we generate the AMAPXML address tables for possible variants
+for nvar in variants:
+    if wb.GLB.AMAPXML_PATH:
+        for key, BL in wb.blocks().items():
+            if BL.used:
+                BL.gen_amap_xml(nvar)
 
 # Now we generate the C address tables
 if wb.GLB.C_HEADER_PATH:

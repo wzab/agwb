@@ -215,11 +215,16 @@ def blackboxes():
     return GLB.blackboxes
 
 def get_reps(el):
+    """ That function reads the number of repetitions of the block or register
+        in different variants, or reads the information about its usage 
+        in different variants. It stores the retrieved information in
+        the returned object.
+    """
     class reps_obj():
         def __init__(self):
             self.force_vec = False
             self.max_reps = 1
-            self.reps_variants = [1]
+            self.reps_variants = [1,]
     r = reps_obj()
     if(el is None):
         return r
@@ -411,6 +416,15 @@ class WbReg(WbObject):
                 self.default += ")"
         else:
             self.default = None
+
+    def var_reps(self,nvar):
+        """Function returns the length of the vector of registers
+           in the particular variant
+        """
+        if (nvar is None) or (len(self.variants) == 1):
+            return self.size
+        else:
+            return self.variants[nvar]
 
     def gen_vhdl(self, parent):
         """
@@ -774,16 +788,17 @@ class WbReg(WbObject):
             parent.add_templ("register_access", d_t, 12)
             parent.add_templ("signals_idle", d_i, 10)
 
-    def gen_amap_xml(self, reg_base):
-        # The generated code depends on the fact it is a single register or the vector of registers
+    def gen_amap_xml(self, reg_base,nvar=None):
         res = ""
-        for r_n in range(0, self.size):
-            adr = reg_base + self.base + r_n
-            # The name format depends whether its a single register or an item in a vector
+        r_n = self.var_reps(nvar)     
+        if r_n > 0:
+            adr = reg_base + self.base
+            rname = self.name
+            # If this is the vector, add additional attributes
             if self.force_vec:
-                rname = self.name + "[" + str(r_n) + "]"
+                rvec = ' nelems="'+str(r_n)+'" elemoffs="1" '
             else:
-                rname = self.name
+                rvec = ""
             # Set permissions
             if self.regtype == "creg":
                 perms = "rw"
@@ -795,13 +810,11 @@ class WbReg(WbObject):
             s_mode = ""
             if self.mode != "":
                 s_mode = ' mode="' + self.mode + '"'
-
             # Generate the mask for register with width below 32 bits
             s_mask = ""
             if self.width < 32:
                 maskval = (1 << (self.width + 1)) - 1
-                s_mask = ' mask="0x' + format(maskval, "08x") + '"'
-
+                s_mask = ' mask="0x' + format(maskval, "08x") + '"'            
             # Finally the format of the description depends on the presence of bitfields
             if not self.fields:
                 res += (
@@ -809,6 +822,8 @@ class WbReg(WbObject):
                     + rname
                     + '" address="0x'
                     + format(adr, "08x")
+                    + '"'
+                    + rvec
                     + '" permission="'
                     + perms
                     + '"'
@@ -822,6 +837,8 @@ class WbReg(WbObject):
                     + rname
                     + '" address="0x'
                     + format(adr, "08x")
+                    + '"'
+                    + rvec
                     + '" permission="'
                     + perms
                     + '"'
@@ -1117,6 +1134,15 @@ class WbArea(WbObject):
         self.variants = oreps.reps_variants
         self.force_vec = oreps.force_vec
         self.ignore = ignore
+
+    def var_reps(self,nvar):
+        """Function returns the number of repetitions of objects in the area
+           in the particular variant
+        """
+        if (nvar is None) or (len(self.variants) == 1):
+            return self.reps
+        else:
+            return self.variants[nvar]
 
     def sort_adr(self):
         return self.adr
@@ -1504,10 +1530,13 @@ class WbBlock(WbObject):
             f_o.write(templ_wb(self.N_MASTERS).format(**self.templ_dict))
             created_files["vhdl"].append(wb_vhdl_file)
 
-    def gen_amap_xml(self):
-        """ This function generates the address map in the XML format for ipbus
-
+    def gen_amap_xml(self,nvar=None):
+        """ This function generates the address map in the AMAP XML format
+            for the nvar variant
         """
+        var_id = ""
+        if nvar is not None:
+            var_id = "_v"+str(nvar)
         res = '<node id="' + self.name + '">\n'
         # Iterate the areas, generating the addresses
         for a_r in self.areas:
@@ -1527,19 +1556,19 @@ class WbBlock(WbObject):
                 )
                 # Now add other registers in a loop
                 for reg in self.regs:
-                    res += reg.gen_amap_xml(adr)
+                    res += reg.gen_amap_xml(adr,nvar)
             else:
                 # Subblock or vector of subblocks
                 # If it is a subblock, prefix the name of the table with "agwb_"
                 xname = a_r.obj.name
                 if isinstance(a_r.obj, WbBlock):
-                    xname = "agwb_" + xname + "_amap.xml"
+                    xname = "agwb_" + xname + "_amap" + var_id + ".xml"
                 if isinstance(a_r.obj, WbBlackBox):
                     if a_r.obj.xmlpath:
                         xname = a_r.obj.xmlpath
                     else:
-                        xname = xname + "_amap.xml"
-                if (a_r.reps == 1) and (a_r.force_vec == False):
+                        xname = xname + "_amap" + var_id + ".xml"
+                if (a_r.var_reps(nvar) == 1) and (a_r.force_vec == False):
                     # Single subblock
                     res += (
                         '  <node id="'
@@ -1552,24 +1581,27 @@ class WbBlock(WbObject):
                         + xname
                         + '"/>\n'
                     )
-                else:
-                    # Vector of subblocks
-                    for n_b in range(0, a_r.reps):
-                        res += (
-                            '  <node id="'
-                            + a_r.name
-                            + "["
-                            + str(n_b)
-                            + ']"'
-                            + ' address="0x'
-                            + format(a_r.adr + n_b * a_r.obj.addr_size, "08x")
-                            + '"'
-                            + ' module="file://'
-                            + xname
-                            + '"/>\n'
-                        )
+                elif (a_r.var_reps(nvar) >= 1):
+                    # Not empty vector of subblocks
+                    res += (
+                        '  <node id="'
+                        + a_r.name
+                        + '"'
+                        + ' address="0x'
+                        + format(a_r.adr, "08x")
+                        + '" '
+                        + ' nelems="'
+                        + str(a_r.var_reps(nvar))
+                        + '"'
+                        + ' elemoffs="'
+                        + format(a_r.obj.addr_size, "08x")
+                        + '"'                        
+                        + ' module="file://'
+                        + xname
+                        + '"/>\n'
+                    )
         res += "</node>\n"
-        with open(GLB.AMAPXML_PATH + "/agwb_" + self.name + "_amap.xml", "w") as f_o:
+        with open(GLB.AMAPXML_PATH + "/agwb_" + self.name + "_amap" + var_id + ".xml", "w") as f_o:
             f_o.write(res)
 
 
