@@ -172,21 +172,21 @@ def templ_wb(nof_masters):
               and (int_regs_wb_m_i.ack = '0') then
             int_regs_wb_m_i.err <= '1'; -- in case of missed address
             -- Access, now we handle consecutive registers
-            case int_addr is
+            -- Set the error state so it is output when none register is accessed
+            int_regs_wb_m_i.dat <= x"A5A5A5A5";
+            int_regs_wb_m_i.ack <= '0';
+            int_regs_wb_m_i.err <= '1';
 {register_access}
-            when {block_id_addr} =>
+            if int_addr = {block_id_addr} then
                int_regs_wb_m_i.dat <= {block_id};
                int_regs_wb_m_i.ack <= '1';
                int_regs_wb_m_i.err <= '0';
-            when {block_ver_addr} =>
+            end if;
+            if int_addr = {block_ver_addr} then
                int_regs_wb_m_i.dat <= {block_ver};
                int_regs_wb_m_i.ack <= '1';
                int_regs_wb_m_i.err <= '0';
-            when others =>
-               int_regs_wb_m_i.dat <= x"A5A5A5A5";
-               int_regs_wb_m_i.ack <= '0';
-               int_regs_wb_m_i.err <= '1';
-            end case;
+            end if;
           end if;
         end if;
       end if;
@@ -694,99 +694,97 @@ class WbReg(WbObject):
                 )
                 parent.add_templ("control_registers_reset", r_t, 10)
         # Generate the signal assignment in the process
-        for i in range(0, self.size):
-            # We prepare the index string used in case if this is a vector of registers
-            if self.force_vec:
-                ind = "(" + str(i) + ")"
-            else:
-                ind = ""
-            d_t = (
-                'when "'
-                + format(self.base + i, "0" + str(parent.reg_adr_bits) + "b")
-                + '" => -- '
-                + hex(self.base + i)
-                + "\n"
+        d_t = (
+            'for i in 0 to '
+            + self.size_generic + ' - 1 loop\n'
+        )
+        # We prepare the index string used in case if this is a vector of registers
+        if self.force_vec:
+            ind = "( i )"
+        else:
+            ind = ""
+        d_t += (
+            '  if int_addr = std_logic_vector(to_unsigned('
+            + str(self.base) +  ' + i, '  + str(parent.reg_adr_bits)
+            + ")) then\n"
+        )
+        d_i = ""
+        # The conversion functions
+        if not self.fields:
+            conv_fun = "std_logic_vector"
+            iconv_fun = self.type
+        elif self.stype is not None:
+            conv_fun = "to_slv"
+            iconv_fun = "to_" + self.stype[2:] # Discard "t_"
+        else:
+            conv_fun = "to_slv"
+            iconv_fun = "to_" + self.name
+        # Read access
+        if self.regtype == "sreg":
+            # First initialize the whole retun value with zeroes
+            d_t += "    int_regs_wb_m_i.dat <= (others => '0');\n"
+            # Now set the used bits with correct values
+            d_t += (
+                "    int_regs_wb_m_i.dat("
+                + str(self.width - 1)
+                + " downto 0) <= "
+                + conv_fun
+                + "("
+                + self.name
+                + "_i"
+                + ind
+                + ");\n"
             )
-            d_i = ""
-            # The conversion functions
-            if not self.fields:
-                conv_fun = "std_logic_vector"
-                iconv_fun = self.type
-            elif self.stype is not None:
-                conv_fun = "to_slv"
-                iconv_fun = "to_" + self.stype[2:] # Discard "t_"
-            else:
-                conv_fun = "to_slv"
-                iconv_fun = "to_" + self.name
-            # Read access
-            if self.regtype == "sreg":
-                # Check if the register is implemented
-                d_t += "   if " + str(i) + " < " + self.size_generic + " then \n" 
-                # First initialize the whole retun value with zeroes
-                d_t += "     int_regs_wb_m_i.dat <= (others => '0');\n"
-                # Now set the used bits with correct values
-                d_t += (
-                    "     int_regs_wb_m_i.dat("
-                    + str(self.width - 1)
-                    + " downto 0) <= "
-                    + conv_fun
-                    + "("
-                    + self.name
-                    + "_i"
-                    + ind
-                    + ");\n"
-                )
-                if self.ack == 1:
-                    d_t += "     if int_regs_wb_m_i.ack = '0' then\n"
-                    # We shorten the STB to a single clock
-                    d_t += "       " + self.name + sfx + "_ack" + ind + " <= '1';\n"
-                    d_t += "     end if;\n"
-                    # Add clearing of ACK signal at the begining of the process
-                    d_i += self.name + sfx + "_ack" + ind + " <= '0';\n"
-            else:
-                # Check if the register is implemented
-                d_t += "   if " + str(i) + " < "+ self.size_generic + " then \n" 
-                # First initialize the whole retun value with zeroes
-                d_t += "     int_regs_wb_m_i.dat <= (others => '0');\n"
-                # Now set the used bits with correct values
-                d_t += (
-                    "     int_regs_wb_m_i.dat("
-                    + str(self.width - 1)
-                    + " downto 0) <= "
-                    + conv_fun
-                    + "(int_"
-                    + self.name
-                    + "_o"
-                    + ind
-                    + ");\n"
-                )
-            # Write access
-            if self.regtype == "creg":
-                d_t += "     if int_regs_wb_m_o.we = '1' then\n"
-                d_t += (
-                    "       int_"
-                    + self.name
-                    + "_o"
-                    + ind
-                    + " <= "
-                    + iconv_fun
-                    + "(int_regs_wb_m_o.dat("
-                    + str(self.width - 1)
-                    + " downto 0));\n"
-                )
-                if self.stb == 1:
-                    d_t += "     if int_regs_wb_m_i.ack = '0' then\n"
-                    # We shorten the STB to a single clock
-                    d_t += "       int_" + self.name + sfx + "_stb" + ind + " <= '1';\n"
-                    d_t += "     end if;\n"
-                    # Add clearing of STB signal at the begining of the process
-                    d_i += "int_" + self.name + sfx + "_stb" + ind + " <= '0';\n"
-                d_t += "     end if;\n"
-            d_t += "     int_regs_wb_m_i.ack <= '1';\n"
-            d_t += "     int_regs_wb_m_i.err <= '0';\n"
-            d_t += "    end if; -- " + self.size_generic + "\n"
-            parent.add_templ("register_access", d_t, 12)
-            parent.add_templ("signals_idle", d_i, 10)
+            if self.ack == 1:
+                d_t += "    if int_regs_wb_m_i.ack = '0' then\n"
+                # We shorten the STB to a single clock
+                d_t += "       " + self.name + sfx + "_ack" + ind + " <= '1';\n"
+                d_t += "    end if;\n"
+                # Add clearing of ACK signal at the begining of the process
+                d_i += self.name + sfx + "_ack" + ind + " <= '0';\n"
+        else:
+            # First initialize the whole retun value with zeroes
+            d_t += "    int_regs_wb_m_i.dat <= (others => '0');\n"
+            # Now set the used bits with correct values
+            d_t += (
+                "    int_regs_wb_m_i.dat("
+                + str(self.width - 1)
+                + " downto 0) <= "
+                + conv_fun
+                + "(int_"
+                + self.name
+                + "_o"
+                + ind
+                + ");\n"
+            )
+        # Write access
+        if self.regtype == "creg":
+            d_t += "    if int_regs_wb_m_o.we = '1' then\n"
+            d_t += (
+                "      int_"
+                + self.name
+                + "_o"
+                + ind
+                + " <= "
+                + iconv_fun
+                + "(int_regs_wb_m_o.dat("
+                + str(self.width - 1)
+                + " downto 0));\n"
+            )
+            if self.stb == 1:
+                d_t += "      if int_regs_wb_m_i.ack = '0' then\n"
+                # We shorten the STB to a single clock
+                d_t += "        int_" + self.name + sfx + "_stb" + ind + " <= '1';\n"
+                d_t += "      end if;\n"
+                # Add clearing of STB signal at the begining of the process
+                d_i += "int_" + self.name + sfx + "_stb" + ind + " <= '0';\n"
+            d_t += "    end if;\n"
+        d_t += "    int_regs_wb_m_i.ack <= '1';\n"
+        d_t += "    int_regs_wb_m_i.err <= '0';\n"
+        d_t += "  end if;\n"
+        d_t += "end loop; -- "  + self.size_generic + "\n"
+        parent.add_templ("register_access", d_t, 12)
+        parent.add_templ("signals_idle", d_i, 10)
 
     def gen_amap_xml(self, reg_base,nvar=None):
         res = ""
