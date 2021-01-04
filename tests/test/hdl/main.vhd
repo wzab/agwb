@@ -20,7 +20,7 @@ entity main is
 end entity main;
 
 architecture rtl of main is
-  constant nvar : integer := 0;
+  constant nvar : integer := 1;
 
   signal LINKS_wb_m_o	: t_wishbone_master_out_array(0 to v_LINKS_size(nvar)-1);
   signal LINKS_wb_m_i	: t_wishbone_master_in_array(0 to v_LINKS_size(nvar)-1);
@@ -37,7 +37,9 @@ begin  -- architecture rtl
 
   MAIN_1 : entity agwb.MAIN
     generic map(
-      g_LINKS_size => v_LINKS_size(nvar))
+      g_LINKS_size => v_LINKS_size(nvar),
+      g_EXTHUGE_size => v_EXTHUGE_size(nvar)
+)
     port map (
       slave_i	     => wb_s_in,
       slave_o	     => wb_s_out,
@@ -83,6 +85,7 @@ begin  -- architecture rtl
 
   end generate gl0;
 
+ gh1 : for i in 0 to v_EXTHUGE_size(nvar)-1 generate
   htst_1 : entity work.htest
     generic map (
       instance_number => 0,
@@ -93,12 +96,13 @@ begin  -- architecture rtl
       clk_sys_i => clk_sys_i,
       wb_s_in	=> EXTHUGE_wb_m_o,
       wb_s_out	=> EXTHUGE_wb_m_i);
+ end generate gh1;
 
   gl1 : for i in 0 to v_LINKS_size(nvar)-1 generate
 
     sys1_1 : entity work.sys1
       generic map (
-        nvar => 0
+        nvar => nvar
         )
       port map (
 	rst_n_i	  => rst_n_i,

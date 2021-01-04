@@ -1409,18 +1409,29 @@ class WbBlock(WbObject):
                 n_ports += 1
                 ar_addresses.append(a_r.adr)
                 ar_adr_bits.append(a_r.adr_bits)
-                # generate the entity port but not for internal registers
+                if a_r.obj is None:
+                    # For internal registers simply connect the bus
+                    d_t = (
+                        "wb_m_i(" + str(a_r.first_port) + ") <= " + a_r.name + "_wb_m_i;\n"
+                    )
+                    d_t += (
+                        a_r.name + "_wb_m_o  <= " + "wb_m_o(" + str(a_r.first_port) + ");\n"
+                    )
                 if a_r.obj != None:
+                    # For subblocks generate the entity port 
                     d_t = a_r.name + "_wb_m_o : out t_wishbone_master_out;\n"
                     d_t += a_r.name + "_wb_m_i : in t_wishbone_master_in := c_WB_SLAVE_OUT_ERR;\n"
                     self.add_templ("subblk_busses", d_t, 6)
-                # generate the signal assignment
-                d_t = (
-                    "wb_m_i(" + str(a_r.first_port) + ") <= " + a_r.name + "_wb_m_i;\n"
-                )
-                d_t += (
-                    a_r.name + "_wb_m_o  <= " + "wb_m_o(" + str(a_r.first_port) + ");\n"
-                )
+                    # conditionally (due to possible 'used' attribute) generate the signal assignment
+                    self.bg_nr += 1
+                    d_t = "bg" + str(self.bg_nr) + ": if " + a_r.size_generic + " > 0 generate\n"                
+                    d_t += (
+                        "  wb_m_i(" + str(a_r.first_port) + ") <= " + a_r.name + "_wb_m_i;\n"
+                    )
+                    d_t += (
+                        "  " + a_r.name + "_wb_m_o  <= " + "wb_m_o(" + str(a_r.first_port) + ");\n"
+                    )
+                    d_t += "end generate; -- " + a_r.size_generic + "\n"                
                 self.add_templ("cont_assigns", d_t, 4)
             else:
                 # The area is associated with the vector of subblocks
@@ -1441,39 +1452,35 @@ class WbBlock(WbObject):
                     + " - 1 ) := ( others => c_WB_SLAVE_OUT_ERR);\n"
                 )
                 self.add_templ("subblk_busses", d_t, 6)
-                # Now we have to assign addresses and masks for each subblock and connect the port
+                # Now we have to assign addresses and masks for each subblock
                 base = a_r.adr
-                nport = a_r.first_port
-                for i in range(0, a_r.reps):
+                for i in range(0,a_r.reps):
                     ar_addresses.append(base)
                     base += a_r.obj.addr_size
                     ar_adr_bits.append(a_r.obj.adr_bits)
-                    # The bus assignment must be generated conditionally (depending on generics)
-                    # We also need to generate the if-generate label
-                    self.bg_nr += 1
-                    d_t = "bg" + str(self.bg_nr) + ": if "+str(i) + " < " + a_r.size_generic + " generate\n"
-                    d_t += (
-                        "  wb_m_i("
-                        + str(nport)
-                        + ") <= "
-                        + a_r.name
-                        + "_wb_m_i("
-                        + str(i)
-                        + ");\n"
-                    )
-                    d_t += (
-                        "  "
-                        + a_r.name
-                        + "_wb_m_o("
-                        + str(i)
-                        + ")  <= "
-                        + "wb_m_o("
-                        + str(nport)
-                        + ");\n"
-                    )
-                    d_t += "end generate;\n"
-                    self.add_templ("cont_assigns", d_t, 4)
-                    nport += 1
+                # The bus assignment must be generated conditionally in a loop (depending on generics)
+                self.bg_nr += 1
+                d_t = "bg" + str(self.bg_nr) + ": if " + a_r.size_generic + " > 0 generate\n"                
+                self.bg_nr += 1
+                d_t += "  bg" + str(self.bg_nr) + ": for i in 0 to " + a_r.size_generic + " - 1 generate\n"                
+                d_t += (
+                    "    wb_m_i("
+                    + str(a_r.first_port)
+                    + " + i) <= "
+                    + a_r.name
+                    + "_wb_m_i(i);\n"
+                )
+                d_t += (
+                    "    "
+                    + a_r.name
+                    + "_wb_m_o(i)  <= "
+                    + "wb_m_o("
+                    + str(a_r.first_port)
+                    + " + i);\n"
+                )
+                d_t += "  end generate; -- for " + a_r.size_generic + "\n"
+                d_t += "end generate; -- if " + a_r.size_generic + "\n"
+                self.add_templ("cont_assigns", d_t, 4)
         self.add_templ("check_assertions",d_a,4)
         self.add_templ("p_generics",d_g,6)
         self.add_templ("p_generics_consts",d_c,2)
