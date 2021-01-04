@@ -4,6 +4,7 @@ use ieee.numeric_std.all;
 library general_cores;
 use general_cores.wishbone_pkg.all;
 library agwb;
+use agwb.agwb_pkg.all;
 use agwb.MAIN_pkg.all;
 library work;
 
@@ -20,12 +21,12 @@ end entity main;
 architecture rtl of main is
   signal  wb_s_in   :   t_wishbone_slave_in;
   signal  wb_s_out  : t_wishbone_slave_out;
-  signal LINKS_wb_m_o  : t_wishbone_master_out_array(0 to 4);
-  signal LINKS_wb_m_i  : t_wishbone_master_in_array(0 to 4);
-  signal EXTERN_wb_m_o : t_wishbone_master_out_array(0 to 2);
-  signal EXTERN_wb_m_i : t_wishbone_master_in_array(0 to 2);
-  signal CDC_wb_m_o    : t_wishbone_master_out_array(0 to 2);
-  signal CDC_wb_m_i    : t_wishbone_master_in_array(0 to 2);
+  signal LINKS_wb_m_o  : t_wishbone_master_out_array(0 to c_LINKS_size-1);
+  signal LINKS_wb_m_i  : t_wishbone_master_in_array(0 to c_LINKS_size-1);
+  signal EXTERN_wb_m_o : t_wishbone_master_out_array(0 to c_EXTERN_size-1);
+  signal EXTERN_wb_m_i : t_wishbone_master_in_array(0 to c_EXTERN_size-1);
+  signal CDC_wb_m_o    : t_wishbone_master_out_array(0 to c_EXTERN_size-1);
+  signal CDC_wb_m_i    : t_wishbone_master_in_array(0 to c_EXTERN_size-1);
   signal CTRL_o        : t_CTRL;
   signal rst_sys_0, rst_sys_n_i, rst_io_0, rst_io_n_i : std_logic;
 
@@ -72,7 +73,7 @@ begin  -- architecture rtl
       rst_n_i       => rst_sys_n_i,
       clk_sys_i     => clk_sys_i);
 
-gl0: for i in 0 to 2 generate
+gl0: for i in 0 to c_EXTERN_size-1 generate
   wb_cdc_1 : entity work.wb_cdc
     generic map (
       width => 32)
@@ -99,7 +100,7 @@ gl0: for i in 0 to 2 generate
 
 end generate gl0;
 
-  gl1 : for i in 0 to 4 generate
+  gl1 : for i in 0 to c_LINKS_size-1 generate
 
     sys1_1 : entity work.sys1
       port map (

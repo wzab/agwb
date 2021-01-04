@@ -4,11 +4,14 @@ use ieee.numeric_std.all;
 library general_cores;
 use general_cores.wishbone_pkg.all;
 library agwb;
+use agwb.agwb_pkg;
 use agwb.sys1_pkg.all;
 library work;
   
 entity sys1 is
-  
+  generic (
+    nvar : integer := 0
+  );
   port (
     rst_n_i : in std_logic;
     clk_sys_i : in std_logic;
@@ -26,7 +29,7 @@ architecture rtl of sys1 is
   signal CTRL_o_stb    : std_logic;
   signal STATUS_i  : t_STATUS;
   signal STATUS_i_ack  : std_logic;
-  signal ENABLEs_o : t_ENABLEs_array;
+  signal ENABLEs_o : t_ENABLEs_array(0 to c_ENABLES_size-1);
   
 begin  -- architecture rtl
 
