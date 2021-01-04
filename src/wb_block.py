@@ -1460,26 +1460,23 @@ class WbBlock(WbObject):
                     ar_adr_bits.append(a_r.obj.adr_bits)
                 # The bus assignment must be generated conditionally in a loop (depending on generics)
                 self.bg_nr += 1
-                d_t = "bg" + str(self.bg_nr) + ": if " + a_r.size_generic + " > 0 generate\n"                
-                self.bg_nr += 1
-                d_t += "  bg" + str(self.bg_nr) + ": for i in 0 to " + a_r.size_generic + " - 1 generate\n"                
+                d_t = "bg" + str(self.bg_nr) + ": for i in 0 to " + a_r.size_generic + " - 1 generate\n"                
                 d_t += (
-                    "    wb_m_i("
+                    "  wb_m_i("
                     + str(a_r.first_port)
                     + " + i) <= "
                     + a_r.name
                     + "_wb_m_i(i);\n"
                 )
                 d_t += (
-                    "    "
+                    "  "
                     + a_r.name
                     + "_wb_m_o(i)  <= "
                     + "wb_m_o("
                     + str(a_r.first_port)
                     + " + i);\n"
                 )
-                d_t += "  end generate; -- for " + a_r.size_generic + "\n"
-                d_t += "end generate; -- if " + a_r.size_generic + "\n"
+                d_t += "end generate; -- for " + a_r.size_generic + "\n"
                 self.add_templ("cont_assigns", d_t, 4)
         self.add_templ("check_assertions",d_a,4)
         self.add_templ("p_generics",d_g,6)
