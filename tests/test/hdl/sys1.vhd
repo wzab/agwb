@@ -8,7 +8,9 @@ use agwb.sys1_pkg.all;
 library work;
   
 entity sys1 is
-  
+  generic (
+    nvar : integer 
+    );
   port (
     rst_n_i : in std_logic;
     clk_sys_i : in std_logic;
@@ -26,11 +28,14 @@ architecture rtl of sys1 is
   signal CTRL_o_stb    : std_logic;
   signal STATUS_i  : t_STATUS;
   signal STATUS_i_ack  : std_logic;
-  signal ENABLEs_o : t_ENABLEs_array(0 to c_ENABLEs_size-1);
+  signal ENABLEs_o : t_ENABLEs_array(0 to v_ENABLEs_size(nvar)-1);
   
 begin  -- architecture rtl
 
   SYS1_1: entity agwb.SYS1
+    generic map(
+      g_ENABLEs_size => v_ENABLEs_size(nvar)
+    )
     port map (
       slave_i   => wb_s_in,
       slave_o   => wb_s_out,

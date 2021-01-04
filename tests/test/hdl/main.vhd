@@ -9,7 +9,6 @@ use agwb.MAIN_pkg.all;
 library work;
 
 entity main is
-
   port (
     rst_n_i   : in  std_logic;
     clk_sys_i : in  std_logic;
@@ -21,8 +20,10 @@ entity main is
 end entity main;
 
 architecture rtl of main is
-  signal LINKS_wb_m_o	: t_wishbone_master_out_array(0 to C_NSEL_MAX-1);
-  signal LINKS_wb_m_i	: t_wishbone_master_in_array(0 to C_NSEL_MAX-1);
+  constant nvar : integer := 0;
+
+  signal LINKS_wb_m_o	: t_wishbone_master_out_array(0 to v_LINKS_size(nvar)-1);
+  signal LINKS_wb_m_i	: t_wishbone_master_in_array(0 to v_LINKS_size(nvar)-1);
   signal EXTHUGE_wb_m_o : t_wishbone_master_out;
   signal EXTHUGE_wb_m_i : t_wishbone_master_in;
   signal EXTERN_wb_m_o	: t_wishbone_master_out_array(0 to (C_NEXTERNS-1));
@@ -36,7 +37,7 @@ begin  -- architecture rtl
 
   MAIN_1 : entity agwb.MAIN
     generic map(
-      g_CTRL_size => c_CTRL_size)
+      g_LINKS_size => v_LINKS_size(nvar))
     port map (
       slave_i	     => wb_s_in,
       slave_o	     => wb_s_out,
@@ -93,9 +94,12 @@ begin  -- architecture rtl
       wb_s_in	=> EXTHUGE_wb_m_o,
       wb_s_out	=> EXTHUGE_wb_m_i);
 
-  gl1 : for i in 0 to C_NSEL_MAX-1 generate
+  gl1 : for i in 0 to v_LINKS_size(nvar)-1 generate
 
     sys1_1 : entity work.sys1
+      generic map (
+        nvar => 0
+        )
       port map (
 	rst_n_i	  => rst_n_i,
 	clk_sys_i => clk_sys_i,
