@@ -20,7 +20,7 @@ entity main is
 end entity main;
 
 architecture rtl of main is
-  constant nvar : integer := 0;
+  constant nvar : integer := 1;
 
   signal LINKS_wb_m_o	: t_wishbone_master_out_array(0 to v_LINKS_size(nvar)-1);
   signal LINKS_wb_m_i	: t_wishbone_master_in_array(0 to v_LINKS_size(nvar)-1);
@@ -37,6 +37,7 @@ begin  -- architecture rtl
 
   MAIN_1 : entity agwb.MAIN
     generic map(
+      g_ver_id => v_MAIN_ver_id(nvar),
       g_LINKS_size => v_LINKS_size(nvar),
       g_EXTHUGE_size => v_EXTHUGE_size(nvar)
 )

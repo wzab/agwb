@@ -77,7 +77,7 @@ use work.{p_entity}_pkg.all;
 entity {p_entity} is
   generic (
 {p_generics}
-    g_dummy : boolean := true -- to avoid problem with semicolon in the last line
+{p_ver_id}
   );
   port (
 """
@@ -185,7 +185,7 @@ begin
              int_regs_wb_m_i.err <= '0';
           end if;
           if int_addr = {block_ver_addr} then
-             int_regs_wb_m_i.dat <= {block_ver};
+             int_regs_wb_m_i.dat <= g_ver_id;
              int_regs_wb_m_i.ack <= '1';
              int_regs_wb_m_i.err <= '0';
           end if;
@@ -1221,6 +1221,8 @@ class WbBlock(WbObject):
         self.templ_dict = {}
         self.name = el.attrib["name"]
         self.id_val = zlib.crc32(bytes(self.name.encode("utf-8")))
+        self.ver_full = 0
+        self.ver_var = {}
         self.desc = el.get("desc", "")
         self.ignore = el.get("ignore", "")
         self.reserved = ex.exprval(el.get("reserved", "0"))
@@ -1366,6 +1368,7 @@ class WbBlock(WbObject):
         # We give empty declaration in case if the block does not contain
         # any registers
         self.add_templ("p_generics", "", 0)
+        self.add_templ("p_ver_id", "", 0)
         self.add_templ("p_generics_consts", "", 0)
         self.add_templ("p_package", "", 0)
         self.add_templ("p_package_body", "", 0)
@@ -1380,6 +1383,19 @@ class WbBlock(WbObject):
         # If the outputs must be aggregated in a single record,
         # we will generate a type for that record instead of output ports
         log.debug(self, self.name)
+        # Generate the block version id constants
+        d_c = 'constant c_'+self.name+'_ver_id : std_logic_vector(31 downto 0) := '
+        d_c += 'x"' + format(self.ver_full, "08x") + '";\n'
+        # If the block has variants, generate the ID table
+        if self.ver_var:
+            d_c += "constant v_"+self.name+"_ver_id : t_ver_id_variants(0 to "
+            d_c += str(GLB.variants - 1) +') := ('
+            for i in range(0,GLB.variants):
+                if i != 0:
+                    d_c += ","
+                d_c += 'x"' + format(self.ver_var[i], "08x") + '"'
+            d_c += ")\n;"
+        self.add_templ("p_generics_consts", d_c, 2)        
         if self.aggregate_outs != "0":
             self.out_type = "t_" + self.name + "_out_regs"
             self.add_templ("out_record", "type " + self.out_type + " is record\n", 2)
@@ -1516,7 +1532,8 @@ class WbBlock(WbObject):
         self.add_templ("reg_adr_bits", str(self.reg_adr_bits), 0)
         self.add_templ("p_adr_bits", str(self.adr_bits), 0)
         self.add_templ("block_id", 'x"' + format(self.id_val, "08x") + '"', 0)
-        self.add_templ("block_ver", 'x"' + format(GLB.VER_ID, "08x") + '"', 0)
+        self.add_templ("p_ver_id", "g_ver_id : std_logic_vector(31 downto 0)"
+                       " := c_" + self.name + "_ver_id", 4)
         self.add_templ("p_addresses", adrs, 0)
         self.add_templ("p_masks", masks, 0)
         self.add_templ("p_registered", "false", 0)
@@ -1540,6 +1557,13 @@ class WbBlock(WbObject):
             f_o.write(templ_wb(self.N_MASTERS).format(**self.templ_dict))
             created_files["vhdl"].append(wb_vhdl_file)
 
+    def amap_xml_hdr(self,ver_hash):
+        res = '<node id="' + self.name
+        res += '" id_val="0x' + format(self.id_val, "08x")
+        res += '" ver_val="0x' + format(ver_hash, "08x")
+        res += '" addr_bits="' + str(self.adr_bits) + '">\n'
+        return res
+        
     def gen_amap_xml(self,nvar=None):
         """ This function generates the address map in the AMAP XML format
             for the nvar variant
@@ -1547,8 +1571,8 @@ class WbBlock(WbObject):
         var_id = ""
         if nvar is not None:
             var_id = "_v"+str(nvar)
-        res = '<node id="' + self.name
-        res += '" addr_bits="' + str(self.adr_bits) + '">\n'
+        hdr = self.amap_xml_hdr(0)
+        res = ""
         # Iterate the areas, generating the addresses
         for a_r in self.areas:
             if a_r.obj is None:
@@ -1612,9 +1636,19 @@ class WbBlock(WbObject):
                         + '"/>\n'
                     )
         res += "</node>\n"
-        with open(GLB.AMAPXML_PATH + "/agwb_" + self.name + "_amap" + var_id + ".xml", "w") as f_o:
-            f_o.write(res)
-
+        # Use the generated AMAP XML description as block version ID.
+        desc = hdr+res
+        blk_ver_id = zlib.crc32(bytes(desc.encode("utf-8")))
+        # Now generate a new header with correct hash
+        hdr = self.amap_xml_hdr(blk_ver_id)
+        desc = hdr+res        
+        if nvar is None:
+            self.ver_full = blk_ver_id
+        else:
+            self.ver_var[nvar] =  blk_ver_id
+        if GLB.AMAPXML_PATH:
+            with open(GLB.AMAPXML_PATH + "/agwb_" + self.name + "_amap" + var_id + ".xml", "w") as f_o:
+                f_o.write(desc)
 
     def gen_ipbus_xml(self):
         """ This function generates the address map in the XML format for ipbus

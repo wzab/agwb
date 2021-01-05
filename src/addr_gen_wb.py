@@ -137,6 +137,7 @@ package agwb_pkg is
     (ack => '0', err => '1', rty => '0', stall => '0', dat => c_DUMMY_WB_DATA);
 
   type t_reps_variants is array (integer range <>) of integer;
+  type t_ver_id_variants is array (integer range <>) of std_logic_vector(31 downto 0);
 
 end package agwb_pkg;
 """
@@ -223,7 +224,15 @@ BL.analyze()
 # Create the list of variants for formats that support it
 variants = [None,]
 if wb.GLB.variants > 1:
-    variants = range(0,wb.GLB.variants)
+    variants += range(0,wb.GLB.variants)
+
+# Now we generate the AMAPXML address tables for possible variants
+# This target must be run first, as it generates VER ID for blocks
+# The blobk gen_amap_xml checks if the output path exists.
+for nvar in variants:
+    for key, BL in wb.blocks().items():
+        if BL.used:
+            BL.gen_amap_xml(nvar)
 
 # Now we can generate the VHDL code that implements
 # the system
@@ -257,13 +266,6 @@ if wb.GLB.IPBUS_PATH:
     for key, BL in wb.blocks().items():
         if BL.used:
             BL.gen_ipbus_xml()
-
-# Now we generate the AMAPXML address tables for possible variants
-for nvar in variants:
-    if wb.GLB.AMAPXML_PATH:
-        for key, BL in wb.blocks().items():
-            if BL.used:
-                BL.gen_amap_xml(nvar)
 
 # Now we generate the C address tables
 if wb.GLB.C_HEADER_PATH:
