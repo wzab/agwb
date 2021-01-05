@@ -828,7 +828,7 @@ class WbReg(WbObject):
                     + format(adr, "08x")
                     + '"'
                     + rvec
-                    + '" permission="'
+                    + ' permission="'
                     + perms
                     + '"'
                     + s_mode
@@ -843,7 +843,7 @@ class WbReg(WbObject):
                     + format(adr, "08x")
                     + '"'
                     + rvec
-                    + '" permission="'
+                    + ' permission="'
                     + perms
                     + '"'
                     + s_mode
