@@ -1545,7 +1545,8 @@ class WbBlock(WbObject):
         var_id = ""
         if nvar is not None:
             var_id = "_v"+str(nvar)
-        res = '<node id="' + self.name + '">\n'
+        res = '<node id="' + self.name
+        res += ' addr_bits="' + str(self.adr_bits) + '">\n'
         # Iterate the areas, generating the addresses
         for a_r in self.areas:
             if a_r.obj is None:
