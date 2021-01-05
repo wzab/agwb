@@ -3,4 +3,3 @@ vhdl work exttest.vhd
 vhdl work sys1.vhd
 include jtag2wb
 include ../../../../hdl/wb_cdc
-vhdl agwb ../../../../hdl/agwb_pkg.vhd
