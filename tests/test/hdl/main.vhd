@@ -20,7 +20,7 @@ entity main is
 end entity main;
 
 architecture rtl of main is
-  constant nvar : integer := 1;
+  constant nvar : integer := 0;
 
   signal LINKS_wb_m_o	: t_wishbone_master_out_array(0 to v_LINKS_size(nvar)-1);
   signal LINKS_wb_m_i	: t_wishbone_master_in_array(0 to v_LINKS_size(nvar)-1);

@@ -1,11 +1,11 @@
-<sysdef top="MAIN">
+<sysdef top="MAIN" >
 <constant name="NEXTERNS" val="4" />
 <constant name="NSEL_BITS" val="5" />
 <constant name="NSEL_MAX" val="(1 &lt;&lt; NSEL_BITS)-1" />
 
 <include path="block1.xml"/>
 
-<block name="MAIN">
+<block name="MAIN" reserved="0x2000">
   <blackbox name="EXTHUGE" type="HTEST" addrbits="16" used="1;0" />
   <subblock name="LINKS" type="SYS1" reps="NSEL_MAX;2" />
   <blackbox name="EXTERN" type="EXTTEST" addrbits="10" reps="NEXTERNS" />
