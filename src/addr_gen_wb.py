@@ -118,6 +118,29 @@ for el in EL_ROOT.findall("constant"):
 # We prepare the packages with constants for different backends
 # For VHDL
 if wb.GLB.VHDL_PATH:
+    with open(wb.GLB.VHDL_PATH + "/agwb_pkg.vhd", "w") as fo:
+        fo.write(
+"""--- This file has been automatically generated
+--- by the agwb (https://github.com/wzab/agwb).
+--- Please don't edit it manually, unless you really have to do it
+library ieee;
+use ieee.std_logic_1164.all;
+use ieee.numeric_std.all;
+
+library general_cores;
+use general_cores.wishbone_pkg.all;
+
+package agwb_pkg is
+
+
+  constant c_WB_SLAVE_OUT_ERR : t_wishbone_slave_out :=
+    (ack => '0', err => '1', rty => '0', stall => '0', dat => c_DUMMY_WB_DATA);
+
+  type t_reps_variants is array (integer range <>) of integer;
+
+end package agwb_pkg;
+"""
+        )        
     with open(wb.GLB.VHDL_PATH + "/" + TOP_NAME + "_const_pkg.vhd", "w") as fo:
         fo.write(
             """library ieee;
@@ -212,7 +235,7 @@ if wb.GLB.VHDL_PATH:
 if wb.GLB.PYTHON_PATH:
     res = """\"\"\"
 This file has been automatically generated
-by the agwb (https://github.com/wzab/addr_gen_wb).
+by the agwb (https://github.com/wzab/agwb).
 Do not modify it by hand.
 \"\"\"\n
 """
@@ -284,6 +307,7 @@ if ARGS.fusesoc:
         }
 
         created_files = wb.created_files["vhdl"]
+        created_files.insert(0,wb.GLB.VHDL_PATH + "/agwb_pkg.vhd")
         created_files.append(wb.GLB.VHDL_PATH + "/" + TOP_NAME + "_const_pkg.vhd")
         coredata["filesets"] = {
             "rtl": {
