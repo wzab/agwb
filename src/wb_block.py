@@ -1394,7 +1394,7 @@ class WbBlock(WbObject):
                 if i != 0:
                     d_c += ","
                 d_c += 'x"' + format(self.ver_var[i], "08x") + '"'
-            d_c += ")\n;"
+            d_c += ");\n"
         self.add_templ("p_generics_consts", d_c, 2)        
         if self.aggregate_outs != "0":
             self.out_type = "t_" + self.name + "_out_regs"
@@ -1559,8 +1559,9 @@ class WbBlock(WbObject):
 
     def amap_xml_hdr(self,ver_hash):
         res = '<node id="' + self.name
-        res += '" id_val="0x' + format(self.id_val, "08x")
-        res += '" ver_val="0x' + format(ver_hash, "08x")
+        res += '" id_hash="0x' + format(self.id_val, "08x")
+        res += '" ver_hash="0x' + format(ver_hash, "08x")
+        res += '" system_hash="0x' + format(GLB.VER_ID, "08x")
         res += '" addr_bits="' + str(self.adr_bits) + '">\n'
         return res
         

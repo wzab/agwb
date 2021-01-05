@@ -151,6 +151,11 @@ library work;
 """
         )
         fo.write("package " + TOP_NAME + "_const_pkg is\n")
+        fo.write(
+                "constant C_" + TOP_NAME + "_system_ver"
+                + " : std_logic_vector(31 downto 0) := "
+                + 'x"' + format(wb.GLB.VER_ID, "08x") + '";\n'
+            )
         for cnst in ex.defines:
             fo.write(
                 "constant C_"
