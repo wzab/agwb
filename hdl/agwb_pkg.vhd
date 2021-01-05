@@ -1,5 +1,5 @@
 -------------------------------------------------------------------------------
--- Title      : Wishbone CDC for classic single cycles
+-- Title      : Package with definitions needed for AGWB with variants
 -- Project    : 
 -------------------------------------------------------------------------------
 -- File	      : agwb_pkg.vhd
