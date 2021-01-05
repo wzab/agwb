@@ -26,6 +26,9 @@ XVOLATILE = "volatile" # "volatile" is used
 
 # Template for generation of the VHDL package
 TEMPL_PKG = """\
+--- This file has been automatically generated
+--- by the agwb (https://github.com/wzab/agwb).
+--- Please don't edit it manually, unless you really have to do it
 library ieee;
 
 use ieee.std_logic_1164.all;
@@ -59,83 +62,82 @@ created_files = {"vhdl": []}
 # the multi-master support or not.
 def templ_wb(nof_masters):
     res = """\
-  --- This file has been automatically generated
-  --- by the agwb (https://github.com/wzab/agwb).
-  --- Please don't edit it manually, unless you really have to do it
-  library ieee;
-  use ieee.std_logic_1164.all;
-  use ieee.numeric_std.all;
-  library general_cores;
-  use general_cores.wishbone_pkg.all;
-  library work;
-  use work.agwb_pkg.all;
-  use work.{p_entity}_pkg.all;
+--- This file has been automatically generated
+--- by the agwb (https://github.com/wzab/agwb).
+--- Please don't edit it manually, unless you really have to do it
+library ieee;
+use ieee.std_logic_1164.all;
+use ieee.numeric_std.all;
+library general_cores;
+use general_cores.wishbone_pkg.all;
+library work;
+use work.agwb_pkg.all;
+use work.{p_entity}_pkg.all;
 
-  entity {p_entity} is
-    generic (
+entity {p_entity} is
+  generic (
 {p_generics}
-     g_dummy : boolean := true -- to avoid problem with semicolon in the last line
-    );
-    port (
+    g_dummy : boolean := true -- to avoid problem with semicolon in the last line
+  );
+  port (
 """
     if nof_masters > 1:
         res += """\
-      slave_i : in t_wishbone_slave_in_array(0 to {nof_masters}-1);
-      slave_o : out t_wishbone_slave_out_array(0 to {nof_masters}-1);
+    slave_i : in t_wishbone_slave_in_array(0 to {nof_masters}-1);
+    slave_o : out t_wishbone_slave_out_array(0 to {nof_masters}-1);
 """
     else:
         res += """\
-      slave_i : in t_wishbone_slave_in;
-      slave_o : out t_wishbone_slave_out;
+    slave_i : in t_wishbone_slave_in;
+    slave_o : out t_wishbone_slave_out;
 """
     res += """\
 {subblk_busses}
 {signal_ports}
-      rst_n_i : in std_logic;
-      clk_sys_i : in std_logic
-      );
+    rst_n_i : in std_logic;
+    clk_sys_i : in std_logic
+    );
 
-  end {p_entity};
+end {p_entity};
 
-  architecture gener of {p_entity} is
-  {signal_decls}
-    -- Internal WB declaration
-    signal int_regs_wb_m_o : t_wishbone_master_out;
-    signal int_regs_wb_m_i : t_wishbone_master_in;
-    signal int_addr : std_logic_vector({reg_adr_bits}-1 downto 0);
-    signal wb_up_o : t_wishbone_slave_out_array(0 to 0);
-    signal wb_up_i : t_wishbone_slave_in_array(0 to 0);
-    signal wb_m_o : t_wishbone_master_out_array(0 to {nof_subblks}-1);
-    signal wb_m_i : t_wishbone_master_in_array(0 to {nof_subblks}-1) := (others => c_WB_SLAVE_OUT_ERR);
+architecture gener of {p_entity} is
+{signal_decls}
+  -- Internal WB declaration
+  signal int_regs_wb_m_o : t_wishbone_master_out;
+  signal int_regs_wb_m_i : t_wishbone_master_in;
+  signal int_addr : std_logic_vector({reg_adr_bits}-1 downto 0);
+  signal wb_up_o : t_wishbone_slave_out_array(0 to 0);
+  signal wb_up_i : t_wishbone_slave_in_array(0 to 0);
+  signal wb_m_o : t_wishbone_master_out_array(0 to {nof_subblks}-1);
+  signal wb_m_i : t_wishbone_master_in_array(0 to {nof_subblks}-1) := (others => c_WB_SLAVE_OUT_ERR);
 
-    -- Constants
-    constant c_address : t_wishbone_address_array(0 to {nof_subblks}-1) := {p_addresses};
-    constant c_mask : t_wishbone_address_array(0 to {nof_subblks}-1) := {p_masks};
-
-  begin
+  -- Constants
+  constant c_address : t_wishbone_address_array(0 to {nof_subblks}-1) := {p_addresses};
+  constant c_mask : t_wishbone_address_array(0 to {nof_subblks}-1) := {p_masks};
+begin
   
 {check_assertions}
 """
     if nof_masters == 1:
         res += """\
-    wb_up_i(0) <= slave_i;
-    slave_o <= wb_up_o(0);
+  wb_up_i(0) <= slave_i;
+  slave_o <= wb_up_o(0);
 """
     res += """\
-    int_addr <= int_regs_wb_m_o.adr({reg_adr_bits}-1 downto 0);
+  int_addr <= int_regs_wb_m_o.adr({reg_adr_bits}-1 downto 0);
 
-  -- Main crossbar
-    xwb_crossbar_1: entity general_cores.xwb_crossbar
-    generic map (
-       g_num_masters => {nof_masters},
-       g_num_slaves  => {nof_subblks},
-       g_registered  => {p_registered},
-       g_address     => c_address,
-       g_mask        => c_mask
-    )
-    port map (
-       clk_sys_i => clk_sys_i,
-       rst_n_i   => rst_n_i,
+-- Main crossbar
+  xwb_crossbar_1: entity general_cores.xwb_crossbar
+  generic map (
+     g_num_masters => {nof_masters},
+     g_num_slaves  => {nof_subblks},
+     g_registered  => {p_registered},
+     g_address     => c_address,
+     g_mask        => c_mask
+  )
+  port map (
+     clk_sys_i => clk_sys_i,
+     rst_n_i   => rst_n_i,
 """
     if nof_masters > 1:
         res += """\
@@ -144,55 +146,55 @@ def templ_wb(nof_masters):
 """
     else:
         res += """\
-       slave_i   => wb_up_i,
-       slave_o   => wb_up_o,
+     slave_i   => wb_up_i,
+     slave_o   => wb_up_o,
 """
     res += """\
-       master_i  => wb_m_i,
-       master_o  => wb_m_o,
-       sdb_sel_o => open
-    );
+     master_i  => wb_m_i,
+     master_o  => wb_m_o,
+     sdb_sel_o => open
+  );
 
-  -- Process for register access
-    process(clk_sys_i)
-    begin
-      if rising_edge(clk_sys_i) then
-        if rst_n_i = '0' then
-          -- Reset of the core
-          int_regs_wb_m_i <= c_DUMMY_WB_MASTER_IN;
-  {control_registers_reset}
-        else
-          -- Normal operation
-          int_regs_wb_m_i.rty <= '0';
-          int_regs_wb_m_i.ack <= '0';
-          int_regs_wb_m_i.err <= '0';
+-- Process for register access
+  process(clk_sys_i)
+  begin
+    if rising_edge(clk_sys_i) then
+      if rst_n_i = '0' then
+        -- Reset of the core
+        int_regs_wb_m_i <= c_DUMMY_WB_MASTER_IN;
+{control_registers_reset}
+      else
+        -- Normal operation
+        int_regs_wb_m_i.rty <= '0';
+        int_regs_wb_m_i.ack <= '0';
+        int_regs_wb_m_i.err <= '0';
 {signals_idle}
-          if (int_regs_wb_m_o.cyc = '1') and (int_regs_wb_m_o.stb = '1')
-              and (int_regs_wb_m_i.err = '0') and (int_regs_wb_m_i.rty = '0')
-              and (int_regs_wb_m_i.ack = '0') then
-            int_regs_wb_m_i.err <= '1'; -- in case of missed address
-            -- Access, now we handle consecutive registers
-            -- Set the error state so it is output when none register is accessed
-            int_regs_wb_m_i.dat <= x"A5A5A5A5";
-            int_regs_wb_m_i.ack <= '0';
-            int_regs_wb_m_i.err <= '1';
+        if (int_regs_wb_m_o.cyc = '1') and (int_regs_wb_m_o.stb = '1')
+            and (int_regs_wb_m_i.err = '0') and (int_regs_wb_m_i.rty = '0')
+            and (int_regs_wb_m_i.ack = '0') then
+          int_regs_wb_m_i.err <= '1'; -- in case of missed address
+          -- Access, now we handle consecutive registers
+          -- Set the error state so it is output when none register is accessed
+          int_regs_wb_m_i.dat <= x"A5A5A5A5";
+          int_regs_wb_m_i.ack <= '0';
+          int_regs_wb_m_i.err <= '1';
 {register_access}
-            if int_addr = {block_id_addr} then
-               int_regs_wb_m_i.dat <= {block_id};
-               int_regs_wb_m_i.ack <= '1';
-               int_regs_wb_m_i.err <= '0';
-            end if;
-            if int_addr = {block_ver_addr} then
-               int_regs_wb_m_i.dat <= {block_ver};
-               int_regs_wb_m_i.ack <= '1';
-               int_regs_wb_m_i.err <= '0';
-            end if;
+          if int_addr = {block_id_addr} then
+             int_regs_wb_m_i.dat <= {block_id};
+             int_regs_wb_m_i.ack <= '1';
+             int_regs_wb_m_i.err <= '0';
+          end if;
+          if int_addr = {block_ver_addr} then
+             int_regs_wb_m_i.dat <= {block_ver};
+             int_regs_wb_m_i.ack <= '1';
+             int_regs_wb_m_i.err <= '0';
           end if;
         end if;
       end if;
-    end process;
+    end if;
+  end process;
 {cont_assigns}
-  end architecture;
+end architecture;
 """
     return res
 
@@ -509,7 +511,7 @@ class WbReg(WbObject):
                 + tname
                 + " is\n"
             )
-            d_b += "variable res : " + tname + ";\n"
+            d_b += "  variable res : " + tname + ";\n"
             d_b += "begin\n"
             for f_l in self.fields:
                 d_b += (
@@ -530,7 +532,7 @@ class WbReg(WbObject):
             d_t += "function to_slv(x : " + tname + ") return std_logic_vector;\n"
             d_b += "function to_slv(x : " + tname + ") return std_logic_vector is\n"
             d_b += (
-                "variable res : std_logic_vector("
+                "  variable res : std_logic_vector("
                 + str(self.width - 1)
                 + " downto 0);\n"
             )
@@ -557,20 +559,20 @@ class WbReg(WbObject):
                 + ";\n"
             )
         # Append the generated types to the parents package section
-        parent.add_templ("p_generics", d_g, 6)
+        parent.add_templ("p_generics", d_g, 4)
         parent.add_templ("p_generics_consts", d_c, 2)
-        parent.add_templ("p_package", d_t, 0)
-        parent.add_templ("p_package_body", d_b, 0)
-        parent.add_templ("check_assertions", d_a, 4)
+        parent.add_templ("p_package", d_t, 2)
+        parent.add_templ("p_package_body", d_b, 2)
+        parent.add_templ("check_assertions", d_a, 2)
 
         # If the outputs are aggregated, add the type of the signal to the output record type
         if self.regtype == "creg" and parent.out_type is not None:
             if self.size > 1:
                 parent.add_templ(
-                    "out_record", self.name + " : " + tname + "_array(0 to " + self.size_constant + " - 1 );\n", 2
+                    "out_record", self.name + " : " + tname + "_array(0 to " + self.size_constant + " - 1 );\n", 4
                 )
             else:
-                parent.add_templ("out_record", self.name + " : " + tname + ";\n", 2)
+                parent.add_templ("out_record", self.name + " : " + tname + ";\n", 4)
             if self.stb == 1:
                 if self.size > 1:
                     parent.add_templ(
@@ -579,10 +581,10 @@ class WbReg(WbObject):
                         + "_stb : std_logic_vector("
                         + str(self.size - 1)
                         + " downto 0);\n",
-                        2,
+                        4,
                     )
                 else:
-                    parent.add_templ("out_record", self.name + "_stb : std_logic;\n", 2)
+                    parent.add_templ("out_record", self.name + "_stb : std_logic;\n", 4)
 
         # Now generate the entity ports.
         # For simplicity of the code, in case of aggregated outputs the port definition
@@ -621,7 +623,7 @@ class WbReg(WbObject):
             else:
                 d_t += self.name + sfx + "_ack : out std_logic;\n"
         if self.regtype != "creg" or parent.out_type is None:
-            parent.add_templ("signal_ports", d_t, 6)
+            parent.add_templ("signal_ports", d_t, 4)
         # Generate the intermediate signals for output ports
         # (because they can't be read back)
         # Connect the signals to outputs (without output aggregation) or to
@@ -677,8 +679,8 @@ class WbReg(WbObject):
                         + sfx
                         + "_stb;\n"
                     )
-            parent.add_templ("signal_decls", d_t, 4)
-            parent.add_templ("cont_assigns", dt2, 4)
+            parent.add_templ("signal_decls", d_t, 2)
+            parent.add_templ("cont_assigns", dt2, 2)
         # Reset control registers
         if self.regtype == "creg":
             if self.default is not None:
@@ -692,7 +694,7 @@ class WbReg(WbObject):
                     + hex(self.default_val)
                     + "\n"
                 )
-                parent.add_templ("control_registers_reset", r_t, 10)
+                parent.add_templ("control_registers_reset", r_t, 8)
         # Generate the signal assignment in the process
         d_t = (
             'for i in 0 to '
@@ -789,8 +791,8 @@ class WbReg(WbObject):
         d_t += "    int_regs_wb_m_i.err <= '0';\n"
         d_t += "  end if;\n"
         d_t += "end loop; -- "  + self.size_generic + "\n"
-        parent.add_templ("register_access", d_t, 12)
-        parent.add_templ("signals_idle", d_i, 10)
+        parent.add_templ("register_access", d_t, 10)
+        parent.add_templ("signals_idle", d_i, 8)
 
     def gen_amap_xml(self, reg_base,nvar=None):
         res = ""
@@ -1380,7 +1382,7 @@ class WbBlock(WbObject):
         log.debug(self, self.name)
         if self.aggregate_outs != "0":
             self.out_type = "t_" + self.name + "_out_regs"
-            self.add_templ("out_record", "type " + self.out_type + " is record\n", 0)
+            self.add_templ("out_record", "type " + self.out_type + " is record\n", 2)
             self.out_name = "out_regs"
         else:
             self.out_type = None
@@ -1427,7 +1429,7 @@ class WbBlock(WbObject):
                     # For subblocks generate the entity port 
                     d_t = a_r.name + "_wb_m_o : out t_wishbone_master_out;\n"
                     d_t += a_r.name + "_wb_m_i : in t_wishbone_master_in := c_WB_SLAVE_OUT_ERR;\n"
-                    self.add_templ("subblk_busses", d_t, 6)
+                    self.add_templ("subblk_busses", d_t, 4)
                     # conditionally (due to possible 'used' attribute) generate the signal assignment
                     self.bg_nr += 1
                     d_t = "bg" + str(self.bg_nr) + ": if " + a_r.size_generic + " > 0 generate\n"                
@@ -1438,7 +1440,7 @@ class WbBlock(WbObject):
                         "  " + a_r.name + "_wb_m_o  <= " + "wb_m_o(" + str(a_r.first_port) + ");\n"
                     )
                     d_t += "end generate; -- " + a_r.size_generic + "\n"                
-                self.add_templ("cont_assigns", d_t, 4)
+                self.add_templ("cont_assigns", d_t, 2)
             else:
                 # The area is associated with the vector of subblocks
                 a_r.first_port = n_ports
@@ -1457,7 +1459,7 @@ class WbBlock(WbObject):
                     + a_r.size_generic
                     + " - 1 ) := ( others => c_WB_SLAVE_OUT_ERR);\n"
                 )
-                self.add_templ("subblk_busses", d_t, 6)
+                self.add_templ("subblk_busses", d_t, 4)
                 # Now we have to assign addresses and masks for each subblock
                 base = a_r.adr
                 for i in range(0,a_r.reps):
@@ -1483,9 +1485,9 @@ class WbBlock(WbObject):
                     + " + i);\n"
                 )
                 d_t += "end generate; -- for " + a_r.size_generic + "\n"
-                self.add_templ("cont_assigns", d_t, 4)
-        self.add_templ("check_assertions",d_a,4)
-        self.add_templ("p_generics",d_g,6)
+                self.add_templ("cont_assigns", d_t, 2)
+        self.add_templ("check_assertions",d_a,2)
+        self.add_templ("p_generics",d_g,4)
         self.add_templ("p_generics_consts",d_c,2)
         # Now generate vectors with addresses and masks
         adrs = "("
@@ -1524,9 +1526,9 @@ class WbBlock(WbObject):
         # If block has aggregated outputs, close the record definition
         # and add the output record to the entity ports
         if self.out_type is not None:
-            self.add_templ("out_record", "end record;\n\n", 0)
+            self.add_templ("out_record", "end record;\n\n", 2)
             self.add_templ(
-                "signal_ports", self.out_name + " : out " + self.out_type + ";\n", 6
+                "signal_ports", self.out_name + " : out " + self.out_type + ";\n", 4
             )
         # All template is filled, so we can now generate the files
         wb_vhdl_pkg_file = GLB.VHDL_PATH + "/" + self.name + "_pkg.vhd"
