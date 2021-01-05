@@ -5,14 +5,14 @@
     <field name="START" width="1"/>
     <field name="STOP" width="1"/>    
   </creg>
-  <sreg name="STATUS" desc="Status register" ack="1" />
-  <creg name="ENABLEs" desc="Link enable registers" reps="10"/>
+  <sreg name="STATUS" desc="Status register" ack="1" reps="0;3" />
+  <creg name="ENABLEs" desc="Link enable registers" reps="10;5"/>
 </block>
 
 <block name="MAIN">
   <subblock name="LINKS" type="SYS1" reps="5"/>
-  <blackbox name="EXTERN" type="EXTTEST" addrbits="10" reps="3" />
-  <creg name="CTRL" desc="Control register in the main block" >
+  <blackbox name="EXTERN" type="EXTTEST" addrbits="10" reps="3;4" />
+  <creg name="CTRL" desc="Control register in the main block" used="1;0">
     <field name="CLK_ENABLE" width="1"/>
     <field name="CLK_FREQ" width="4"/>
     <field name="PLL_RESET" width="1"/>

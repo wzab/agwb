@@ -27,13 +27,16 @@ architecture rtl of sys1 is
   signal slave_o   : t_wishbone_slave_out;
   signal CTRL_o    : t_CTRL;
   signal CTRL_o_stb    : std_logic;
-  signal STATUS_i  : t_STATUS;
-  signal STATUS_i_ack  : std_logic;
-  signal ENABLEs_o : t_ENABLEs_array(0 to c_ENABLES_size-1);
+  signal STATUS_i  : t_STATUS_array(0 to v_STATUS_size(nvar)-1);
+  signal STATUS_i_ack  : std_logic_vector(v_STATUS_size(nvar)-1 downto 0);
+  signal ENABLEs_o : t_ENABLEs_array(0 to v_ENABLES_size(nvar)-1);
   
 begin  -- architecture rtl
 
   SYS1_wb_1: entity agwb.SYS1
+    generic map (
+      g_STATUS_size  => v_STATUS_size(nvar),
+      g_ENABLEs_size => v_ENABLES_size(nvar))
     port map (
       slave_i   => wb_s_in,
       slave_o   => wb_s_out,
