@@ -24,6 +24,20 @@ import expressions as ex
 XVOLATILE = "volatile" # "volatile" is used
 #XVOLATILE = ""  # "volatile" not used
 
+# Special addresses allocated at the begininng of the block address space
+# (The testdev - optionally)
+# IMPORTANT!
+# Please note, that for C header target, the structure is built manually!
+# If you change any address below, you have to adjust gen_c_header accordingly!
+spec_regs = {
+  "id" : 0,
+  "ver" : 1,
+  "test_rw" : 4,
+  "test_wo" : 5,
+  "test_ro" : 6,
+  "test_tout" : 7,
+}
+
 # Template for generation of the VHDL package
 TEMPL_PKG = """\
 --- This file has been automatically generated
@@ -102,6 +116,7 @@ end {p_entity};
 
 architecture gener of {p_entity} is
 {signal_decls}
+{testdev_signals}
   -- Internal WB declaration
   signal int_regs_wb_m_o : t_wishbone_master_out;
   signal int_regs_wb_m_i : t_wishbone_master_in;
@@ -179,6 +194,7 @@ begin
           int_regs_wb_m_i.ack <= '0';
           int_regs_wb_m_i.err <= '1';
 {register_access}
+{testdev_access}
           if int_addr = {block_id_addr} then
              int_regs_wb_m_i.dat <= {block_id};
              int_regs_wb_m_i.ack <= '1';
@@ -1233,6 +1249,7 @@ class WbBlock(WbObject):
         self.ver_full = 0
         self.ver_var = {}
         self.desc = el.get("desc", "")
+        self.testdev_ena = ex.exprval(el.get("testdev_ena", "0"))
         self.ignore = el.get("ignore", "")
         self.reserved = ex.exprval(el.get("reserved", "0"))
         # We check if the outputs from the registers should be aggregated
@@ -1241,7 +1258,10 @@ class WbBlock(WbObject):
         self.areas = []
         # We prepare the table for storing the registers.
         self.regs = []
-        self.free_reg_addr = 2  # The first free address after ID & VER
+        if self.testdev_ena != 0:
+            self.free_reg_addr = 8  # We reserve eight addresses for ID, VER and TEST DEVICE
+        else:
+            self.free_reg_addr = 2  # The first free address after ID & VER
         # Prepare the list of subblocks
         self.subblks = []
         self.N_MASTERS = 1
@@ -1360,6 +1380,9 @@ class WbBlock(WbObject):
         for l_n in re.findall(r".*\n?", value)[:-1]:
             if l_n != "":
                 self.templ_dict[templ_key] += indent * " " + l_n
+    
+    def create_addr(self,adr):
+        return '"' + format(adr, "0" + str(self.reg_adr_bits) + "b") + '"'
 
     def gen_vhdl(self):
         # To fill the template, we must to set the following values:
@@ -1385,10 +1408,52 @@ class WbBlock(WbObject):
         self.add_templ("signal_decls", "", 0)
         self.add_templ("control_registers_reset", "", 0)
         self.add_templ("register_access", "", 0)
+        self.add_templ("testdev_access", "", 0)
+        self.add_templ("testdev_signals", "", 0)
         self.add_templ("subblk_busses", "", 0)
         self.add_templ("signal_ports", "", 0)
         self.add_templ("signals_idle", "", 0)
         self.add_templ("out_record", "", 0)
+        if self.testdev_ena != 0:
+            d_t = "-- Test device signals\n"
+            d_t += "signal sig_testdev_rw : std_logic_vector(31 downto 0) := (others => '0');\n"
+            d_t += "signal sig_testdev_rowo : std_logic_vector(31 downto 0) := (others => '0');\n"
+            self.add_templ("testdev_signals",d_t,2);
+            d_t = """
+if int_addr = """ + self.create_addr(spec_regs["test_rw"]) + """ then -- test_rw
+   int_regs_wb_m_i.dat <= sig_testdev_rw;
+   if int_regs_wb_m_o.we = '1' then
+      sig_testdev_rw <= std_logic_vector(int_regs_wb_m_o.dat);
+   end if;
+   int_regs_wb_m_i.ack <= '1';
+   int_regs_wb_m_i.err <= '0';
+end if;
+if int_addr = """ + self.create_addr(spec_regs["test_wo"]) + """ then -- test_wo
+   if int_regs_wb_m_o.we = '1' then
+      sig_testdev_rowo <= std_logic_vector(int_regs_wb_m_o.dat);
+      int_regs_wb_m_i.ack <= '1';
+      int_regs_wb_m_i.err <= '0';
+   else
+      int_regs_wb_m_i.ack <= '0';
+      int_regs_wb_m_i.err <= '1';
+   end if;
+end if;
+if int_addr = """ + self.create_addr(spec_regs["test_ro"]) + """ then -- test_ro
+   if int_regs_wb_m_o.we = '1' then
+      int_regs_wb_m_i.ack <= '0';
+      int_regs_wb_m_i.err <= '1';
+   else
+      int_regs_wb_m_i.dat <= sig_testdev_rowo;
+      int_regs_wb_m_i.ack <= '1';
+      int_regs_wb_m_i.err <= '0';
+   end if;
+end if;
+if int_addr = """ + self.create_addr(spec_regs["test_tout"]) + """ then -- test_tout
+     int_regs_wb_m_i.ack <= '0';
+     int_regs_wb_m_i.err <= '0';
+end if;
+"""
+            self.add_templ("testdev_access",d_t,10);
         # If the outputs must be aggregated in a single record,
         # we will generate a type for that record instead of output ports
         log.debug(self, self.name)
@@ -1527,15 +1592,15 @@ class WbBlock(WbObject):
             masks += str(i) + '=>"' + format(maskval, "032b") + '"'
         adrs += ")"
         masks += ")"
-        # Generate the register address for
+        # Generate the register address for special registers
         self.add_templ(
             "block_id_addr",
-            '"' + format(0, "0" + str(self.reg_adr_bits) + "b") + '"',
+            self.create_addr(spec_regs["id"]),
             0,
         )
         self.add_templ(
             "block_ver_addr",
-            '"' + format(1, "0" + str(self.reg_adr_bits) + "b") + '"',
+            self.create_addr(spec_regs["ver"]),
             0,
         )
         self.add_templ("reg_adr_bits", str(self.reg_adr_bits), 0)
@@ -1591,14 +1656,37 @@ class WbBlock(WbObject):
                 adr = a_r.adr
                 res += (
                     '  <node id="ID" address="0x'
-                    + format(adr, "08x")
+                    + format(adr+spec_regs["id"], "08x")
                     + '" permission="r"/>\n'
                 )
                 res += (
                     '  <node id="VER" address="0x'
-                    + format(adr + 1, "08x")
+                    + format(adr + spec_regs["ver"], "08x")
                     + '" permission="r"/>\n'
                 )
+                if self.testdev_ena != 0:
+                    # To enable testing of error detection, all test registers 
+                    # have permissions set to "rw"!
+                    res += (
+                        '  <node id="TEST_RW" address="0x'
+                        + format(adr+spec_regs["test_rw"], "08x")
+                        + '" permission="rw"/>\n'
+                        )
+                    res += (
+                        '  <node id="TEST_WO" address="0x'
+                        + format(adr+spec_regs["test_wo"], "08x")
+                        + '" permission="rw"/>\n'
+                        )
+                    res += (
+                        '  <node id="TEST_RO" address="0x'
+                        + format(adr+spec_regs["test_ro"], "08x")
+                        + '" permission="rw"/>\n'
+                        )
+                    res += (
+                        '  <node id="TEST_TOUT" address="0x'
+                        + format(adr+spec_regs["test_tout"], "08x")
+                        + '" permission="rw"/>\n'
+                        )
                 # Now add other registers in a loop
                 for reg in self.regs:
                     res += reg.gen_amap_xml(adr,nvar)
@@ -1673,14 +1761,37 @@ class WbBlock(WbObject):
                 adr = a_r.adr
                 res += (
                     '  <node id="ID" address="0x'
-                    + format(adr, "08x")
+                    + format(adr+spec_regs["id"], "08x")
                     + '" permission="r"/>\n'
                 )
                 res += (
                     '  <node id="VER" address="0x'
-                    + format(adr + 1, "08x")
+                    + format(adr + spec_regs["ver"], "08x")
                     + '" permission="r"/>\n'
                 )
+                if self.testdev_ena != 0:
+                    # To enable testing of error detection, all test registers 
+                    # have permissions set to "rw"!
+                    res += (
+                        '  <node id="TEST_RW" address="0x'
+                        + format(adr+spec_regs["test_rw"], "08x")
+                        + '" permission="rw"/>\n'
+                        )
+                    res += (
+                        '  <node id="TEST_WO" address="0x'
+                        + format(adr+spec_regs["test_wo"], "08x")
+                        + '" permission="rw"/>\n'
+                        )
+                    res += (
+                        '  <node id="TEST_RO" address="0x'
+                        + format(adr+spec_regs["test_ro"], "08x")
+                        + '" permission="rw"/>\n'
+                        )
+                    res += (
+                        '  <node id="TEST_TOUT" address="0x'
+                        + format(adr+spec_regs["test_tout"], "08x")
+                        + '" permission="rw"/>\n'
+                        )
                 # Now add other registers in a loop
                 for reg in self.regs:
                     res += reg.gen_ipbus_xml(adr)
@@ -1742,7 +1853,7 @@ class WbBlock(WbObject):
                 # Add two standard registers - ID and VER
                 adr = a_r.adr
                 cdefs += (
-                    ": " + parent + "_ID " + parent + " $" + format(adr, "x") + " + ;\n"
+                    ": " + parent + "_ID " + parent + " $" + format(adr+spec_regs["id"], "x") + " + ;\n"
                 )
                 cdefs += (
                     ": "
@@ -1750,9 +1861,25 @@ class WbBlock(WbObject):
                     + "_VER "
                     + parent
                     + " $"
-                    + format(adr + 1, "x")
+                    + format(adr + spec_regs["id"], "x")
                     + " + ;\n"
                 )
+                if self.testdev_ena != 0:
+                    # Add additional test registers (to lower dictionary usage,
+                    # the prefix is shortened to _TSTDV)
+                   cdefs += (
+                        ": " + parent + "_TSTDV_RW " + parent + " $" + format(adr+spec_regs["test_rw"], "x") + " + ;\n"
+                   )
+                   cdefs += (
+                        ": " + parent + "_TSTDV_WO " + parent + " $" + format(adr+spec_regs["test_wo"], "x") + " + ;\n"
+                   )
+                   cdefs += (
+                        ": " + parent + "_TSTDV_RO " + parent + " $" + format(adr+spec_regs["test_ro"], "x") + " + ;\n"
+                   )
+                   cdefs += (
+                        ": " + parent + "_TSTDV_TOUT " + parent + " $" + format(adr+spec_regs["test_tout"], "x") + " + ;\n"
+                   )
+                    
                 # Add two constants
                 cdefs += (
                     "$"
@@ -1853,6 +1980,18 @@ class WbBlock(WbObject):
                 res += "  " + XVOLATILE + " uint32_t ID;\n"
                 res += "  " + XVOLATILE + " uint32_t VER;\n"
                 cur_addr += 2
+                # Conditionally generate the registers for test device.
+                # Please note, that the addresses of those registers are not taken from
+                # spec_regs array. The structure must be adjusted by hand!
+                if self.testdev_ena != 0:
+                    # First two registers are not accessible
+                    res += "  " + XVOLATILE + " uint32_t TEST_ERR0;\n"
+                    res += "  " + XVOLATILE + " uint32_t TEST_ERR1;\n"                    
+                    res += "  " + XVOLATILE + " uint32_t TEST_RW;\n"
+                    res += "  " + XVOLATILE + " uint32_t TEST_WO;\n"
+                    res += "  " + XVOLATILE + " uint32_t TEST_RO;\n"
+                    res += "  " + XVOLATILE + " uint32_t TEST_TOUT;\n"
+                    cur_addr += 6   
                 # Now add other registers in a loop
                 for reg in self.regs:
                     r_n, h_n = reg.gen_c_header(adr, self.name)
@@ -1922,8 +2061,16 @@ class WbBlock(WbObject):
                 # Registers area
                 # Add two standard register - ID and VER
                 adr = a_r.adr
-                res += sp8 + "'ID':(" + hex(adr) + ",(agwb.StatusRegister,)),\\\n"
-                res += sp8 + "'VER':(" + hex(adr + 1) + ",(agwb.StatusRegister,)),\\\n"
+                res += sp8 + "'ID':(" + hex(adr + spec_regs["id"]) + ",(agwb.StatusRegister,)),\\\n"
+                res += sp8 + "'VER':(" + hex(adr + spec_regs["ver"]) + ",(agwb.StatusRegister,)),\\\n"
+                if self.testdev_ena != 0:
+                    # Conditionally add test registers. 
+                    # They are added as control registers to enable testing of
+                    # read and write addresses.
+                    res += sp8 + "'TEST_RW':(" + hex(adr + spec_regs["test_rw"]) + ",(agwb.ControlRegister,)),\\\n"
+                    res += sp8 + "'TEST_WO':(" + hex(adr + spec_regs["test_wo"]) + ",(agwb.ControlRegister,)),\\\n"
+                    res += sp8 + "'TEST_RO':(" + hex(adr + spec_regs["test_ro"]) + ",(agwb.ControlRegister,)),\\\n"
+                    res += sp8 + "'TEST_TOUT':(" + hex(adr + spec_regs["test_tout"]) + ",(agwb.ControlRegister,)),\\\n"                    
                 for reg in self.regs:
                     res += reg.gen_python(adr)
             else:

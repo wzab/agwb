@@ -5,7 +5,7 @@
 
 <include path="block1.xml"/>
 
-<block name="MAIN" reserved="0x2000">
+<block name="MAIN" reserved="0x2000" testdev_ena="1" >
   <blackbox name="EXTHUGE" type="HTEST" addrbits="16" used="1;0" />
   <subblock name="LINKS" type="SYS1" reps="NSEL_MAX;2" />
   <blackbox name="EXTERN" type="EXTTEST" addrbits="10" reps="NEXTERNS" />
