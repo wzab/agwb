@@ -21,7 +21,7 @@ end entity main;
 architecture rtl of main is
   -- Number of the variant: 0 or 1
   constant nvar : integer := 1;
-  
+
   signal wb_s_in                                      : t_wishbone_slave_in;
   signal wb_s_out                                     : t_wishbone_slave_out;
   signal LINKS_wb_m_o                                 : t_wishbone_master_out_array(0 to c_LINKS_size-1);
