@@ -1763,7 +1763,7 @@ class WbBlock(WbObject):
                 )
                 cdefs += (
                     "$"
-                    + format(GLB.VER_ID, "x")
+                    + format(self.ver_full, "x")
                     + " constant "
                     + parent
                     + "_VER_VAL \n"
@@ -1915,7 +1915,7 @@ class WbBlock(WbObject):
         res = "\nclass " + self.name + "(agwb.Block):\n"
         res += sp4 + "x__size = " + str(self.addr_size) + "\n"
         res += sp4 + "x__id = " + hex(self.id_val) + "\n"
-        res += sp4 + "x__ver = " + hex(GLB.VER_ID) + "\n"
+        res += sp4 + "x__ver = " + hex(self.ver_full) + "\n"
         res += sp4 + "x__fields = {\n"
         for a_r in self.areas:
             if a_r.obj is None:
