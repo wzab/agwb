@@ -549,15 +549,24 @@ class WbReg(WbObject):
                 )
             d_b += "  return res;\n"
             d_b += "end function;\n\n"
-        # If this is a vector of registers, create the array type
+        # If this is a vector of registers, create the array types
         if self.force_vec:
+            # The unconstrained one
             d_t += (
-                "type "
+                "type u"
                 + tname
                 + "_array is array( natural range <> ) of "
                 + tname
                 + ";\n"
             )
+            # And the constrained one
+            d_t += (
+                "subtype "
+                + tname
+                + "_array is u" + tname +
+                 "_array(0 to " + self.size_constant + " - 1);\n"
+            )
+            
         # Append the generated types to the parents package section
         parent.add_templ("p_generics", d_g, 4)
         parent.add_templ("p_generics_consts", d_c, 2)
@@ -596,7 +605,7 @@ class WbReg(WbObject):
             sfx = "_o"
             sdir = "out "
         if self.force_vec:
-            d_t = self.name + sfx + " : " + sdir + " " + tname + "_array(0 to " + self.size_generic + " - 1 );\n"
+            d_t = self.name + sfx + " : " + sdir + " u" + tname + "_array(0 to " + self.size_generic + " - 1 );\n"
         else:
             d_t = self.name + sfx + " : " + sdir + " " + tname + ";\n"
         # Now we generate the STB or ACK ports (if required)
@@ -631,7 +640,7 @@ class WbReg(WbObject):
         if self.regtype == "creg":
             # Create the intermediate readable signal
             if self.force_vec:
-                d_t = "signal int_" + self.name + sfx + " : " + tname + "_array(0 to " + self.size_generic + " - 1 )"
+                d_t = "signal int_" + self.name + sfx + " : u" + tname + "_array(0 to " + self.size_generic + " - 1 )"
             else:
                 d_t = "signal int_" + self.name + sfx + " : " + tname
             if self.default is not None:
