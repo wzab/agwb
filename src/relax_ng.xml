@@ -1,0 +1,303 @@
+<grammar xmlns="http://relaxng.org/ns/structure/1.0">
+
+	<start>
+		<element name="sysdef">
+
+			<optional>
+				<attribute name="masters">
+					<text/>
+				</attribute>
+			</optional>
+
+			<attribute name="top">
+				<text/>
+			</attribute>
+
+			<interleave>
+				<zeroOrMore>
+					<ref name="blackbox"/>
+				</zeroOrMore>
+
+				<zeroOrMore>
+					<ref name="block"/>
+				</zeroOrMore>
+
+				<zeroOrMore>
+					<ref name="constant"/>
+				</zeroOrMore>
+
+				<zeroOrMore>
+					<ref name="creg"/>
+				</zeroOrMore>
+
+				<zeroOrMore>
+					<ref name="include"/>
+				</zeroOrMore>
+
+				<zeroOrMore>
+					<ref name="sreg"/>
+				</zeroOrMore>
+
+				<zeroOrMore>
+					<ref name="subblock"/>
+				</zeroOrMore>
+			</interleave>
+
+		</element>
+	</start>
+
+	<define name="blackbox">
+		<element name="blackbox">
+			<attribute name="addrbits">
+				<text/>
+			</attribute>
+			<optional>
+				<attribute name="force_vec">
+					<text/>
+				</attribute>
+			</optional>
+			<attribute name="name">
+				<text/>
+			</attribute>
+			<optional>
+				<attribute name="reps">
+					<text/>
+				</attribute>
+			</optional>
+			<attribute name="type">
+				<text/>
+			</attribute>
+			<optional>
+				<attribute name="used">
+					<text/>
+				</attribute>
+			</optional>
+			<optional>
+				<attribute name="xmlpath">
+					<text/>
+				</attribute>
+			</optional>
+		</element>
+	</define>
+
+	<define name="block">
+		<element name="block">
+			<optional>
+				<attribute name="aggr_outs">
+					<text/>
+				</attribute>
+			</optional>
+			<attribute name="name">
+				<text/>
+			</attribute>
+			<optional>
+				<attribute name="reserved">
+					<text/>
+				</attribute>
+			</optional>
+			<optional>
+				<attribute name="testdev_ena">
+					<text/>
+				</attribute>
+			</optional>
+			<interleave>
+				<zeroOrMore>
+					<ref name="blackbox"/>
+				</zeroOrMore>
+				<zeroOrMore>
+					<ref name="creg"/>
+				</zeroOrMore>
+				<zeroOrMore>
+					<ref name="sreg"/>
+				</zeroOrMore>
+				<zeroOrMore>
+					<ref name="subblock"/>
+				</zeroOrMore>
+			</interleave>
+		</element>
+	</define>
+
+	<define name="field">
+		<element name="field">
+			<optional>
+				<attribute name="default">
+					<text/>
+				</attribute>
+			</optional>
+			<optional>
+				<attribute name="desc">
+					<text/>
+				</attribute>
+			</optional>
+			<attribute name="name">
+				<text/>
+			</attribute>
+			<optional>
+				<attribute name="type">
+					<text/>
+				</attribute>
+			</optional>
+			<attribute name="width">
+				<text/>
+			</attribute>
+		</element>
+	</define>
+
+	<define name="constant">
+		<element name="constant">
+			<attribute name="name">
+				<text/>
+			</attribute>
+			<attribute name="val">
+				<text/>
+			</attribute>
+		</element>
+	</define>
+
+	<define name="creg">
+		<element name="creg">
+			<attribute name="name">
+				<text/>
+			</attribute>
+			<optional>
+				<attribute name="default">
+					<text/>
+				</attribute>
+			</optional>
+			<optional>
+				<attribute name="desc">
+					<text/>
+				</attribute>
+			</optional>
+			<optional>
+				<attribute name="mode">
+					<text/>
+				</attribute>
+			</optional>
+			<optional>
+				<attribute name="reps">
+					<text/>
+				</attribute>
+			</optional>
+			<optional>
+				<attribute name="stb">
+					<text/>
+				</attribute>
+			</optional>
+			<optional>
+				<attribute name="stype">
+					<text/>
+				</attribute>
+			</optional>
+			<optional>
+				<attribute name="type">
+					<text/>
+				</attribute>
+			</optional>
+			<optional>
+				<attribute name="used">
+					<text/>
+				</attribute>
+			</optional>
+			<optional>
+				<attribute name="width">
+					<text/>
+				</attribute>
+			</optional>
+
+			<interleave>
+				<zeroOrMore>
+					<ref name="field"/>
+				</zeroOrMore>
+			</interleave>
+		</element>
+	</define>
+
+	<define name="include">
+		<element name="include">
+			<attribute name="path">
+				<text/>
+			</attribute>
+		</element>
+	</define>
+
+	<define name="sreg">
+		<element name="sreg">
+			<optional>
+				<attribute name="ack">
+					<text/>
+				</attribute>
+			</optional>
+			<optional>
+				<attribute name="desc">
+					<text/>
+				</attribute>
+			</optional>
+			<optional>
+				<attribute name="mode">
+					<text/>
+				</attribute>
+			</optional>
+			<attribute name="name">
+				<text/>
+			</attribute>
+			<optional>
+				<attribute name="reps">
+					<text/>
+				</attribute>
+			</optional>
+			<optional>
+				<attribute name="stype">
+					<text/>
+				</attribute>
+			</optional>
+			<optional>
+				<attribute name="type">
+					<text/>
+				</attribute>
+			</optional>
+			<optional>
+				<attribute name="width">
+					<text/>
+				</attribute>
+			</optional>
+
+			<interleave>
+				<zeroOrMore>
+					<ref name="field"/>
+				</zeroOrMore>
+			</interleave>
+		</element>
+	</define>
+
+	<define name="subblock">
+		<element name="subblock">
+			<optional>
+				<attribute name="force_vec">
+					<text/>
+				</attribute>
+			</optional>
+			<attribute name="name">
+				<text/>
+			</attribute>
+			<attribute name="type">
+				<text/>
+			</attribute>
+			<optional>
+				<attribute name="desc">
+					<text/>
+				</attribute>
+			</optional>
+			<optional>
+				<attribute name="ignore">
+					<text/>
+				</attribute>
+			</optional>
+			<optional>
+				<attribute name="reps">
+					<text/>
+				</attribute>
+			</optional>
+		</element>
+	</define>
+</grammar>

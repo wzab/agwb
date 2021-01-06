@@ -13,8 +13,10 @@ Marek Guminski (marek.guminski<at>gmail.com)
 
 The code is published under LGPL V2 license
 """
+from lxml import etree
 import xml.etree.ElementTree as et
 import xml.parsers.expat as pe
+from io import StringIO
 import os
 import sys
 import shutil
@@ -107,6 +109,17 @@ except et.ParseError as perr:
     for src in ERR_SRC:
         print("file: " + src[0] + ", line:" + str(src[1]))
     sys.exit(1)
+
+# Check tree with RELAX NG schema
+lxml_parser = etree.XMLParser(dtd_validation=True)
+relax_ng_path = os.path.join(os.path.dirname(__file__), "relax_ng.xml")
+relaxng_doc = etree.parse(relax_ng_path)
+relax_ng = etree.RelaxNG(relaxng_doc)
+agwb_tree = etree.parse(StringIO(FINAL_XML))
+valid = relax_ng.validate(agwb_tree)
+if not valid:
+    raise Exception(relax_ng.error_log)
+
 TOP_NAME = EL_ROOT.attrib["top"]
 if "masters" in EL_ROOT.attrib:
     N_MASTERS = ex.exprval(EL_ROOT.attrib["masters"])
