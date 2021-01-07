@@ -15,7 +15,8 @@ import sys
 comm_start = re.compile(r'.*<!--.*')
 comm_stop = re.compile(r'.*-->.*')
 
-R1 = r'\s*<include\s+path=\"(?P<fname>\S+)\"\s*/>\s*'
+#R1 = r'\s*<include\s+path=\"(?P<fname>\S+)\"\s*/>\s*'
+R1 = r'<include\s+path=\"(?P<fname>\S+)\"\s*/>'
 P1 = re.compile(R1)
 class LineLocation(object):
     """ Class LineLocation stores the origin of the
