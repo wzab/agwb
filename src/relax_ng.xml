@@ -229,11 +229,9 @@
 					<text/>
 				</attribute>
 			</optional>
-			<optional>
-				<zeroOrMore>
-					<ref name="field"/>
-				</zeroOrMore>
-			</optional>
+			<zeroOrMore>
+				<ref name="field"/>
+			</zeroOrMore>
 		</element>
 	</define>
 
@@ -295,11 +293,9 @@
 					<text/>
 				</attribute>
 			</optional>
-			<optional>
-				<zeroOrMore>
-					<ref name="field"/>
-				</zeroOrMore>
-			</optional>	
+			<zeroOrMore>
+				<ref name="field"/>
+			</zeroOrMore>
 		</element>
 	</define>
 
