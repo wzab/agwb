@@ -13,7 +13,7 @@
 				<text/>
 			</attribute>
 
-			<optional>
+			<interleave>
 				<zeroOrMore>
 					<ref name="blackbox"/>
 				</zeroOrMore>
@@ -41,7 +41,7 @@
 				<zeroOrMore>
 					<ref name="subblock"/>
 				</zeroOrMore>
-			</optional>
+			</interleave>
 
 		</element>
 	</start>
@@ -115,7 +115,7 @@
 					<text/>
 				</attribute>
 			</optional>
-			<optional>
+			<interleave>
 				<zeroOrMore>
 					<ref name="blackbox"/>
 				</zeroOrMore>
@@ -128,7 +128,7 @@
 				<zeroOrMore>
 					<ref name="subblock"/>
 				</zeroOrMore>
-			</optional>
+			</interleave>
 		</element>
 	</define>
 
@@ -230,11 +230,11 @@
 				</attribute>
 			</optional>
 
-			<optional>
+			<interleave>
 				<zeroOrMore>
 					<ref name="field"/>
 				</zeroOrMore>
-			</optional>
+			</interleave>
 		</element>
 	</define>
 
@@ -297,11 +297,11 @@
 				</attribute>
 			</optional>
 
-			<optional>
+			<interleave>
 				<zeroOrMore>
 					<ref name="field"/>
 				</zeroOrMore>
-			</optional>
+			</interleave>
 		</element>
 	</define>
 
