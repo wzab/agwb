@@ -56,6 +56,11 @@
 					<text/>
 				</attribute>
 			</optional>
+			<optional>
+				<attribute name="desc">
+					<text/>
+				</attribute>
+			</optional>
 			<attribute name="name">
 				<text/>
 			</attribute>
@@ -100,6 +105,16 @@
 					<text/>
 				</attribute>
 			</optional>
+			<optional>
+				<attribute name="desc">
+					<text/>
+				</attribute>
+			</optional>
+			<optional>
+				<attribute name="ignore">
+					<text/>
+				</attribute>
+			</optional>
 			<interleave>
 				<zeroOrMore>
 					<ref name="blackbox"/>
@@ -126,6 +141,11 @@
 			</optional>
 			<optional>
 				<attribute name="desc">
+					<text/>
+				</attribute>
+			</optional>
+			<optional>
+				<attribute name="ignore">
 					<text/>
 				</attribute>
 			</optional>
@@ -204,6 +224,11 @@
 					<text/>
 				</attribute>
 			</optional>
+			<optional>
+				<attribute name="ignore">
+					<text/>
+				</attribute>
+			</optional>
 
 			<interleave>
 				<zeroOrMore>
@@ -247,6 +272,11 @@
 				</attribute>
 			</optional>
 			<optional>
+				<attribute name="used">
+					<text/>
+				</attribute>
+			</optional>
+			<optional>
 				<attribute name="stype">
 					<text/>
 				</attribute>
@@ -258,6 +288,11 @@
 			</optional>
 			<optional>
 				<attribute name="width">
+					<text/>
+				</attribute>
+			</optional>
+			<optional>
+				<attribute name="ignore">
 					<text/>
 				</attribute>
 			</optional>
@@ -295,6 +330,11 @@
 			</optional>
 			<optional>
 				<attribute name="reps">
+					<text/>
+				</attribute>
+			</optional>
+			<optional>
+				<attribute name="used">
 					<text/>
 				</attribute>
 			</optional>
