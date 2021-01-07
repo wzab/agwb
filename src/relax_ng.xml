@@ -296,11 +296,9 @@
 				</attribute>
 			</optional>
 			<optional>
-				<interleave>
-					<zeroOrMore>
-						<ref name="field"/>
-					</zeroOrMore>
-				</interleave>
+				<zeroOrMore>
+					<ref name="field"/>
+				</zeroOrMore>
 			</optional>	
 		</element>
 	</define>
