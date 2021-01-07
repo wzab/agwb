@@ -13,7 +13,7 @@ Marek Guminski (marek.guminski<at>gmail.com)
 
 The code is published under LGPL V2 license
 """
-from lxml import etree
+from lxml import etree as let
 import xml.etree.ElementTree as et
 import xml.parsers.expat as pe
 from io import StringIO
@@ -80,7 +80,6 @@ if wb.GLB.HTML_PATH:
 # it also generates the list of objects describing the origin of each line
 # in the final XML (to facilitate future error detection)
 FINAL_XML, LINES_ORIGIN = include.handle_includes(INFILENAME)
-
 # The version ID is calculated as a hash of the XML defining the interface
 # it is encoded in UTF-8, to avoid problems with different locales
 wb.GLB.VER_ID = zlib.crc32(bytes(FINAL_XML.encode("utf-8")))
@@ -111,15 +110,26 @@ except et.ParseError as perr:
     sys.exit(1)
 
 # Check tree with RELAX NG schema
-lxml_parser = etree.XMLParser(dtd_validation=True)
+lxml_parser = let.XMLParser(dtd_validation=True)
 relax_ng_path = os.path.join(os.path.dirname(__file__), "relax_ng.xml")
-relaxng_doc = etree.parse(relax_ng_path)
-relax_ng = etree.RelaxNG(relaxng_doc)
-agwb_tree = etree.parse(StringIO(FINAL_XML))
+relaxng_doc = let.parse(relax_ng_path)
+relax_ng = let.RelaxNG(relaxng_doc)
+agwb_tree = let.parse(StringIO(FINAL_XML))
 valid = relax_ng.validate(agwb_tree)
 if not valid:
-    raise Exception(relax_ng.error_log)
-
+    print(relax_ng.error_log)
+    errline=str(relax_ng.error_log[0]).split(":")
+    if len(errline) > 2:
+        ROW=int(errline[1])
+        COL=int(errline[2])
+        print(FINAL_XML.split("\n")[ROW - 1])
+        print(COL * "-" + "|")
+        print("The erroneous line was produced from the following sources:")
+        ERR_SRC = include.find_error(LINES_ORIGIN, ROW)
+        for src in ERR_SRC:
+            print("file: " + src[0] + ", line:" + str(src[1]))        
+    sys.exit(1)
+    
 TOP_NAME = EL_ROOT.attrib["top"]
 if "masters" in EL_ROOT.attrib:
     N_MASTERS = ex.exprval(EL_ROOT.attrib["masters"])
