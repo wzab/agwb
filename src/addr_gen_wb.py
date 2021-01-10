@@ -111,7 +111,7 @@ except et.ParseError as perr:
 
 # Check tree with RELAX NG schema
 lxml_parser = let.XMLParser(dtd_validation=True)
-relax_ng_path = os.path.join(os.path.dirname(__file__), "relax_ng.xml")
+relax_ng_path = os.path.join(os.path.dirname(__file__), "agwb.rng")
 relaxng_doc = let.parse(relax_ng_path)
 relax_ng = let.RelaxNG(relaxng_doc)
 agwb_tree = let.parse(StringIO(FINAL_XML))

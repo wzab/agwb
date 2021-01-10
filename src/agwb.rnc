@@ -1,0 +1,90 @@
+start =
+  element sysdef {
+    attribute masters { text }?,
+    attribute top { text },
+    (blackbox*
+     & block*
+     & constant*
+     & creg*
+     & \include*
+     & sreg*
+     & subblock*)
+  }
+blackbox =
+  element blackbox {
+    attribute addrbits { text },
+    attribute force_vec { text }?,
+    attribute desc { text }?,
+    attribute name { text },
+    attribute reps { text }?,
+    attribute type { text },
+    attribute used { text }?,
+    attribute xmlpath { text }?
+  }
+block =
+  element block {
+    attribute aggr_outs { text }?,
+    attribute name { text },
+    attribute reserved { text }?,
+    attribute testdev_ena { text }?,
+    attribute desc { text }?,
+    attribute ignore { text }?,
+    (blackbox* & creg* & sreg* & subblock*)
+  }
+field =
+  element field {
+    attribute default { text }?,
+    attribute desc { text }?,
+    attribute ignore { text }?,
+    attribute name { text },
+    attribute type { text }?,
+    attribute width { text }
+  }
+constant =
+  element constant {
+    attribute name { text },
+    attribute val { text }
+  }
+creg =
+  element creg {
+    attribute name { text },
+    attribute default { text }?,
+    attribute desc { text }?,
+    attribute mode { text }?,
+    attribute reps { text }?,
+    attribute stb { text }?,
+    attribute stype { text }?,
+    attribute type { text }?,
+    attribute used { text }?,
+    attribute width { text }?,
+    attribute ignore { text }?,
+    field*
+  }
+\include =
+  element include {
+    attribute path { text }
+  }
+sreg =
+  element sreg {
+    attribute ack { text }?,
+    attribute desc { text }?,
+    attribute mode { text }?,
+    attribute name { text },
+    attribute reps { text }?,
+    attribute used { text }?,
+    attribute stype { text }?,
+    attribute type { text }?,
+    attribute width { text }?,
+    attribute ignore { text }?,
+    field*
+  }
+subblock =
+  element subblock {
+    attribute force_vec { text }?,
+    attribute name { text },
+    attribute type { text },
+    attribute desc { text }?,
+    attribute ignore { text }?,
+    attribute reps { text }?,
+    attribute used { text }?
+  }
