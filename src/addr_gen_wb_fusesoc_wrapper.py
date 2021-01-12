@@ -33,6 +33,11 @@ if __name__ == "__main__":
             '--hdl', hdl]
 
     try:
+        amapxml = str(config['parameters']['amapxml'])
+        args += ['--amapxml', files_root + amapxml]
+    except:
+        pass
+    try:
         ipbus = str(config['parameters']['ipbus'])
         args += ['--ipbus', files_root + ipbus]
     except:
