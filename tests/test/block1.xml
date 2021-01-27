@@ -1,4 +1,4 @@
-<block name="SYS1" registered="1">
+<block name="SYS1">
   <creg name="CTRL" desc="Control register" stb="1" used="1;0">
     <field name="START" width="1" desc="Start the operation"/>
     <field name="SPEED" width="4" default="-1" type="signed" desc="Transmission speed"/>
