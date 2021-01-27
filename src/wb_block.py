@@ -91,7 +91,8 @@ use work.{p_entity}_pkg.all;
 entity {p_entity} is
   generic (
 {p_generics}
-{p_ver_id}
+{p_ver_id};
+    g_registered : boolean := false
   );
   port (
 """
@@ -146,7 +147,7 @@ begin
   generic map (
      g_num_masters => {nof_masters},
      g_num_slaves  => {nof_subblks},
-     g_registered  => {p_registered},
+     g_registered  => g_registered,
      g_address     => c_address,
      g_mask        => c_mask
   )
@@ -1392,7 +1393,6 @@ class WbBlock(WbObject):
         # nof_subblks,
         # subblk_assignments,
         # n_slaves,
-        # p_registered,
         # p_addresses, p_masks
         # block_id, block_ver - to verify that design matches the software
 
@@ -1610,7 +1610,6 @@ end if;
                        " := c_" + self.name + "_ver_id", 4)
         self.add_templ("p_addresses", adrs, 0)
         self.add_templ("p_masks", masks, 0)
-        self.add_templ("p_registered", "false", 0)
         self.add_templ("nof_subblks", str(n_ports), 0)
         self.add_templ("nof_masters", str(self.N_MASTERS), 0)
         self.add_templ("p_entity", self.name, 0)

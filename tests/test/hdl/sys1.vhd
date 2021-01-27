@@ -35,7 +35,8 @@ begin  -- architecture rtl
   SYS1_1: entity agwb.SYS1
     generic map(
       g_ver_id => v_SYS1_ver_id(nvar),
-      g_ENABLEs_size => v_ENABLEs_size(nvar)
+      g_ENABLEs_size => v_ENABLEs_size(nvar),
+      g_registered => true
     )
     port map (
       slave_i   => wb_s_in,
