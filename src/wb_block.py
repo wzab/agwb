@@ -1251,6 +1251,7 @@ class WbBlock(WbObject):
         self.desc = el.get("desc", "")
         self.testdev_ena = ex.exprval(el.get("testdev_ena", "0"))
         self.ignore = el.get("ignore", "")
+        self.registered = ex.exprval(el.get("registered", "0"))
         self.reserved = ex.exprval(el.get("reserved", "0"))
         # We check if the outputs from the registers should be aggregated
         self.aggregate_outs = el.get("aggr_outs", "0")
@@ -1610,10 +1611,14 @@ end if;
                        " := c_" + self.name + "_ver_id", 4)
         self.add_templ("p_addresses", adrs, 0)
         self.add_templ("p_masks", masks, 0)
-        self.add_templ("p_registered", "false", 0)
         self.add_templ("nof_subblks", str(n_ports), 0)
         self.add_templ("nof_masters", str(self.N_MASTERS), 0)
         self.add_templ("p_entity", self.name, 0)
+        # Set the "g_registered" generic depending on the user-defined attribute
+        if self.registered == 0:
+            self.add_templ("p_registered", "false", 0)
+        else:
+            self.add_templ("p_registered", "true", 0)
         # If block has aggregated outputs, close the record definition
         # and add the output record to the entity ports
         if self.out_type is not None:

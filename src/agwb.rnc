@@ -24,11 +24,12 @@ blackbox =
 block =
   element block {
     attribute aggr_outs { text }?,
-    attribute name { text },
-    attribute reserved { text }?,
-    attribute testdev_ena { text }?,
     attribute desc { text }?,
     attribute ignore { text }?,
+    attribute name { text },
+    attribute registered { text }?,
+    attribute reserved { text }?,
+    attribute testdev_ena { text }?,
     (blackbox* & creg* & sreg* & subblock*)
   }
 field =

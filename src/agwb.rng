@@ -92,19 +92,6 @@
 					<text/>
 				</attribute>
 			</optional>
-			<attribute name="name">
-				<text/>
-			</attribute>
-			<optional>
-				<attribute name="reserved">
-					<text/>
-				</attribute>
-			</optional>
-			<optional>
-				<attribute name="testdev_ena">
-					<text/>
-				</attribute>
-			</optional>
 			<optional>
 				<attribute name="desc">
 					<text/>
@@ -112,6 +99,24 @@
 			</optional>
 			<optional>
 				<attribute name="ignore">
+					<text/>
+				</attribute>
+			</optional>
+			<attribute name="name">
+					<text/>
+			</attribute>
+			<optional>
+				<attribute name="registered">
+					<text/>
+				</attribute>
+			</optional>
+			<optional>
+				<attribute name="reserved">
+					<text/>
+				</attribute>
+			</optional>
+			<optional>
+				<attribute name="testdev_ena">
 					<text/>
 				</attribute>
 			</optional>
