@@ -1878,7 +1878,7 @@ end if;
                     + "_VER "
                     + parent
                     + " $"
-                    + format(adr + spec_regs["id"], "x")
+                    + format(adr + spec_regs["ver"], "x")
                     + " + ;\n"
                 )
                 if self.testdev_ena != 0:
