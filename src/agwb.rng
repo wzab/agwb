@@ -171,6 +171,11 @@
 			<attribute name="val">
 				<text/>
 			</attribute>
+			<optional>
+				<attribute name="desc">
+					<text/>
+				</attribute>
+			</optional>
 		</element>
 	</define>
 
