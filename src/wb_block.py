@@ -92,7 +92,7 @@ entity {p_entity} is
   generic (
 {p_generics}
 {p_ver_id};
-    g_registered : boolean := false
+    g_registered : integer := 0
   );
   port (
 """
@@ -150,7 +150,7 @@ begin
   int_addr <= int_regs_wb_m_o.adr({reg_adr_bits}-1 downto 0);
 
 -- Conditional adding of xwb_register   
-  gr1: if g_registered generate
+  gr1: if g_registered = 2 generate
     grl1: for i in 0 to {nof_masters}-1 generate
       xwb_register_1: entity general_cores.xwb_register
       generic map (
@@ -165,7 +165,7 @@ begin
     end generate grl1;
   end generate gr1;
 
-  gr2: if not g_registered generate
+  gr2: if g_registered /= 2 generate
       wb_up_r_i <= wb_up_i;
       wb_up_o <= wb_up_r_o;
   end generate gr2;
@@ -175,7 +175,7 @@ begin
   generic map (
      g_num_masters => {nof_masters},
      g_num_slaves  => {nof_subblks},
-     g_registered  => false,
+     g_registered  => (g_registered = 1),
      g_address     => c_address,
      g_mask        => c_mask
   )

@@ -40,7 +40,7 @@ begin  -- architecture rtl
       g_ver_id => v_MAIN_ver_id(nvar),
       g_LINKS_size => v_LINKS_size(nvar),
       g_EXTHUGE_size => v_EXTHUGE_size(nvar),
-      g_registered => true
+      g_registered => 2
 )
     port map (
       slave_i	     => wb_s_in,

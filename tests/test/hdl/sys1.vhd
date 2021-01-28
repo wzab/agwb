@@ -36,7 +36,7 @@ begin  -- architecture rtl
     generic map(
       g_ver_id => v_SYS1_ver_id(nvar),
       g_ENABLEs_size => v_ENABLEs_size(nvar),
-      g_registered => true
+      g_registered => 1
     )
     port map (
       slave_i   => wb_s_in,
