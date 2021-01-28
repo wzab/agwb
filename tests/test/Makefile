@@ -8,9 +8,11 @@ RUN_OPTIONS= --unbuffered --stop-time=5000ns --wave=${ENTITY}.ghw
 #RUN_OPTIONS= --stop-time=290000ns 
 #RUN_OPTIONS=  --wave=${ENTITY}.ghw 
 SOURCES_GC = \
+ general-cores/modules/common/gencores_pkg.vhd \
  general-cores/modules/genrams/genram_pkg.vhd \
  general-cores/modules/wishbone/wishbone_pkg.vhd \
  general-cores/modules/wishbone/wb_crossbar/xwb_crossbar.vhd \
+ general-cores/modules/wishbone/wb_register/xwb_register.vhd \
 
 SOURCES_AGWB = \
  gen/agwb_pkg.vhd \

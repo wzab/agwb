@@ -7,5 +7,5 @@ set -e
   # git checkout propose_master
   # but as general-cores may further evolve, and get incompatible 
   # with my codes, here I get the particular commit:
-  git checkout 3bbcf4a385999625bfdeac568410f248b017f57f
+  git checkout 63f3671351127a398006e01f66b37adb7eda9a37
 )

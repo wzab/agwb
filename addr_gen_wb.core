@@ -5,6 +5,7 @@ name: wzab::addr_gen_wb
 filesets:
     rtl:
         depend:
+            - cern:general_cores:xwb_register:0.0.0
             - cern:general_cores:xwb_crossbar:0.0.0
 
 generators:

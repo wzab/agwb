@@ -122,8 +122,10 @@ architecture gener of {p_entity} is
   signal int_regs_wb_m_o : t_wishbone_master_out;
   signal int_regs_wb_m_i : t_wishbone_master_in;
   signal int_addr : std_logic_vector({reg_adr_bits}-1 downto 0);
-  signal wb_up_o : t_wishbone_slave_out_array(0 to 0);
-  signal wb_up_i : t_wishbone_slave_in_array(0 to 0);
+  signal wb_up_o : t_wishbone_slave_out_array(0 to {nof_masters}-1);
+  signal wb_up_i : t_wishbone_slave_in_array(0 to {nof_masters}-1);
+  signal wb_up_r_o : t_wishbone_slave_out_array(0 to {nof_masters}-1);
+  signal wb_up_r_i : t_wishbone_slave_in_array(0 to {nof_masters}-1);
   signal wb_m_o : t_wishbone_master_out_array(0 to {nof_subblks}-1);
   signal wb_m_i : t_wishbone_master_in_array(0 to {nof_subblks}-1) := (others => c_WB_SLAVE_OUT_ERR);
 
@@ -139,33 +141,49 @@ begin
   wb_up_i(0) <= slave_i;
   slave_o <= wb_up_o(0);
 """
+    else:
+        res += """\
+  wb_up_i <= slave_i;
+  slave_o <= wb_up_o;
+"""    
     res += """\
   int_addr <= int_regs_wb_m_o.adr({reg_adr_bits}-1 downto 0);
+
+-- Conditional adding of xwb_register   
+  gr1: if g_registered generate
+    grl1: for i in 0 to {nof_masters}-1 generate
+      xwb_register_1: entity general_cores.xwb_register
+      generic map (
+        g_WB_MODE => CLASSIC)
+      port map (
+        rst_n_i  => rst_n_i,
+        clk_i    => clk_sys_i,
+        slave_i  => wb_up_i(i),
+        slave_o  => wb_up_o(i),
+        master_i => wb_up_r_o(i),
+        master_o => wb_up_r_i(i));
+    end generate grl1;
+  end generate gr1;
+
+  gr2: if not g_registered generate
+      wb_up_r_i <= wb_up_i;
+      wb_up_o <= wb_up_r_o;
+  end generate gr2;
 
 -- Main crossbar
   xwb_crossbar_1: entity general_cores.xwb_crossbar
   generic map (
      g_num_masters => {nof_masters},
      g_num_slaves  => {nof_subblks},
-     g_registered  => g_registered,
+     g_registered  => false,
      g_address     => c_address,
      g_mask        => c_mask
   )
   port map (
      clk_sys_i => clk_sys_i,
      rst_n_i   => rst_n_i,
-"""
-    if nof_masters > 1:
-        res += """\
-       slave_i   => slave_i,
-       slave_o   => slave_o,
-"""
-    else:
-        res += """\
-     slave_i   => wb_up_i,
-     slave_o   => wb_up_o,
-"""
-    res += """\
+     slave_i   => wb_up_r_i,
+     slave_o   => wb_up_r_o,
      master_i  => wb_m_i,
      master_o  => wb_m_o,
      sdb_sel_o => open
