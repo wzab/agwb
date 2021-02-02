@@ -123,7 +123,7 @@ class _BitFieldAccess(object):
 
     def readx(self):
         rval = self.x__iface.readx(self.x__base)
-        return _BitFieldFuture(rval,x__bf)
+        return _BitFieldFuture(rval,self.x__bf)
 
     def writex(self, value, now=True):
         # Check if the value to be stored is correct
@@ -166,7 +166,7 @@ class Vector(object):
 
 
 class Block(object):
-    """Class describing the blocks handled by addr_gen_wb-gnerated code.
+    """Class describing the blocks handled by addr_gen_wb-generated code.
 
     The Python backend generates derived classes, with class fields
     corresponding to subblocks or registers.
@@ -225,6 +225,8 @@ class Block(object):
             self._verify_id()
             self._verify_ver()
 
+    def dispatch(self):
+        self.x__iface.dispatch()
 
 class _Register(object):
     """Base class supporting access to the register."""
@@ -294,17 +296,80 @@ if __name__ == "__main__":
     # read(address) and write(address,value)
     class DemoIface(object):
         def __init__(self):
+            self.opers = [] # List of operations
+            self.reg_cache = {} # Register cache or aggregated RMW commands
             pass
+            
+        class DI_future(object):
+            def __init__(self,iface):
+                self.iface = iface
+                self.done = False
+                self._val = None
+            def __getattr__(self,name):
+                if name == "val":
+                    # Check if the transaction is executed
+                    if self.done:
+                        return self._val
+                    else:
+                        self.iface.dispatch()
+                        if self.done:
+                            return self._val
+                        else:
+                            raise Exception("val not set after dispatch!")
+            def set(self, val):
+                self.done = True
+                self._val = val     
 
         def read(self, addr):
             global rf
+            if self.opers:
+                self.dispatch()
+            return self._read(addr)
+            
+        def _read(self, addr):
             print("reading from address:" + hex(addr) + " val=" + hex(rf[addr]))
             return rf[addr]
 
         def write(self, addr, val):
             global rf
+            if self.opers:
+                self.dispatch()
+            self._write(addr,val)
+
+        def _write(self, addr, val):            
             print("writing " + hex(val) + " to address " + hex(addr))
             rf[addr] = val
+
+        def writex(self, addr, val):
+            self.opers.append(lambda : self.write(addr, val))
+        
+        def readx(self, addr):
+            df = self.DI_future(self)
+            self.opers.append(lambda : df.set(self._read(addr)))
+            return df
+        
+        def rmw(self, addr, mask, val, now=True):
+            # Temporarily the minimalistic implementation
+            # Does not support caching!            
+            if self.opers:
+                self.dispatch()
+            rval = self.read(addr)
+            rval |= mask
+            rval ^= mask
+            val &= mask
+            rval |= val
+            self.write(addr,rval)
+        
+        def dispatch(self):
+            if not self.opers:
+                print("empty dispatch")
+                return
+            print("before dispatch")
+            for x in self.opers:
+                x()
+            self.opers = []
+            print("after dispatch")
+        
 
     class c2(Block):
         x__size = 3
@@ -313,22 +378,41 @@ if __name__ == "__main__":
                 1,
                 (
                     StatusRegister,
-                    {"t1": BitField(3, 1, False), "t2": BitField(9, 4, True),},
+                    {"t1": BitField(3, 1, False), "t2": BitField(9, 4, False),},
                 ),
             )
         }
 
+    class regs(Block):
+        x__size = 4
+        x__fields = {
+           "rv" : (
+             1,
+             (
+                ControlRegister, {},
+             ),
+           ) 
+        }
+        
     class c1(Block):
         x__size = 100
-        x__fields = {"f1": (0, 10, (c2,)), "f2": (11, (c2,)), "size": (32, (c2,))}
+        x__fields = {"f1": (0, 10, (c2,)), "f2": (11, (c2,)), "size": (32, (c2,)),"x1":(40,5,(regs,))}
 
     mf = DemoIface()
     a = c1(mf, 12)
-    a.f1[0].r1.t2.write(-3)
-    a.f1[0].r1.t1.write(5)
-    a.f2.r1.t1.write(7)
-    a.f2.r1.t2.write(13)
-    print(a.f1[0].r1.t2.read())
-    print(a.f1[0].r1.t1.read())
+    
+    a.f1[0].r1.t2.writex(11)
+    a.f1[0].r1.t1.writex(5)
+    a.f2.r1.t1.writex(7)
+    a.f2.r1.t2.writex(13)
+    a.x1[3].rv.write(5)
+    a.x1[1].rv.write(7)    
+    p1 = a.f1[0].r1.t2.readx()
+    p2 = a.f1[0].r1.t1.readx()
+    a.dispatch()
+    print(p1.val,p2.val)
+    p3 = a.x1[1].rv.readx()
+    p4 = a.x1[3].rv.readx()
+    print(p3.val,p4.val)
     print(a.f2.r1.t2.read())
     print(a.f2.r1.t1.read())
