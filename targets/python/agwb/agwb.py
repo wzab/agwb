@@ -4,6 +4,8 @@ Documentation for agwb.py module
 
 Written by Wojciech M. Zabolotny
 wzab01<at>gmail.com 18-20.06.2019
+added support for extended interface:
+wzab01<at>gmail.com 2.02.2021
 
 The agwb.py module is a helper that provides
 access to hierarchy of blocks/registers/bitfields
@@ -13,6 +15,26 @@ The interface must provide two methods:
 
 read(self,address) that returns 32-bit value
 write(self,address,value) that writes such a value
+
+The extended interface (with cached write and read
+accesses and support for optimized bitfields
+handling and read-modify-write) should provide
+additional methods:
+
+writex(self,address,value) - that only schedules 
+       a write (unless the operation list is full)
+readx(self,address) - that returns the "future" 
+       object with "val" field (or method) that returns
+       the value (possibly triggering dispatch if necessary)
+rmw(self,address,mask,value) - schedules the read-modify-write
+       operation defined as follows
+       X:= (X and ~mask) | (value and mask)
+write_field(self,address,value,now=false) - performs 
+      the operation on the field, but updates the register
+      only if "now" is true.
+dispatch() - executes the accumulated list of operations
+      (the list may be executed automatically, if it grows
+      to its full possible length).
 """
 
 
