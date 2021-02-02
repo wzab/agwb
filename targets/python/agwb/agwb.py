@@ -40,7 +40,6 @@ dispatch() - executes the accumulated list of operations
       to its full possible length).
 """
 
-
 class BitField(object):
     """Class delivering an object used to describe the bitfield.
 
@@ -63,6 +62,23 @@ class BitField(object):
             self.sign_mask = 0
         self.mask = ((1 << (msb + 1)) - 1) ^ ((1 << lsb) - 1)
 
+class _BitFieldFuture(object):
+    """Class enabling delayed access to the value read from the bitfield
+    """
+    def __init__(self, rfut, bf):
+    	self.rfut = rfut
+    	self.bf = bf
+    	
+    def __getattr__(self,name):
+        if name == "val":
+            rval = self.rfut.val & self.bf.mask
+            rval >>= self.bf.lsb
+            if self.bf.sign_mask:
+                if rval & self.bf.sign_mask:
+                    rval -= self.bf.sign_mask << 1
+            return rval
+        else:
+            raise Exception("Only val field is available")
 
 class _BitFieldAccess(object):
     """Class providing a versatile object supporting  read/write access to any bitfield.
@@ -105,6 +121,23 @@ class _BitFieldAccess(object):
         rval |= value
         self.x__iface.write(self.x__base, rval)
 
+    def readx(self):
+        rval = self.x__iface.readx(self.x__base)
+        return _BitFieldFuture(rval,x__bf)
+
+    def writex(self, value, now=True):
+        # Check if the value to be stored is correct
+        if (value < self.x__bf.vmin) or (value > self.x__bf.vmax):
+            raise Exception("Value doesn't fit in the bitfield")
+        # If the bitfield is signed, convert the negative values
+        if self.x__bf.sign_mask:
+            if value < 0:
+                value += self.x__bf.sign_mask << 1
+                print("final value: " + str(value))
+        # Calculate the shifted value
+        value = value << self.x__bf.lsb
+        # Schedule the RMW operation        
+        self.x__iface.rmw(self.x__base, self.x__bf.mask, value, now)        
 
 class Vector(object):
     """Class describing the vector of registers or subblocks.
@@ -209,14 +242,26 @@ class _Register(object):
     def read(self):
         return self.x__iface.read(self.x__base)
 
+    def readx(self):
+        return self.x__iface.readx(self.x__base)
+
     def read_fifo(self, count):
         return self.x__iface.read_fifo(self.x__base, count)
 
     def write(self, value):
         self.x__iface.write(self.x__base, value)
 
+    def writex(self, value):
+        self.x__iface.writex(self.x__base, value)
+
     def write_fifo(self, values):
         self.x__iface.write(self.x__base, values)
+
+    def rmw(self, mask, value, now=True):
+        self.x__iface.write(self.x__base, mask, value, now=True)
+
+    def dispatch(self):
+        self.x__iface.dispatch()
 
     def __getattr__(self, name):
         return _BitFieldAccess(self.x__iface, self.x__base, self.x__bfields[name])
