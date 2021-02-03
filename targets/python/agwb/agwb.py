@@ -372,7 +372,7 @@ if __name__ == "__main__":
                 rc = self.rmw_cache[addr]
             rc.rmw(mask, val)
             if now:
-                self.writex(addr,rc.finalize())
+                self.opers.append(lambda: self._write(addr,rc.finalize()))
                 del self.rmw_cache[addr]
         
         def dispatch(self):
