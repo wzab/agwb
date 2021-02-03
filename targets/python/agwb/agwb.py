@@ -137,7 +137,10 @@ class _BitFieldAccess(object):
         # Calculate the shifted value
         value = value << self.x__bf.lsb
         # Schedule the RMW operation        
-        self.x__iface.rmw(self.x__base, self.x__bf.mask, value, now)        
+        self.x__iface.rmw(self.x__base, self.x__bf.mask, value)        
+        # If now is true, finalize the current RMW
+        if now:
+            self.x__iface.rmw()
 
 class Vector(object):
     """Class describing the vector of registers or subblocks.
@@ -285,6 +288,8 @@ class StatusRegister(_Register):
 """
 Below is the demo code, showing an example how we may access the registers
 via an emulated interface.
+Please remember that in the real solution the functionality will be split
+into two parts: in the HW backend, and in the gateway application.
 """
 if __name__ == "__main__":
     # Table emulating the register file
@@ -297,9 +302,12 @@ if __name__ == "__main__":
     class DemoIface(object):
         def __init__(self):
             self.opers = [] # List of operations
-            self.rmw_cache = {} # RMW operation cache for aggregated RMW commands
+            self.rmw_df = None # Future object for current RMW
+            self.rmw_addr = None # RMW address for aggregated RMW commands
+            self.rmw_mask = 0 # Mask for the aggregated RMW commands
+            self.rmw_nval = 0 # Value for the aggregated RMW commands
             pass
-            
+        
         class DI_future(object):
             def __init__(self,iface):
                 self.iface = iface
@@ -320,60 +328,70 @@ if __name__ == "__main__":
                 self.done = True
                 self._val = val     
 
-        class RMW_cache(object):
-            def __init__(self,df):
-                self.df = df
-                self.mask = 0 # Bitmask to be applied
-                self.nval = 0 # New value to be written
-            def rmw(self, mask, nval):
-                self.mask |= mask
-                self.nval |= mask
-                self.nval ^= mask
-                self.nval |= (nval & mask)               
-            def finalize(self):
-                dval = self.df.val | self.mask
-                dval ^= self.mask
-                return self.nval | dval
-
         def read(self, addr):
-            global rf
+            self.rmw() # Finalize any pending RMW
             if self.opers:
                 self.dispatch()
             return self._read(addr)
             
         def _read(self, addr):
+            global rf
             print("reading from address:" + hex(addr) + " val=" + hex(rf[addr]))
             return rf[addr]
 
         def write(self, addr, val):
-            global rf
+            self.rmw() # Finalize any pending RMW
             if self.opers:
                 self.dispatch()
             self._write(addr,val)
 
         def _write(self, addr, val):            
+            global rf
             print("writing " + hex(val) + " to address " + hex(addr))
             rf[addr] = val
 
         def writex(self, addr, val):
+            self.rmw() # Finalize any pending RMW
             self.opers.append(lambda : self._write(addr, val))
         
         def readx(self, addr):
+            self.rmw() # Finalize any pending RMW
             df = self.DI_future(self)
             self.opers.append(lambda : df.set(self._read(addr)))
             return df
         
-        def rmw(self, addr, mask, val, now=True):
-            if addr not in self.rmw_cache:
-                # We must prepare for caching a value
-                rc = self.RMW_cache(self.readx(addr))
-                self.rmw_cache[addr] = rc
-            else:
-                rc = self.rmw_cache[addr]
-            rc.rmw(mask, val)
-            if now:
-                self.opers.append(lambda: self._write(addr,rc.finalize()))
-                del self.rmw_cache[addr]
+        def _rmw(self, df, addr, mask, nval):
+            # The real HW implemented RMW
+            dval = df.val | mask
+            dval ^= mask
+            dval |= nval
+            self._write(addr, dval)
+            
+        def rmw(self, addr=None, mask=0, val=0):
+            # Call to RMW without arguments simply finalizes the last RMW
+            # Check if another RMW is being prepared
+            if (self.rmw_addr is not None) and (addr != self.rmw_addr):
+                # Finalize the previous RMW
+                # We must copy the values, as they may be overwritten at the time of execution!
+                df = self.rmw_df
+                mask = self.rmw_mask
+                waddr = self.rmw_addr
+                nval = self.rmw_nval 
+                self.opers.append(lambda : self._rmw(df, waddr, mask, nval))
+                self.rmw_addr = None
+                self.rmw_df = None
+            if addr is not None:                
+                # Schedule reading of the initial value of the register
+                if self.rmw_addr is None:
+                    df = self.DI_future(self)
+                    self.opers.append(lambda : df.set(self._read(addr)))
+                    self.rmw_df = df
+                    self.rmw_addr = addr
+                # Now aggregate the current operation
+                self.rmw_mask |= mask
+                self.rmw_nval |= mask
+                self.rmw_nval ^= mask
+                self.rmw_nval |= (val & mask)               
         
         def dispatch(self):
             if not self.opers:
@@ -416,9 +434,11 @@ if __name__ == "__main__":
     mf = DemoIface()
     a = c1(mf, 12)
     
+    # Check if two consecutive BF writes do not interfere 
     a.f1[0].r1.t2.writex(11,False)
     print("1")
-    a.f1[0].r1.t1.writex(5,True)
+    a.f1[0].r1.t1.writex(5,True) # We intentionally "forget" to finalize that RMW, to see 
+                                  # if the autoamted handling works
     print("2")
     a.f2.r1.t1.writex(7,False)
     print("3")
