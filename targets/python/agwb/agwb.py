@@ -26,15 +26,15 @@ writex(self,address,value) - that only schedules
 readx(self,address) - that returns the "future" 
        object with "val" field (or method) that returns
        the value (possibly triggering dispatch if necessary)
-rmw(self,address,mask,value,now=true) - schedules the read-modify-write
+rmw(self,address=none,mask=0,value=0) - schedules the read-modify-write
        operation defined as follows
        X:= (X and ~mask) | (value and mask)
-       If "now" is true, the new value should be scheduled 
-       for writing.
-       If "now" is false, the new value should be calculated
-       and stored internally by the bus interface.
-       The last call to rmw on the particular register should
-       have "now" set to "true".
+       The consecutive operations on the same address are aggregated.
+       the "value" and "mask" are updated.
+       If any other operation (read, write, readx, writes) or
+       rmw to anothe address is called, the pending rmw must 
+       be finalized.
+       Also calling rmw without arguments finalizes the pending RMW.
 dispatch() - executes the accumulated list of operations
       (the list may be executed automatically, if it grows
       to its full possible length).
