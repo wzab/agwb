@@ -260,7 +260,7 @@ class _Register(object):
         self.x__iface.write(self.x__base, values)
 
     def rmw(self, mask, value, now=True):
-        self.x__iface.write(self.x__base, mask, value, now=True)
+        self.x__iface.rmw(self.x__base, mask, value, now=True)
 
     def dispatch(self):
         self.x__iface.dispatch()
@@ -297,7 +297,7 @@ if __name__ == "__main__":
     class DemoIface(object):
         def __init__(self):
             self.opers = [] # List of operations
-            self.reg_cache = {} # Register cache or aggregated RMW commands
+            self.rmw_cache = {} # RMW operation cache for aggregated RMW commands
             pass
             
         class DI_future(object):
@@ -320,6 +320,21 @@ if __name__ == "__main__":
                 self.done = True
                 self._val = val     
 
+        class RMW_cache(object):
+            def __init__(self,df):
+                self.df = df
+                self.mask = 0 # Bitmask to be applied
+                self.nval = 0 # New value to be written
+            def rmw(self, mask, nval):
+                self.mask |= mask
+                self.nval |= mask
+                self.nval ^= mask
+                self.nval |= (nval & mask)               
+            def finalize(self):
+                dval = self.df.val | self.mask
+                dval ^= self.mask
+                return self.nval | dval
+
         def read(self, addr):
             global rf
             if self.opers:
@@ -341,7 +356,7 @@ if __name__ == "__main__":
             rf[addr] = val
 
         def writex(self, addr, val):
-            self.opers.append(lambda : self.write(addr, val))
+            self.opers.append(lambda : self._write(addr, val))
         
         def readx(self, addr):
             df = self.DI_future(self)
@@ -349,16 +364,16 @@ if __name__ == "__main__":
             return df
         
         def rmw(self, addr, mask, val, now=True):
-            # Temporarily the minimalistic implementation
-            # Does not support caching!            
-            if self.opers:
-                self.dispatch()
-            rval = self.read(addr)
-            rval |= mask
-            rval ^= mask
-            val &= mask
-            rval |= val
-            self.write(addr,rval)
+            if addr not in self.rmw_cache:
+                # We must prepare for caching a value
+                rc = self.RMW_cache(self.readx(addr))
+                self.rmw_cache[addr] = rc
+            else:
+                rc = self.rmw_cache[addr]
+            rc.rmw(mask, val)
+            if now:
+                self.writex(addr,rc.finalize())
+                del self.rmw_cache[addr]
         
         def dispatch(self):
             if not self.opers:
@@ -401,10 +416,13 @@ if __name__ == "__main__":
     mf = DemoIface()
     a = c1(mf, 12)
     
-    a.f1[0].r1.t2.writex(11)
-    a.f1[0].r1.t1.writex(5)
-    a.f2.r1.t1.writex(7)
-    a.f2.r1.t2.writex(13)
+    a.f1[0].r1.t2.writex(11,False)
+    print("1")
+    a.f1[0].r1.t1.writex(5,True)
+    print("2")
+    a.f2.r1.t1.writex(7,False)
+    print("3")
+    a.f2.r1.t2.writex(13,True)
     a.x1[3].rv.write(5)
     a.x1[1].rv.write(7)    
     p1 = a.f1[0].r1.t2.readx()
