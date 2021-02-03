@@ -373,14 +373,14 @@ if __name__ == "__main__":
             if (self.rmw_addr is not None) and (addr != self.rmw_addr):
                 # Finalize the previous RMW
                 # We must copy the values, as they may be overwritten at the time of execution!
-                df = self.rmw_df
+                odf = self.rmw_df
                 mask = self.rmw_mask
                 waddr = self.rmw_addr
                 nval = self.rmw_nval 
-                self.opers.append(lambda : self._rmw(df, waddr, mask, nval))
+                self.opers.append(lambda : self._rmw(odf, waddr, mask, nval))
                 self.rmw_addr = None
                 self.rmw_df = None
-            if addr is not None:                
+            if addr is not None: 
                 # Schedule reading of the initial value of the register
                 if self.rmw_addr is None:
                     df = self.DI_future(self)
@@ -437,7 +437,7 @@ if __name__ == "__main__":
     # Check if two consecutive BF writes do not interfere 
     a.f1[0].r1.t2.writex(11,False)
     print("1")
-    a.f1[0].r1.t1.writex(5,True) # We intentionally "forget" to finalize that RMW, to see 
+    a.f1[0].r1.t1.writex(5,False) # We intentionally "forget" to finalize that RMW, to see 
                                   # if the autoamted handling works
     print("2")
     a.f2.r1.t1.writex(7,False)
