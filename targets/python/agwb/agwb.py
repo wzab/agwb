@@ -93,6 +93,10 @@ class _BitFieldAccess(object):
         self.x__bf = bf
 
     def read(self):
+        """ Simple read method. Does not use any access optimization.
+            The read is performed immediately, the result is
+            masked, shifted and returned as integer. 
+        """
         rval = self.x__iface.read(self.x__base)
         rval &= self.x__bf.mask
         rval >>= self.x__bf.lsb
@@ -102,6 +106,11 @@ class _BitFieldAccess(object):
         return rval
 
     def write(self, value):
+        """ Simple write method. Does not use any access optimization.
+            The write is performed immediately.
+            Please note, that access to each bitfield generates
+            a strobe pulse for the whole register (if strobe is implemented).
+        """
         # Check if the value to be stored is correct
         if (value < self.x__bf.vmin) or (value > self.x__bf.vmax):
             raise Exception("Value doesn't fit in the bitfield")
@@ -122,10 +131,26 @@ class _BitFieldAccess(object):
         self.x__iface.write(self.x__base, rval)
 
     def readx(self):
+        """ Optimized read method. Schedules reading of the register.
+            The "future" object is returned.
+            When the "val" field in the returned value is accessed,
+            The read is performed immediately (if not dispatched yet),
+            and the result is masked, shifted and returned. 
+        """    
         rval = self.x__iface.readx(self.x__base)
         return _BitFieldFuture(rval,self.x__bf)
 
     def writex(self, value, now=True):
+        """ Optimized write method. The write is translated into the
+            rmw command. Multiple writex commands to bitfields located
+            in the same register are aggregated into a single rmw,
+            unless "now" is True.
+            Reading of the register is scheduled after the first writex
+            is executed.
+            If "now" is True, or another operation than rmw to the same
+            register is executed, the write is scheduled with current
+            mask and value, resulting from rmws aggregated up to now.
+        """
         # Check if the value to be stored is correct
         if (value < self.x__bf.vmin) or (value > self.x__bf.vmax):
             raise Exception("Value doesn't fit in the bitfield")
@@ -245,25 +270,56 @@ class _Register(object):
         return self.x__bfields.keys()
 
     def read(self):
+        """ Simple read method. Does not use any access optimization.
+            The read is performed immediately, the result is
+            masked, shifted and returned as integer. 
+        """
         return self.x__iface.read(self.x__base)
 
     def readx(self):
         return self.x__iface.readx(self.x__base)
+        """ Optimized read method. Schedules reading of the register.
+            The "future" object is returned.
+            When the "val" field in the returned value is accessed,
+            The read is performed immediately (if not dispatched yet),
+            and the result is returned as an integer.
+        """    
 
     def read_fifo(self, count):
         return self.x__iface.read_fifo(self.x__base, count)
 
     def write(self, value):
+        """ Simple write method. Does not use any access optimization.
+            The write is performed immediately.
+            Please note, that access to each bitfield generates
+            a strobe pulse for the whole register (if strobe is implemented).
+        """
         self.x__iface.write(self.x__base, value)
 
     def writex(self, value):
+        """ Optimized write method. The write is only scheduled.
+            It will be executed after the next "dispatch" call,
+            or if the maximum length of the scheduled operations' list is
+            achieved.
+        """
         self.x__iface.writex(self.x__base, value)
 
     def write_fifo(self, values):
         self.x__iface.write(self.x__base, values)
 
     def rmw(self, mask, value, now=True):
-        self.x__iface.rmw(self.x__base, mask, value, now=True)
+        """ Optimized read-modify-write method. Multiple rmw commands
+            done on the same register are aggregated into a single rmw.
+            Reading of the register is scheduled after the first rmw
+            is executed.
+            If "now" is True, or another operation than rmw to the same
+            register is executed, the write is scheduled with current
+            mask and value, resulting from rmws aggregated up to now.
+        """        
+        self.x__iface.rmw(self.x__base, mask, value)
+        if now:
+            self.x__iface.rmw()
+        
 
     def dispatch(self):
         self.x__iface.dispatch()
