@@ -49,7 +49,7 @@ class BitField(object):
     Only fields are used.
     """
 
-    def __init__(self, msb, lsb, is_signed):
+    def __init__(self, msb:int, lsb:int, is_signed:bool) -> None:
         self.lsb = lsb
         self.msb = msb
         if is_signed:
@@ -65,7 +65,7 @@ class BitField(object):
 class _BitFieldFuture(object):
     """Class enabling delayed access to the value read from the bitfield
     """
-    def __init__(self, rfut, bf):
+    def __init__(self, rfut, bf) -> None:
     	self.rfut = rfut
     	self.bf = bf
     	
@@ -122,8 +122,7 @@ class _BitFieldAccess(object):
         # Read the whole register
         rval = self.x__iface.read(self.x__base)
         # Mask the bitfield
-        rval |= self.x__bf.mask
-        rval ^= self.x__bf.mask
+        rval &= ~self.x__bf.mask
         # Shift the new value
         value = value << self.x__bf.lsb
         value &= self.x__bf.mask
@@ -200,9 +199,9 @@ class Block(object):
     corresponding to subblocks or registers.
     """
 
-    x__is_blackbox = False
-    x__size = 1
-    x__fields = {}
+    x__is_blackbox:bool = False
+    x__size:int = 1
+    x__fields:dict = {}
 
     def __init__(self, iface, base):
         """base is the base address for the given block. """
@@ -334,12 +333,17 @@ ControlRegister = _Register  # The control register is just the generic register
 class StatusRegister(_Register):
     """Class supporting access to the read-only (status) register.
 
-    The write method throws an exception.
+    The write methods throws an exception.
     """
 
     def write(self, value):
         raise Exception("Status register at " + hex(self.x__base) + " can't be written")
 
+    def writex(self, value):
+        raise Exception("Status register at " + hex(self.x__base) + " can't be written")
+
+    def rmw(self, mask, value, now=True):
+        raise Exception("Status register at " + hex(self.x__base) + " can't be written")
 
 """
 Below is the demo code, showing an example how we may access the registers
@@ -418,8 +422,7 @@ if __name__ == "__main__":
         
         def _rmw(self, df, addr, mask, nval):
             # The real HW implemented RMW
-            dval = df.val | mask
-            dval ^= mask
+            dval = df.val & ~mask
             dval |= nval
             self._write(addr, dval)
             
@@ -445,8 +448,7 @@ if __name__ == "__main__":
                     self.rmw_addr = addr
                 # Now aggregate the current operation
                 self.rmw_mask |= mask
-                self.rmw_nval |= mask
-                self.rmw_nval ^= mask
+                self.rmw_nval &= ~mask
                 self.rmw_nval |= (val & mask)               
         
         def dispatch(self):
@@ -473,8 +475,8 @@ if __name__ == "__main__":
         }
 
     class regs(Block):
-        x__size = 4
-        x__fields = {
+        x__size:int = 4
+        x__fields:dict = {
            "rv" : (
              1,
              (
