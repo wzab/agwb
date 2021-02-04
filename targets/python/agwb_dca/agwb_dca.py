@@ -93,7 +93,7 @@ class _BitFieldAccess(object):
         self.x__base = base
         self.x__bf = bf
 
-    def readf(self):
+    def readf(self) -> int:
         """ Simple read method. Does not use any access optimization.
             The read is performed immediately, the result is
             masked, shifted and returned as integer. 
@@ -106,7 +106,7 @@ class _BitFieldAccess(object):
                 rval -= self.x__bf.sign_mask << 1
         return rval
 
-    def writef(self, value):
+    def writef(self, value:int) -> None:
         """ Simple write method. Does not use any access optimization.
             The write is performed immediately.
             Please note, that access to each bitfield generates
@@ -130,7 +130,7 @@ class _BitFieldAccess(object):
         rval |= value
         self.x__iface.write(self.x__base, rval)
 
-    def readfb(self):
+    def readfb(self) -> Callable[[],int]:
         """ Optimized read method. Schedules reading of the register.
             The "future" object is returned.
             When the "val" field in the returned value is accessed,
@@ -140,7 +140,7 @@ class _BitFieldAccess(object):
         rval = self.x__iface.readb(self.x__base)
         return _BitFieldFuture(rval,self.x__bf).val
 
-    def writefb(self, value, more=False):
+    def writefb(self, value:int, more:bool=False) -> None:
         """ Optimized write method. The write is translated into the
             rmw command. Multiple writex commands to bitfields located
             in the same register are aggregated into a single rmw,
