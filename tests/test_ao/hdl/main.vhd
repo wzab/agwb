@@ -27,20 +27,20 @@ architecture rtl of main is
   -- Set to 13 to check if the assertion checking works correctly.
   constant real_TEST_IN_size : integer := 4 ;
 
-  -- That constant checks if we can block a single register
-  constant real_CTRL_size : integer := 0;
+  -- That constant checks if we can block a single register set to 0 (to get an error) or to 1
+  constant real_CTRL_size : integer := 1;
 
-  signal LINKS_wb_m_o	: t_wishbone_master_out_array(0 to C_NSEL_MAX-1);
-  signal LINKS_wb_m_i	: t_wishbone_master_in_array(0 to C_NSEL_MAX-1);
+  signal LINKS_wb_m_o	: t_wishbone_master_out_array(C_NSEL_MAX-1 downto 0);
+  signal LINKS_wb_m_i	: t_wishbone_master_in_array(C_NSEL_MAX-1 downto 0);
   signal EXTHUGE_wb_m_o : t_wishbone_master_out;
   signal EXTHUGE_wb_m_i : t_wishbone_master_in;
-  signal EXTERN_wb_m_o	: t_wishbone_master_out_array(0 to (C_NEXTERNS-1));
-  signal EXTERN_wb_m_i	: t_wishbone_master_in_array(0 to (C_NEXTERNS-1));
-  signal CDC_wb_m_o	: t_wishbone_master_out_array(0 to (C_NEXTERNS-1));
-  signal CDC_wb_m_i	: t_wishbone_master_in_array(0 to (C_NEXTERNS-1));
+  signal EXTERN_wb_m_o	: t_wishbone_master_out_array((C_NEXTERNS-1) downto 0);
+  signal EXTERN_wb_m_i	: t_wishbone_master_in_array((C_NEXTERNS-1) downto 0);
+  signal CDC_wb_m_o	: t_wishbone_master_out_array((C_NEXTERNS-1) downto 0);
+  signal CDC_wb_m_i	: t_wishbone_master_in_array((C_NEXTERNS-1) downto 0);
   signal CTRL_o		: t_CTRL;
-  signal TEST_IN_i	: t_TEST_IN_array(0 to real_TEST_IN_size - 1)  := (others => (others => '0'));
-  signal TEST_OUT_o	: t_TEST_OUT_array(0 to c_TEST_OUT_size - 1) := (others => (others => '0'));
+  signal TEST_IN_i	: ut_TEST_IN_array(real_TEST_IN_size - 1 downto 0)  := (others => (others => '0'));
+  signal TEST_OUT_o	: ut_TEST_OUT_array(c_TEST_OUT_size - 1 downto 0) := (others => (others => '0'));
 begin  -- architecture rtl
 
   MAIN_1 : entity agwb.MAIN
