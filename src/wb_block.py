@@ -601,7 +601,7 @@ class WbReg(WbObject):
                 + "_array is u" + tname +
                  "_array(" + self.size_constant + " - 1 downto 0);\n"
             )
-            
+
         # Append the generated types to the parents package section
         parent.add_templ("p_generics", d_g, 4)
         parent.add_templ("p_generics_consts", d_c, 2)
@@ -1401,7 +1401,7 @@ class WbBlock(WbObject):
         for l_n in re.findall(r".*\n?", value)[:-1]:
             if l_n != "":
                 self.templ_dict[templ_key] += indent * " " + l_n
-    
+
     def create_addr(self,adr):
         return '"' + format(adr, "0" + str(self.reg_adr_bits) + "b") + '"'
 
@@ -1484,7 +1484,7 @@ end if;
         if self.ver_var:
             d_c += "constant v_"+self.name+"_ver_id : t_ver_id_variants("
             d_c += str(GLB.variants - 1) +' downto 0) := ('
-            for i in range(0,GLB.variants):
+            for i in range(GLB.variants-1,-1,-1): # Reverse order due to "downto"
                 if i != 0:
                     d_c += ","
                 d_c += 'x"' + format(self.ver_var[i], "08x") + '"'
@@ -1657,7 +1657,7 @@ end if;
         res += '" system_hash="0x' + format(GLB.VER_ID, "08x")
         res += '" addr_bits="' + str(self.adr_bits) + '">\n'
         return res
-        
+
     def gen_amap_xml(self,nvar=None):
         """ This function generates the address map in the AMAP XML format
             for the nvar variant
@@ -1747,7 +1747,7 @@ end if;
                         + '"'
                         + ' elemoffs="'
                         + format(a_r.obj.addr_size, "08x")
-                        + '"'                        
+                        + '"'
                         + ' module="file://'
                         + xname
                         + '"/>\n'
@@ -1898,7 +1898,7 @@ end if;
                    cdefs += (
                         ": " + parent + "_TSTDV_TOUT " + parent + " $" + format(adr+spec_regs["test_tout"], "x") + " + ;\n"
                    )
-                    
+
                 # Add two constants
                 cdefs += (
                     "$"
@@ -2073,7 +2073,10 @@ end if;
         res = "\nclass " + self.name + "(agwb.Block):\n"
         res += sp4 + "x__size = " + str(self.addr_size) + "\n"
         res += sp4 + "x__id = " + hex(self.id_val) + "\n"
-        res += sp4 + "x__ver = " + hex(self.ver_full) + "\n"
+        if nvar is None:
+            res += sp4 + "x__ver = " + hex(self.ver_full) + "\n"
+        else:
+            res += sp4 + "x__ver = " + hex(self.ver_var[nvar]) + "\n"
         res += sp4 + "x__fields = {\n"
         for a_r in self.areas:
             if a_r.obj is None:
