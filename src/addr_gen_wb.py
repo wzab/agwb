@@ -270,7 +270,7 @@ if wb.GLB.variants > 1:
 
 # Now we generate the AMAPXML address tables for possible variants
 # This target must be run first, as it generates VER ID for blocks
-# The blobk gen_amap_xml checks if the output path exists.
+# The block gen_amap_xml checks if the output path exists.
 for nvar in variants:
     for key, BL in wb.blocks().items():
         if BL.used:
@@ -284,24 +284,28 @@ if wb.GLB.VHDL_PATH:
             BL.gen_vhdl()
 # Now we generate the Python access code
 if wb.GLB.PYTHON_PATH:
-    res = """\"\"\"
+    for nvar in variants:
+        res = """\"\"\"
 This file has been automatically generated
 by the agwb (https://github.com/wzab/agwb).
 Do not modify it by hand.
 \"\"\"\n
 """
-    res += "from . import agwb\n\n"
-    for key, BL in wb.blackboxes().items():
-        res += BL.gen_python()
-    for key, BL in wb.blocks().items():
-        if BL.used:
-            res += BL.gen_python()
-    with open(wb.GLB.PYTHON_PATH + "/agwb/" + TOP_NAME + ".py", "w") as fo:
-        fo.write(res)
-    with open(wb.GLB.PYTHON_PATH + "/agwb/" + "__init__.py", "a") as f:
-        f.write(
-                "from ." + TOP_NAME + " import *\n"
-        )
+        res += "from . import agwb\n\n"
+        for key, BL in wb.blackboxes().items():
+            res += BL.gen_python(nvar)
+        for key, BL in wb.blocks().items():
+            if BL.used:
+                res += BL.gen_python(nvar)
+        topname = TOP_NAME
+        if nvar is not None:
+            topname += "_v" + str(nvar)
+        with open(wb.GLB.PYTHON_PATH + "/agwb/" + topname + ".py", "w") as fo:
+            fo.write(res)
+        with open(wb.GLB.PYTHON_PATH + "/agwb/" + "__init__.py", "a") as f:
+            f.write(
+                    "from ." + topname + " import *\n"
+            )
         
 # Now we generate the IPbus address tables
 if wb.GLB.IPBUS_PATH:

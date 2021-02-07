@@ -1,6 +1,6 @@
 """
 This is the script that generates the VHDL code needed to access
-the registers in a hierarchical Wishbone-conencted system.
+the registers in a hierarchical Wishbone-connected system.
 
 Written by Wojciech M. Zabolotny
 (wzab01<at>gmail.com or wzab<at>ise.pw.edu.pl)
@@ -838,7 +838,7 @@ class WbReg(WbObject):
         parent.add_templ("register_access", d_t, 10)
         parent.add_templ("signals_idle", d_i, 8)
 
-    def gen_amap_xml(self, reg_base,nvar=None):
+    def gen_amap_xml(self, reg_base, nvar = None):
         res = ""
         r_n = self.var_reps(nvar)     
         if r_n > 0:
@@ -1085,54 +1085,56 @@ class WbReg(WbObject):
                 )
         return cdefs
 
-    def gen_python(self, reg_base):
+    def gen_python(self, reg_base, nvar = None):
         sp8 = 8 * " "
         sp12 = 12 * " "
         res = ""
-        if self.force_vec:
-            # Vector of registers
-            res += (
-                sp8
-                + "'"
-                + self.name
-                + "':("
-                + hex(reg_base + self.base)
-                + ","
-                + str(self.size)
-                + ",("
-            )
-        else:
-            # Single register
-            res += sp8 + "'" + self.name + "':(" + hex(reg_base + self.base) + ",("
-        if self.regtype == "sreg":
-            res += "agwb.StatusRegister,"
-        elif self.regtype == "creg":
-            res += "agwb.ControlRegister,"
-        else:
-            raise Exception("Incorrect type of register:" + self.regtype)
-        if not self.fields:
-            # No bitfields
-            res += ")),\n"
-        else:
-            # Handle bitfields
-            res += "\n" + sp8 + "{\\\n"
-            for f_l in self.fields:
+        r_n = self.var_reps(nvar)
+        if r_n > 0:
+            if self.force_vec:
+                # Vector of registers
                 res += (
-                    sp12
+                    sp8
                     + "'"
-                    + f_l.name
-                    + "':agwb.BitField("
-                    + str(f_l.msb)
+                    + self.name
+                    + "':("
+                    + hex(reg_base + self.base)
                     + ","
-                    + str(f_l.lsb)
-                    + ","
+                    + str(self.size)
+                    + ",("
                 )
-                if self.type == "signed":
-                    res += "True"
-                else:
-                    res += "False"
-                res += "),\\\n"
-            res += sp8 + "})),\n"
+            else:
+                # Single register
+                res += sp8 + "'" + self.name + "':(" + hex(reg_base + self.base) + ",("
+            if self.regtype == "sreg":
+                res += "agwb.StatusRegister,"
+            elif self.regtype == "creg":
+                res += "agwb.ControlRegister,"
+            else:
+                raise Exception("Incorrect type of register:" + self.regtype)
+            if not self.fields:
+                # No bitfields
+                res += ")),\n"
+            else:
+                # Handle bitfields
+                res += "\n" + sp8 + "{\\\n"
+                for f_l in self.fields:
+                    res += (
+                        sp12
+                        + "'"
+                        + f_l.name
+                        + "':agwb.BitField("
+                        + str(f_l.msb)
+                        + ","
+                        + str(f_l.lsb)
+                        + ","
+                    )
+                    if self.type == "signed":
+                        res += "True"
+                    else:
+                        res += "False"
+                    res += "),\\\n"
+                res += sp8 + "})),\n"
         return res
 
     def gen_html(self, base, name):
@@ -1226,7 +1228,7 @@ class WbBlackBox(WbObject):
         with open(GLB.C_HEADER_PATH + "/agwb_" + self.name + ".h", "w") as f_o:
             f_o.write(res)
 
-    def gen_python(self):
+    def gen_python(self, nvar = None):
         """ This function generates the class providing access
         to the blackbox from the Python code.
         Currently the blackbox is simply handled as a vector
@@ -2063,7 +2065,7 @@ end if;
             f_o.write(head)
             f_o.write(res)
 
-    def gen_python(self):
+    def gen_python(self,nvar=None):
         """ This function generates the class providing access
         to the block from the Python code"""
         sp4 = 4 * " "
@@ -2089,10 +2091,10 @@ end if;
                     res += sp8 + "'TEST_RO':(" + hex(adr + spec_regs["test_ro"]) + ",(agwb.ControlRegister,)),\\\n"
                     res += sp8 + "'TEST_TOUT':(" + hex(adr + spec_regs["test_tout"]) + ",(agwb.ControlRegister,)),\\\n"                    
                 for reg in self.regs:
-                    res += reg.gen_python(adr)
+                    res += reg.gen_python(adr,nvar)
             else:
                 # The format depends on whether this is a block or vector of blocks
-                if (a_r.reps == 1) and (a_r.force_vec == False):
+                if (a_r.var_reps(nvar) == 1) and (a_r.force_vec == False):
                     # Single subblock
                     res += (
                         sp8
@@ -2104,7 +2106,7 @@ end if;
                         + a_r.obj.name
                         + ",)),\\\n"
                     )
-                else:
+                elif (a_r.var_reps(nvar) >= 1):
                     # Vector of subblocks
                     res += (
                         sp8

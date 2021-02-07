@@ -203,10 +203,11 @@ class Block(object):
     x__size:int = 1
     x__fields:dict = {}
 
-    def __init__(self, iface, base):
+    def __init__(self, iface, base, variant = None):
         """base is the base address for the given block. """
         self.x__base = base
         self.x__iface = iface
+        self.x__variant = variant
 
     def __dir__(self):
         return self.x__fields.keys()
