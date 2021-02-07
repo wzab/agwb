@@ -38,7 +38,8 @@ PARSER.add_argument("--ipbus", help="IPbus outputs destination", default="")
 PARSER.add_argument("--amapxml", help="AMap XML outputs destination", default="")
 PARSER.add_argument("--header", help="C header outputs destination", default="")
 PARSER.add_argument("--fs", help="Forth outputs destination", default="")
-PARSER.add_argument("--python", help="Python outputs destination", default="")
+PARSER.add_argument("--python", help="Python outputs destination (can't be used together with --pythondca)", default="")
+PARSER.add_argument("--pythondca", help="Python for DCA outputs destination (can't be used together with --python)", default="")
 PARSER.add_argument("--html", help="HTML documentation destination", default="")
 PARSER.add_argument(
     "--fusesoc", help="Generate FuseSoc .core file", action="store_true"
@@ -68,7 +69,19 @@ wb.GLB.C_HEADER_PATH = ARGS.header
 if wb.GLB.C_HEADER_PATH:
     os.makedirs(wb.GLB.C_HEADER_PATH, exist_ok=True)
 
-wb.GLB.PYTHON_PATH = ARGS.python
+# We need a special handling of two mutual exclusive Python targets
+if ARGS.python and ARGS.pythondca:
+    raise Exception("--python and --pythondca can't be used together")
+
+wb.GLB.PYTHON_PATH = ""
+if ARGS.python:
+    wb.GLB.PYTHON_PATH = ARGS.python
+    wb.GLB.PYTHON_SRC_PATH = "../targets/python/agwb/"
+
+if ARGS.pythondca:
+    wb.GLB.PYTHON_PATH = ARGS.pythondca
+    wb.GLB.PYTHON_SRC_PATH = "../targets/python/agwb_dca/"
+
 if wb.GLB.PYTHON_PATH:
     os.makedirs(wb.GLB.PYTHON_PATH, exist_ok=True)
 
@@ -211,7 +224,7 @@ if wb.GLB.C_HEADER_PATH:
 if wb.GLB.PYTHON_PATH:
     dst_path = wb.GLB.PYTHON_PATH + "/agwb"
     os.makedirs(dst_path, exist_ok=True)
-    src_path = os.path.join(os.path.dirname(__file__), "../targets/python/agwb/")
+    src_path = os.path.join(os.path.dirname(__file__), wb.GLB.PYTHON_SRC_PATH)
     shutil.copy(src_path + "__init__.py", dst_path)
     shutil.copy(src_path + "agwb.py", dst_path)
     with open(wb.GLB.PYTHON_PATH + "/agwb/" + TOP_NAME + "_const.py", "w") as fo:
