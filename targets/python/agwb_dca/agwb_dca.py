@@ -33,7 +33,7 @@ write_masked(self,address=none,mask=0,value=0) - schedules the read-modify-write
        operation defined as follows
        X:= (X and ~mask) | (value and mask)
        the operation should be handled in the FPGA.
-writeb_field(self,address=none,mask=0,value=0, more=False) 
+writeb_masked(self,address=none,mask=0,value=0, more=False) 
        Schedules update of fields. Setting more to True
        blocks immediate scheduling of the operation.
        Multiple writes TO FIELDS LOCATED IN THE SAME REGISTER
@@ -162,7 +162,7 @@ class _BitFieldAccess(object):
         # Calculate the shifted value
         value = value << self.x__bf.lsb
         # Schedule the masked write operation        
-        self.x__iface.writeb_field(self.x__base, self.x__bf.mask, value, more)        
+        self.x__iface.writeb_masked(self.x__base, self.x__bf.mask, value, more)        
 
 class Vector(object):
     """Class describing the vector of registers or subblocks.
@@ -377,7 +377,7 @@ if __name__ == "__main__":
                 self._val = val     
 
         def read(self, addr:int) -> int:
-            self._check_wbf() # Test for uncompleted write_field
+            self._check_wbm() # Test for uncompleted writeb_masked
             if self.opers:
                 self.dispatch()
             return self._read(addr)
@@ -388,7 +388,7 @@ if __name__ == "__main__":
             return rf[addr]
 
         def write(self, addr:int, val:int) -> None:
-            self._check_wbf() # Test for uncompleted write_field
+            self._check_wbm() # Test for uncompleted writeb_masked
             if self.opers:
                 self.dispatch()
             self._write(addr,val)
@@ -399,18 +399,18 @@ if __name__ == "__main__":
             rf[addr] = val
 
         def writeb(self, addr:int, val:int) -> None:
-            self._check_wbf() # Test for uncompleted write_field
+            self._check_wbm() # Test for uncompleted writeb_masked
             self.opers.append(lambda : self._write(addr, val))
         
         def readb(self, addr:int) -> Callable[[],int]:
-            self._check_wbf() # Test for uncompleted write_field
+            self._check_wbm() # Test for uncompleted writeb_masked
             df = self.DI_future(self)
             self.opers.append(lambda : df.set(self._read(addr)))
             return df.val
         
         def _rmw(self, addr, mask, nval):
             # The real HW implemented RMW (now emulated with read and write)
-            self._check_wbf() # Test for uncompleted write_field
+            self._check_wbm() # Test for uncompleted writeb_masked
             print("start RMW (will be done in HW)")
             dval = self._read(addr)
             dval &= ~mask
@@ -419,17 +419,17 @@ if __name__ == "__main__":
             print("finished RMW (will be done in HW)")
         
         def write_masked(self, addr:int, mask:int, data:int) -> None:
-            self._check_wbf() # Test for uncompleted write_field
+            self._check_wbm() # Test for uncompleted writeb_masked
             self.opers.append(lambda : self._rmw(addr, mask, data))
 
-        def _check_wbf(self):
+        def _check_wbm(self):
             if (self.rmw_addr is not None):
-                raise Exception("Another operation can't be done when writeb_field is not completed")
+                raise Exception("Another operation can't be done when writeb_masked is not completed")
                 
-        def writeb_field(self, addr:int, mask:int, val:int, more:bool = False):
+        def writeb_masked(self, addr:int, mask:int, val:int, more:bool = False):
             # Check if another RMW was not completed
             if (self.rmw_addr is not None) and (addr != self.rmw_addr):
-                raise Exception("aggregated writeb_field must use the same address")
+                raise Exception("aggregated writeb_masked must use the same address")
 
             if self.rmw_addr is None:
                 self.rmw_addr = addr
