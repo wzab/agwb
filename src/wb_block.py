@@ -98,8 +98,8 @@ entity {p_entity} is
 """
     if nof_masters > 1:
         res += """\
-    slave_i : in t_wishbone_slave_in_array(0 to {nof_masters}-1);
-    slave_o : out t_wishbone_slave_out_array(0 to {nof_masters}-1);
+    slave_i : in t_wishbone_slave_in_array({nof_masters}-1 downto 0);
+    slave_o : out t_wishbone_slave_out_array({nof_masters}-1 downto 0);
 """
     else:
         res += """\
@@ -122,16 +122,16 @@ architecture gener of {p_entity} is
   signal int_regs_wb_m_o : t_wishbone_master_out;
   signal int_regs_wb_m_i : t_wishbone_master_in;
   signal int_addr : std_logic_vector({reg_adr_bits}-1 downto 0);
-  signal wb_up_o : t_wishbone_slave_out_array(0 to {nof_masters}-1);
-  signal wb_up_i : t_wishbone_slave_in_array(0 to {nof_masters}-1);
-  signal wb_up_r_o : t_wishbone_slave_out_array(0 to {nof_masters}-1);
-  signal wb_up_r_i : t_wishbone_slave_in_array(0 to {nof_masters}-1);
-  signal wb_m_o : t_wishbone_master_out_array(0 to {nof_subblks}-1);
-  signal wb_m_i : t_wishbone_master_in_array(0 to {nof_subblks}-1) := (others => c_WB_SLAVE_OUT_ERR);
+  signal wb_up_o : t_wishbone_slave_out_array({nof_masters}-1 downto 0);
+  signal wb_up_i : t_wishbone_slave_in_array({nof_masters}-1 downto 0);
+  signal wb_up_r_o : t_wishbone_slave_out_array({nof_masters}-1 downto 0);
+  signal wb_up_r_i : t_wishbone_slave_in_array({nof_masters}-1 downto 0);
+  signal wb_m_o : t_wishbone_master_out_array({nof_subblks}-1 downto 0);
+  signal wb_m_i : t_wishbone_master_in_array({nof_subblks}-1 downto 0) := (others => c_WB_SLAVE_OUT_ERR);
 
   -- Constants
-  constant c_address : t_wishbone_address_array(0 to {nof_subblks}-1) := {p_addresses};
-  constant c_mask : t_wishbone_address_array(0 to {nof_subblks}-1) := {p_masks};
+  constant c_address : t_wishbone_address_array({nof_subblks}-1  downto 0) := {p_addresses};
+  constant c_mask : t_wishbone_address_array({nof_subblks}-1 downto 0) := {p_masks};
 begin
   
 {check_assertions}
@@ -492,8 +492,8 @@ class WbReg(WbObject):
         d_c += "constant " + self.size_constant + " : integer := " + str(self.size) +";\n"
         # If there are multiple variants, generate the array with values
         if len(self.variants) > 1:
-            d_c += "constant " + self.size_variants + " : t_reps_variants(0 to " + \
-                str(GLB.variants - 1) +  ") := " + str(tuple(self.variants)) + ";\n"
+            d_c += "constant " + self.size_variants + " : t_reps_variants(" + \
+                str(GLB.variants - 1) + " downto 0 ) := " + str(tuple(self.variants[::-1])) + ";\n"
         d_g += self.size_generic + " : integer := " + self.size_constant +";\n"
         # Create the assertion
         d_a += "assert " + self.size_generic + " <= " + self.size_constant +\
@@ -599,7 +599,7 @@ class WbReg(WbObject):
                 "subtype "
                 + tname
                 + "_array is u" + tname +
-                 "_array(0 to " + self.size_constant + " - 1);\n"
+                 "_array(" + self.size_constant + " - 1 downto 0);\n"
             )
             
         # Append the generated types to the parents package section
@@ -613,7 +613,7 @@ class WbReg(WbObject):
         if self.regtype == "creg" and parent.out_type is not None:
             if self.size > 1:
                 parent.add_templ(
-                    "out_record", self.name + " : " + tname + "_array(0 to " + self.size_constant + " - 1 );\n", 4
+                    "out_record", self.name + " : u" + tname + "_array(" + self.size_constant + " - 1 downto 0);\n", 4
                 )
             else:
                 parent.add_templ("out_record", self.name + " : " + tname + ";\n", 4)
@@ -623,7 +623,7 @@ class WbReg(WbObject):
                         "out_record",
                         self.name
                         + "_stb : std_logic_vector("
-                        + str(self.size - 1)
+                        + self.size_constant +" - 1"
                         + " downto 0);\n",
                         4,
                     )
@@ -640,7 +640,7 @@ class WbReg(WbObject):
             sfx = "_o"
             sdir = "out "
         if self.force_vec:
-            d_t = self.name + sfx + " : " + sdir + " u" + tname + "_array(0 to " + self.size_generic + " - 1 );\n"
+            d_t = self.name + sfx + " : " + sdir + " u" + tname + "_array(" + self.size_generic + " - 1 downto 0);\n"
         else:
             d_t = self.name + sfx + " : " + sdir + " " + tname + ";\n"
         # Now we generate the STB or ACK ports (if required)
@@ -675,7 +675,7 @@ class WbReg(WbObject):
         if self.regtype == "creg":
             # Create the intermediate readable signal
             if self.force_vec:
-                d_t = "signal int_" + self.name + sfx + " : u" + tname + "_array(0 to " + self.size_generic + " - 1 )"
+                d_t = "signal int_" + self.name + sfx + " : u" + tname + "_array(" + self.size_generic + " - 1 downto 0)"
             else:
                 d_t = "signal int_" + self.name + sfx + " : " + tname
             if self.default is not None:
@@ -1482,8 +1482,8 @@ end if;
         d_c += 'x"' + format(self.ver_full, "08x") + '";\n'
         # If the block has variants, generate the ID table
         if self.ver_var:
-            d_c += "constant v_"+self.name+"_ver_id : t_ver_id_variants(0 to "
-            d_c += str(GLB.variants - 1) +') := ('
+            d_c += "constant v_"+self.name+"_ver_id : t_ver_id_variants("
+            d_c += str(GLB.variants - 1) +' downto 0) := ('
             for i in range(0,GLB.variants):
                 if i != 0:
                     d_c += ","
@@ -1515,8 +1515,8 @@ end if;
                 d_c += "constant " + a_r.size_constant + " : integer := " + str(a_r.reps) + ";\n"
                 # If there are multiple variants, generate the array with values
                 if len(a_r.variants) > 1:
-                    d_c += "constant " + a_r.size_variants + " : t_reps_variants(0 to " + \
-                        str(GLB.variants - 1) +  ") := " + str(tuple(a_r.variants)) + ";\n"
+                    d_c += "constant " + a_r.size_variants + " : t_reps_variants( " + \
+                        str(GLB.variants - 1) +  " downto 0 ) := " + str(tuple(a_r.variants[::-1])) + ";\n"
                 # Create the assertion
                 d_a += "assert " + a_r.size_generic + " <= " + a_r.size_constant +\
                    " report \"" + a_r.size_generic + " must be not greater than " +\
@@ -1559,15 +1559,15 @@ end if;
                 # generate the entity port
                 d_t = (
                     a_r.name
-                    + "_wb_m_o : out t_wishbone_master_out_array(0 to "
+                    + "_wb_m_o : out t_wishbone_master_out_array( "
                     + a_r.size_generic
-                    + " - 1 );\n"
+                    + " - 1 downto 0 );\n"
                 )
                 d_t += (
                     a_r.name
-                    + "_wb_m_i : in t_wishbone_master_in_array(0 to "
+                    + "_wb_m_i : in t_wishbone_master_in_array( "
                     + a_r.size_generic
-                    + " - 1 ) := ( others => c_WB_SLAVE_OUT_ERR);\n"
+                    + " - 1 downto 0 ) := ( others => c_WB_SLAVE_OUT_ERR);\n"
                 )
                 self.add_templ("subblk_busses", d_t, 4)
                 # Now we have to assign addresses and masks for each subblock
