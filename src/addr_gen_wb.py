@@ -71,7 +71,8 @@ if wb.GLB.C_HEADER_PATH:
 
 # We need a special handling of two mutual exclusive Python targets
 if ARGS.python and ARGS.pythondca:
-    raise Exception("--python and --pythondca can't be used together")
+    print("--python and --pythondca can't be used together")
+    sys.exit(1)
 
 wb.GLB.PYTHON_PATH = ""
 if ARGS.python:
