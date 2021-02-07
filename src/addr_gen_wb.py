@@ -304,9 +304,8 @@ Do not modify it by hand.
             fo.write(res)
         with open(wb.GLB.PYTHON_PATH + "/agwb/" + "__init__.py", "a") as f:
             f.write(
-                    "from ." + topname + " import *\n"
+                    "from ." + topname + " import " + TOP_NAME + " as " + topname + "\n"
             )
-        
 # Now we generate the IPbus address tables
 if wb.GLB.IPBUS_PATH:
     for key, BL in wb.blocks().items():
