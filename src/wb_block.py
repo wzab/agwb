@@ -1485,7 +1485,7 @@ end if;
             d_c += "constant v_"+self.name+"_ver_id : t_ver_id_variants("
             d_c += str(GLB.variants - 1) +' downto 0) := ('
             for i in range(GLB.variants-1,-1,-1): # Reverse order due to "downto"
-                if i != 0:
+                if i != GLB.variants-1:
                     d_c += ","
                 d_c += 'x"' + format(self.ver_var[i], "08x") + '"'
             d_c += ");\n"
