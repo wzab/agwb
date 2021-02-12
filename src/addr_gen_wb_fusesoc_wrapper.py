@@ -58,7 +58,7 @@ if __name__ == "__main__":
     except:
         pass
     try:
-        python = str(config['parameters']['pythondca'])
+        pythondca = str(config['parameters']['pythondca'])
         args += ['--pythondca', files_root + pythondca]
     except:
         pass
