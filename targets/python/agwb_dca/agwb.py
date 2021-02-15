@@ -26,18 +26,19 @@ additional methods:
 
 writeb(self,address,value) - that only schedules 
        a write (unless the operation list is full)
-readb(self,address) - that returns the "future" 
-       object with "v" field (or method) that returns
+readb(self,address) - that returns the "Callable" 
+       object. Calling the returned object returns 
        the value (possibly triggering dispatch if necessary)
-write_masked(self,address=none,mask=0,value=0) - schedules the read-modify-write
+write_masked(self,address,mask,value) - executes the read-modify-write
        operation defined as follows
        X:= (X and ~mask) | (value and mask)
        the operation should be handled in the FPGA.
-writeb_masked(self,address=none,mask=0,value=0, more=False) 
-       Schedules update of fields. Setting more to True
-       blocks immediate scheduling of the operation.
-       Multiple writes TO FIELDS LOCATED IN THE SAME REGISTER
-       are accumulated. The last call myst have "more" set to True.
+writeb_masked(self,address,mask,value, more=False) 
+       Prepares the read-modify-write operation defined as follows
+       X:= (X and ~mask) | (value and mask)
+       Setting more to "True" blocks immediate scheduling of the operation.
+       Then multiple writes TO FIELDS LOCATED IN THE SAME REGISTER
+       are accumulated. The last call must have "more" set to True.
        It schedules the resulting read-modify-write command.
 dispatch() - executes the accumulated list of operations
       (the list may be executed automatically, if it grows
@@ -120,20 +121,13 @@ class _BitFieldAccess(object):
             if value < 0:
                 value += self.x__bf.sign_mask << 1
                 print("final value: " + str(value))
-        # Read the whole register
-        rval = self.x__iface.read(self.x__base)
-        # Mask the bitfield
-        rval &= ~self.x__bf.mask
-        # Shift the new value
         value = value << self.x__bf.lsb
-        value &= self.x__bf.mask
-        rval |= value
-        self.x__iface.write(self.x__base, rval)
+        self.x__iface.write_masked(self.x__base, self.x__bf.mask, value)        
 
     def readfb(self) -> Callable[[],int]:
         """ Optimized read method. Schedules reading of the register.
-            The "future" object is returned.
-            When the "val" field in the returned value is accessed,
+            The "Callable" object is returned.
+            When the returned object is called,
             The read is performed immediately (if not dispatched yet),
             and the result is masked, shifted and returned. 
         """    
@@ -274,13 +268,13 @@ class _Register(object):
         return self.x__iface.read(self.x__base)
 
     def readb(self) -> Callable[[],int]:
-        return self.x__iface.readb(self.x__base)
         """ Optimized read method. Schedules reading of the register.
-            The "future" object is returned.
-            When the "val" field in the returned value is accessed,
-            The read is performed immediately (if not dispatched yet),
-            and the result is returned as an integer.
+            The "Callable" object is returned.
+            When the returned object is called, the read is performed
+            immediately (if not dispatched yet), and the result
+            is returned as an integer.
         """    
+        return self.x__iface.readb(self.x__base)
 
     def read_fifo(self, count:int):
         return self.x__iface.read_fifo(self.x__base, count)
@@ -498,9 +492,9 @@ if __name__ == "__main__":
     print("1")
     a.f1[0].r1.t1.writefb(5)
     print("2")
-    a.f2.r1.t1.writefb(7,True)
+    a.f2.r1.t1.writefb(7,False)
     print("3")
-    a.f2.r1.t2.writefb(13)
+    a.f2.r1.t2.writef(13)
     a.x1[3].rv.write(5)
     a.x1[1].rv.write(7)    
     p1 = a.f1[0].r1.t2.readfb()
