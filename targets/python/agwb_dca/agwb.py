@@ -299,10 +299,20 @@ class _Register(object):
         self.x__iface.write(self.x__base, values)
 
     def write_masked(self, mask:int, value:int) -> None:
-        """ Optimized read-modify-write method. The operation is only scheduled.
+        """ Executes the read-modify-write method.
             X := (X & ^mask) | (value & mask)
         """
         self.x__iface.write_masked(self.x__base, mask, value)        
+
+    def writeb_masked(self, mask:int, value:int, more:bool=False) -> None:
+        """ Prepares the read-modify-write operation defined as follows
+            X:= (X and ~mask) | (value and mask)
+            Setting more to "True" blocks immediate scheduling of the operation.
+            Then multiple writes TO FIELDS LOCATED IN THE SAME REGISTER
+            are accumulated. The last call must have "more" set to True.
+            It schedules the resulting read-modify-write command.
+        """
+        self.x__iface.writeb_masked(self.x__base, mask, value, more)
 
     def dispatch(self):
         self.x__iface.dispatch()
@@ -350,7 +360,7 @@ if __name__ == "__main__":
             self.rmw_mask = 0 # Mask for the aggregated RMW commands
             self.rmw_nval = 0 # Value for the aggregated RMW commands
             pass
-        
+
         class DI_future(object):
             def __init__(self,iface):
                 self.iface = iface
@@ -410,7 +420,7 @@ if __name__ == "__main__":
             dval &= ~mask
             dval |= (nval & mask)
             self._write(addr, dval)
-            print("finished RMW (will be done in HW)")
+            print("finished RMW (done in HW)")
         
         def write_masked(self, addr:int, mask:int, data:int) -> None:
             self._check_wbm() # Test for uncompleted writeb_masked
@@ -499,7 +509,7 @@ if __name__ == "__main__":
     a.x1[1].rv.write(7)    
     p1 = a.f1[0].r1.t2.readfb()
     p2 = a.f1[0].r1.t1.readfb()
-    a.x1[1].rv.write_masked(3<<10,0xffffff)    
+    a.x1[1].rv.writeb_masked(3<<10,0xffffff)    
     p2b = a.x1[1].rv.readb()
     a.dispatch()
     print(p1(),p2(), hex(p2b()))
