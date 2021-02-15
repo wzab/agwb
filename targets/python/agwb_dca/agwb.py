@@ -120,7 +120,7 @@ class _BitFieldAccess(object):
         if self.x__bf.sign_mask:
             if value < 0:
                 value += self.x__bf.sign_mask << 1
-                print("final value: " + str(value))
+                #print("final value: " + str(value))
         value = value << self.x__bf.lsb
         self.x__iface.write_masked(self.x__base, self.x__bf.mask, value)        
 
@@ -152,7 +152,7 @@ class _BitFieldAccess(object):
         if self.x__bf.sign_mask:
             if value < 0:
                 value += self.x__bf.sign_mask << 1
-                print("final value: " + str(value))
+                #print("final value: " + str(value))
         # Calculate the shifted value
         value = value << self.x__bf.lsb
         # Schedule the masked write operation        

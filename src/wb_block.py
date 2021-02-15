@@ -308,6 +308,7 @@ class WbField(WbObject):
         self.msb = lsb + self.size - 1
         self.type = fl.get("type", "std_logic_vector")
         self.desc = fl.get("desc", "")
+        self.trigger = ex.exprval(fl.get("trigger", "0"))
         self.ignore = fl.get("ignore", "")
         self.default_val = fl.get("default")
         if self.default_val is not None:
@@ -417,6 +418,12 @@ class WbReg(WbObject):
         # from bitfields (that have higher priority)
         for f_l in self.fields:
             f_l.def_adjust(self)
+        # Now we can adjust the read_mask for the register (used to zero the "trigger"
+        # bitfields when reading)
+        self.read_mask = 0;
+        for f_l in self.fields:
+            if f_l.trigger != 0:
+                self.read_mask |= ((1 << (f_l.msb + 1)) - 1) ^ ((1 << f_l.lsb) - 1)
         if self.default_val is not None:
             if self.default_val > 2 ** self.free_bit - 1:
                 raise Exception(
@@ -804,8 +811,17 @@ class WbReg(WbObject):
                 + self.name
                 + "_o"
                 + ind
-                + ");\n"
-            )
+                + ")")
+            if self.read_mask != 0 :
+                mask = '"'
+                for i in range(self.width-1,-1,-1):
+                    if self.read_mask & (1<<i) != 0:
+                        mask += "0"
+                    else:
+                        mask += "1"
+                mask += '"'
+                d_t += " and " + mask
+            d_t += ";\n"
         # Write access
         if self.regtype == "creg":
             d_t += "    if int_regs_wb_m_o.we = '1' then\n"

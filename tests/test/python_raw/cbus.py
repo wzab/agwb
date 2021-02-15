@@ -34,3 +34,9 @@ class cbus_iface(object):
   def read(self,address):
       return bus_read(address)
 
+  def write_masked(self,address,mask,val):
+      x = bus_read(address)
+      x = x & ~mask
+      x |= (val & mask)
+      bus_write(address,val)
+

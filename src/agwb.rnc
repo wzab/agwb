@@ -37,13 +37,15 @@ field =
     attribute desc { text }?,
     attribute ignore { text }?,
     attribute name { text },
+    attribute trigger { text }?,
     attribute type { text }?,
     attribute width { text }
   }
 constant =
   element constant {
     attribute name { text },
-    attribute val { text }
+    attribute val { text },
+    attribute desc { text }?
   }
 creg =
   element creg {

@@ -153,6 +153,11 @@
 				<text/>
 			</attribute>
 			<optional>
+				<attribute name="trigger">
+					<text/>
+				</attribute>
+			</optional>
+			<optional>
 				<attribute name="type">
 					<text/>
 				</attribute>
