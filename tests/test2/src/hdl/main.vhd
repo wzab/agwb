@@ -24,12 +24,12 @@ architecture rtl of main is
 
   signal wb_s_in                                      : t_wishbone_slave_in;
   signal wb_s_out                                     : t_wishbone_slave_out;
-  signal LINKS_wb_m_o                                 : t_wishbone_master_out_array(0 to c_LINKS_size-1);
-  signal LINKS_wb_m_i                                 : t_wishbone_master_in_array(0 to c_LINKS_size-1);
-  signal EXTERN_wb_m_o                                : t_wishbone_master_out_array(0 to v_EXTERN_size(nvar)-1);
-  signal EXTERN_wb_m_i                                : t_wishbone_master_in_array(0 to v_EXTERN_size(nvar)-1);
-  signal CDC_wb_m_o                                   : t_wishbone_master_out_array(0 to v_EXTERN_size(nvar)-1);
-  signal CDC_wb_m_i                                   : t_wishbone_master_in_array(0 to v_EXTERN_size(nvar)-1);
+  signal LINKS_wb_m_o                                 : t_wishbone_master_out_array(c_LINKS_size-1 downto 0);
+  signal LINKS_wb_m_i                                 : t_wishbone_master_in_array(c_LINKS_size-1 downto 0);
+  signal EXTERN_wb_m_o                                : t_wishbone_master_out_array(v_EXTERN_size(nvar)-1 downto 0);
+  signal EXTERN_wb_m_i                                : t_wishbone_master_in_array(v_EXTERN_size(nvar)-1 downto 0);
+  signal CDC_wb_m_o                                   : t_wishbone_master_out_array(v_EXTERN_size(nvar)-1 downto 0);
+  signal CDC_wb_m_i                                   : t_wishbone_master_in_array(v_EXTERN_size(nvar)-1 downto 0);
   signal CTRL_o                                       : t_CTRL;
   signal rst_sys_0, rst_sys_n_i, rst_io_0, rst_io_n_i : std_logic;
 

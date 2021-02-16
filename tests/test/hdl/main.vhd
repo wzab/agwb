@@ -22,14 +22,14 @@ end entity main;
 architecture rtl of main is
   constant nvar : integer := 0;
 
-  signal LINKS_wb_m_o	: t_wishbone_master_out_array(0 to v_LINKS_size(nvar)-1);
-  signal LINKS_wb_m_i	: t_wishbone_master_in_array(0 to v_LINKS_size(nvar)-1);
+  signal LINKS_wb_m_o	: t_wishbone_master_out_array(v_LINKS_size(nvar)-1 downto 0);
+  signal LINKS_wb_m_i	: t_wishbone_master_in_array(v_LINKS_size(nvar)-1 downto 0);
   signal EXTHUGE_wb_m_o : t_wishbone_master_out;
   signal EXTHUGE_wb_m_i : t_wishbone_master_in;
-  signal EXTERN_wb_m_o	: t_wishbone_master_out_array(0 to (C_NEXTERNS-1));
-  signal EXTERN_wb_m_i	: t_wishbone_master_in_array(0 to (C_NEXTERNS-1));
-  signal CDC_wb_m_o	: t_wishbone_master_out_array(0 to (C_NEXTERNS-1));
-  signal CDC_wb_m_i	: t_wishbone_master_in_array(0 to (C_NEXTERNS-1));
+  signal EXTERN_wb_m_o	: t_wishbone_master_out_array((C_NEXTERNS-1) downto 0);
+  signal EXTERN_wb_m_i	: t_wishbone_master_in_array((C_NEXTERNS-1) downto 0);
+  signal CDC_wb_m_o	: t_wishbone_master_out_array((C_NEXTERNS-1) downto 0);
+  signal CDC_wb_m_i	: t_wishbone_master_in_array((C_NEXTERNS-1) downto 0);
   signal CTRL_o		: t_CTRL;
   signal TEST_IN_i	: t_TEST_IN_array  := (others => (others => '0'));
   signal TEST_OUT_o	: t_TEST_OUT_array := (others => (others => '0'));

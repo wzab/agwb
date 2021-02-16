@@ -27,9 +27,9 @@ architecture rtl of sys1 is
   signal slave_o      : t_wishbone_slave_out;
   signal CTRL_o       : t_CTRL;
   signal CTRL_o_stb   : std_logic;
-  signal STATUS_i     : ut_STATUS_array(0 to v_STATUS_size(nvar)-1);
+  signal STATUS_i     : ut_STATUS_array(v_STATUS_size(nvar)-1 downto 0);
   signal STATUS_i_ack : std_logic_vector(v_STATUS_size(nvar)-1 downto 0);
-  signal ENABLEs_o    : ut_ENABLEs_array(0 to v_ENABLES_size(nvar)-1);
+  signal ENABLEs_o    : ut_ENABLEs_array(v_ENABLES_size(nvar)-1 downto 0);
 
 begin  -- architecture rtl
 
