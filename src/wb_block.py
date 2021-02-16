@@ -750,7 +750,14 @@ class WbReg(WbObject):
                 )
                 parent.add_templ("control_registers_reset", r_t, 8)
         # Generate the signal assignment in the process
-        d_t = (
+        d_t = ""
+        if not self.force_vec:
+            # If it is a single oject, add comment why we use for-loop without indexing
+            d_t += '\n'
+            d_t += '-- That\'s a single register that may be present (size=1) or not (size=0).\n'
+            d_t += '-- The "for" loop works like "if".\n'
+            d_t += '-- That\'s why we do not index the register inside the loop.\n'
+        d_t += (
             'for i in 0 to '
             + self.size_generic + ' - 1 loop\n'
         )
@@ -812,7 +819,7 @@ class WbReg(WbObject):
                 + conv_fun
                 + "(int_"
                 + self.name
-                + "_o"
+                + sfx
                 + ind
                 + ")")
             if self.read_mask != 0 :
@@ -826,11 +833,20 @@ class WbReg(WbObject):
                 d_t += " and " + mask
                 # Additionally we add clearing the trigger bits
                 # to the trigger_bits_reset section
-                d_tbr += ( 
-                  "int_" + self.name + sfx + " <= "
-                  + iconv_fun + "("+conv_fun+"("
-                  + "int_" + self.name + sfx + ") and " + mask + ");\n"
-                  )
+                if not self.force_vec:
+                    # Add comment why we use for-loop without indexing
+                    d_tbr += '\n'
+                    d_tbr += '-- That\'s a single register that may be present (size=1) or not (size=0).\n'
+                    d_tbr += '-- The "for" loop works like "if".\n'
+                    d_tbr += '-- That\'s why we do not index the register inside the loop.\n'
+                d_tbr += (
+                    'for i in 0 to '
+                    + self.size_generic + ' - 1 loop\n'
+                    "   int_" + self.name + sfx + ind + " <= "
+                    + iconv_fun + "("+conv_fun+"("
+                    + "int_" + self.name + sfx + ind + ") and " + mask + ");\n"
+                    +'end loop;\n'
+                    )
             d_t += ";\n"
         # Write access
         if self.regtype == "creg":

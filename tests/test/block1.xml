@@ -4,7 +4,7 @@
     <field name="SPEED" width="4" default="-1" type="signed" desc="Transmission speed"/>
     <field name="STOP" width="1" desc="Stop the operation" trigger="1" />
   </creg>
-  <creg name="X2" stb="1">
+  <creg name="X2" stb="1" reps="3">
     <field name="B1" width="1" desc="Start the operation" trigger="1" />
     <field name="B2" width="1" desc="Start the operation"  />
     <field name="B3" width="1" desc="Start the operation" trigger="1" />    

@@ -3,7 +3,7 @@ import cbus
 # Use variant 0:
 from agwb import MAIN_v0 as MAIN0, MAIN as MAIN, MAIN_v1 as MAIN1
 # Use the maximum version:
-from agwb import MAIN1
+from agwb import MAIN
 
 cbus.bus_delay(100)
 mif=cbus.cbus_iface()
