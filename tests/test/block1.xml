@@ -1,8 +1,8 @@
 <block name="SYS1">
   <creg name="CTRL" desc="Control register" stb="1" used="1;0">
     <field name="START" width="1" desc="Start the operation" trigger="1" />
-    <field name="SPEED" width="4" default="-1" type="signed" desc="Transmission speed"/>
     <field name="STOP" width="1" desc="Stop the operation" trigger="1" />
+    <field name="SPEED" width="4" default="-1" type="signed" desc="Transmission speed"/>
   </creg>
   <creg name="X2" stb="1" reps="3">
     <field name="B1" width="1" desc="Start the operation" trigger="1" />

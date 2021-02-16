@@ -847,8 +847,8 @@ class WbReg(WbObject):
                     'for i in 0 to '
                     + self.size_generic + ' - 1 loop\n'
                     "   int_" + self.name + sfx + ind + " <= "
-                    + iconv_fun + "("+conv_fun+"("
-                    + "int_" + self.name + sfx + ind + ") and " + self.trig_clear_constant + ");\n"
+                    + iconv_fun + "( agwb_and("+conv_fun+"("
+                    + "int_" + self.name + sfx + ind + "), " + self.trig_clear_constant + "));\n"
                     +'end loop;\n'
                     )
             d_t += ";\n"

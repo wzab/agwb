@@ -175,8 +175,21 @@ package agwb_pkg is
 
   type t_reps_variants is array (integer range <>) of integer;
   type t_ver_id_variants is array (integer range <>) of std_logic_vector(31 downto 0);
+   function agwb_and(a : std_logic_vector; b : std_logic_vector ) return std_logic_vector;
 
 end package agwb_pkg;
+
+package body agwb_pkg is
+
+  function agwb_and(a:std_logic_vector; b:std_logic_vector) return std_logic_vector is
+  variable res : std_logic_vector(a'range);
+  begin
+     res := a and b;
+     return res;
+  end function;
+
+end agwb_pkg;
+
 """
         )        
     with open(wb.GLB.VHDL_PATH + "/" + TOP_NAME + "_const_pkg.vhd", "w") as fo:
