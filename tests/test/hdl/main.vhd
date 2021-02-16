@@ -104,6 +104,7 @@ begin  -- architecture rtl
 
     sys1_1 : entity work.sys1
       generic map (
+        bnr => i,
         nvar => nvar
         )
       port map (
