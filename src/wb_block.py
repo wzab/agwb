@@ -198,6 +198,8 @@ begin
         int_regs_wb_m_i <= c_DUMMY_WB_MASTER_IN;
 {control_registers_reset}
       else
+        -- Clearing of trigger bits (if there are any)
+{trigger_bits_reset}
         -- Normal operation
         int_regs_wb_m_i.rty <= '0';
         int_regs_wb_m_i.ack <= '0';
@@ -482,6 +484,7 @@ class WbReg(WbObject):
            and the optional ACK or STB flags
         * Read or write sequence to be embedded in the process
         """
+        d_tbr = ""
         d_t = ""
         d_b = ""
         d_i = ""
@@ -821,6 +824,13 @@ class WbReg(WbObject):
                         mask += "1"
                 mask += '"'
                 d_t += " and " + mask
+                # Additionally we add clearing the trigger bits
+                # to the trigger_bits_reset section
+                d_tbr += ( 
+                  "int_" + self.name + sfx + " <= "
+                  + iconv_fun + "("+conv_fun+"("
+                  + "int_" + self.name + sfx + ") and " + mask + ");\n"
+                  )
             d_t += ";\n"
         # Write access
         if self.regtype == "creg":
@@ -853,6 +863,7 @@ class WbReg(WbObject):
         d_t += "end loop; -- "  + self.size_generic + "\n"
         parent.add_templ("register_access", d_t, 10)
         parent.add_templ("signals_idle", d_i, 8)
+        parent.add_templ("trigger_bits_reset", d_tbr, 8)
 
     def gen_amap_xml(self, reg_base, nvar = None):
         res = ""
@@ -1443,6 +1454,7 @@ class WbBlock(WbObject):
         self.add_templ("check_assertions", "", 0)
         self.add_templ("signal_decls", "", 0)
         self.add_templ("control_registers_reset", "", 0)
+        self.add_templ("trigger_bits_reset", "", 0)
         self.add_templ("register_access", "", 0)
         self.add_templ("testdev_access", "", 0)
         self.add_templ("testdev_signals", "", 0)
