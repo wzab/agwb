@@ -38,5 +38,5 @@ class cbus_iface(object):
       x = bus_read(address)
       x = x & ~mask
       x |= (val & mask)
-      bus_write(address,val)
+      bus_write(address,x)
 
