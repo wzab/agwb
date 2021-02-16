@@ -384,6 +384,7 @@ class WbReg(WbObject):
         self.size_generic = "g_"+self.name+"_size"
         self.size_constant = "c_"+self.name+"_size"
         self.size_variants = "v_"+self.name+"_size"
+        self.trig_clear_constant = "c_"+self.name+"_trig_clear"
         self.mode = el.get("mode", "")
         self.ignore = el.get("ignore", "")
         self.desc = el.get("desc", "")
@@ -498,6 +499,16 @@ class WbReg(WbObject):
             + format(self.base, "08x")
             + '";\n'
         )
+        # If read_mask is not 0, we generate a mask for clearing the trigger bits
+        if self.read_mask != 0 :        
+            d_c += "constant " + self.trig_clear_constant + " : std_logic_vector("
+            d_c += str(self.width-1) +' downto 0) := "'
+            for i in range(self.width-1,-1,-1):
+                if self.read_mask & (1<<i) != 0:
+                    d_c += "0"
+                else:
+                    d_c += "1"
+            d_c += '";\n'
         # Generate the generic and constant describing the size of the register vector
         d_c += "constant " + self.size_constant + " : integer := " + str(self.size) +";\n"
         # If there are multiple variants, generate the array with values
@@ -823,14 +834,7 @@ class WbReg(WbObject):
                 + ind
                 + ")")
             if self.read_mask != 0 :
-                mask = '"'
-                for i in range(self.width-1,-1,-1):
-                    if self.read_mask & (1<<i) != 0:
-                        mask += "0"
-                    else:
-                        mask += "1"
-                mask += '"'
-                d_t += " and " + mask
+                d_t += " and " + self.trig_clear_constant
                 # Additionally we add clearing the trigger bits
                 # to the trigger_bits_reset section
                 if not self.force_vec:
@@ -844,7 +848,7 @@ class WbReg(WbObject):
                     + self.size_generic + ' - 1 loop\n'
                     "   int_" + self.name + sfx + ind + " <= "
                     + iconv_fun + "("+conv_fun+"("
-                    + "int_" + self.name + sfx + ind + ") and " + mask + ");\n"
+                    + "int_" + self.name + sfx + ind + ") and " + self.trig_clear_constant + ");\n"
                     +'end loop;\n'
                     )
             d_t += ";\n"
