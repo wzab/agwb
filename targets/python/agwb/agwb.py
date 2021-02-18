@@ -81,7 +81,7 @@ class _BitFieldFuture(object):
             else:
                 raise Exception("Only val field is available")
         except KeyError as ke:
-            return object.__getattr__(self,name)
+            return object.__getattribute__(self,name)
 
 
 class _BitFieldAccess(object):
@@ -227,7 +227,7 @@ class Block(object):
                 # pass addititional argument to the constructor
                 return f_i[1][0](self.x__iface, self.x__base + f_i[0], f_i[1][1])
         except KeyError as ke:
-            return object.__getattr__(self,name)
+            return object.__getattribute__(self,name)
 
 
     def _verify_id(self):
@@ -336,7 +336,7 @@ class _Register(object):
         try:
             return _BitFieldAccess(self.x__iface, self.x__base, self.x__bfields[name])
         except KeyError as ke:
-            return object.__getattr__(self,name)
+            return object.__getattribute__(self,name)
 
 
 
@@ -399,7 +399,7 @@ if __name__ == "__main__":
                             else:
                                 raise Exception("val not set after dispatch!")
                 except KeyError as ke:
-                    return object.__getattr__(self,name)
+                    return object.__getattribute__(self,name)
 
             def set(self, val):
                 self.done = True

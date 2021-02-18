@@ -214,7 +214,7 @@ class Block(object):
                 # pass addititional argument to the constructor
                 return f_i[1][0](self.x__iface, self.x__base + f_i[0], f_i[1][1])
         except KeyError as ke:
-            return object.__getattr__(self,name)
+            return object.__getattribute__(self,name)
 
     def _verify_id(self):
         id = self.ID.read()
@@ -324,7 +324,7 @@ class _Register(object):
         try:
             return _BitFieldAccess(self.x__iface, self.x__base, self.x__bfields[name])
         except KeyError as ke:
-            return object.__getattr__(self,name)
+            return object.__getattribute__(self,name)
 
 
 ControlRegister = _Register  # The control register is just the generic register
