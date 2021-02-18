@@ -2166,7 +2166,7 @@ end if;
                         + "':("
                         + hex(a_r.adr)
                         + ","
-                        + str(a_r.reps)
+                        + str(a_r.var_reps(nvar))
                         + ",("
                         + a_r.obj.name
                         + ",)),\\\n"
