@@ -21,9 +21,9 @@ accesses and support for optimized bitfields
 handling and read-modify-write) should provide
 additional methods:
 
-writex(self,address,value) - that only schedules 
+writex(self,address,value) - that only schedules
        a write (unless the operation list is full)
-readx(self,address) - that returns the "future" 
+readx(self,address) - that returns the "future"
        object with "val" field (or method) that returns
        the value (possibly triggering dispatch if necessary)
 rmw(self,address=none,mask=0,value=0) - schedules the read-modify-write
@@ -32,7 +32,7 @@ rmw(self,address=none,mask=0,value=0) - schedules the read-modify-write
        The consecutive operations on the same address are aggregated.
        the "value" and "mask" are updated.
        If any other operation (read, write, readx, writes) or
-       rmw to anothe address is called, the pending rmw must 
+       rmw to anothe address is called, the pending rmw must
        be finalized.
        Also calling rmw without arguments finalizes the pending RMW.
 dispatch() - executes the accumulated list of operations
@@ -66,19 +66,23 @@ class _BitFieldFuture(object):
     """Class enabling delayed access to the value read from the bitfield
     """
     def __init__(self, rfut, bf) -> None:
-    	self.rfut = rfut
-    	self.bf = bf
-    	
+        self.rfut = rfut
+        self.bf = bf
+
     def __getattr__(self,name):
-        if name == "val":
-            rval = self.rfut.val & self.bf.mask
-            rval >>= self.bf.lsb
-            if self.bf.sign_mask:
-                if rval & self.bf.sign_mask:
-                    rval -= self.bf.sign_mask << 1
-            return rval
-        else:
-            raise Exception("Only val field is available")
+        try:
+            if name == "val":
+                rval = self.rfut.val & self.bf.mask
+                rval >>= self.bf.lsb
+                if self.bf.sign_mask:
+                    if rval & self.bf.sign_mask:
+                        rval -= self.bf.sign_mask << 1
+                return rval
+            else:
+                raise Exception("Only val field is available")
+        except KeyError as ke:
+            return object.__getattr__(self,name)
+
 
 class _BitFieldAccess(object):
     """Class providing a versatile object supporting  read/write access to any bitfield.
@@ -95,7 +99,7 @@ class _BitFieldAccess(object):
     def read(self):
         """ Simple read method. Does not use any access optimization.
             The read is performed immediately, the result is
-            masked, shifted and returned as integer. 
+            masked, shifted and returned as integer.
         """
         rval = self.x__iface.read(self.x__base)
         rval &= self.x__bf.mask
@@ -134,8 +138,8 @@ class _BitFieldAccess(object):
             The "future" object is returned.
             When the "val" field in the returned value is accessed,
             The read is performed immediately (if not dispatched yet),
-            and the result is masked, shifted and returned. 
-        """    
+            and the result is masked, shifted and returned.
+        """
         rval = self.x__iface.readx(self.x__base)
         return _BitFieldFuture(rval,self.x__bf)
 
@@ -160,8 +164,8 @@ class _BitFieldAccess(object):
                 print("final value: " + str(value))
         # Calculate the shifted value
         value = value << self.x__bf.lsb
-        # Schedule the RMW operation        
-        self.x__iface.rmw(self.x__base, self.x__bf.mask, value)        
+        # Schedule the RMW operation
+        self.x__iface.rmw(self.x__base, self.x__bf.mask, value)
         # If now is true, finalize the current RMW
         if now:
             self.x__iface.rmw()
@@ -213,14 +217,18 @@ class Block(object):
         return self.x__fields.keys()
 
     def __getattr__(self, name):
-        f_i = self.x__fields[name]
-        if len(f_i) == 3:
-            return Vector(self.x__iface, self.x__base + f_i[0], f_i[1], f_i[2])
-        elif len(f_i) == 2:
-            if len(f_i[1]) == 1:
-                return f_i[1][0](self.x__iface, self.x__base + f_i[0])
-            # pass addititional argument to the constructor
-            return f_i[1][0](self.x__iface, self.x__base + f_i[0], f_i[1][1])
+        try:
+            f_i = self.x__fields[name]
+            if len(f_i) == 3:
+                return Vector(self.x__iface, self.x__base + f_i[0], f_i[1], f_i[2])
+            elif len(f_i) == 2:
+                if len(f_i[1]) == 1:
+                    return f_i[1][0](self.x__iface, self.x__base + f_i[0])
+                # pass addititional argument to the constructor
+                return f_i[1][0](self.x__iface, self.x__base + f_i[0], f_i[1][1])
+        except KeyError as ke:
+            return object.__getattr__(self,name)
+
 
     def _verify_id(self):
         id = self.ID.read()
@@ -272,7 +280,7 @@ class _Register(object):
     def read(self):
         """ Simple read method. Does not use any access optimization.
             The read is performed immediately, the result is
-            masked, shifted and returned as integer. 
+            masked, shifted and returned as integer.
         """
         return self.x__iface.read(self.x__base)
 
@@ -283,7 +291,7 @@ class _Register(object):
             When the "val" field in the returned value is accessed,
             The read is performed immediately (if not dispatched yet),
             and the result is returned as an integer.
-        """    
+        """
 
     def read_fifo(self, count):
         return self.x__iface.read_fifo(self.x__base, count)
@@ -315,17 +323,21 @@ class _Register(object):
             If "now" is True, or another operation than rmw to the same
             register is executed, the write is scheduled with current
             mask and value, resulting from rmws aggregated up to now.
-        """        
+        """
         self.x__iface.rmw(self.x__base, mask, value)
         if now:
             self.x__iface.rmw()
-        
+
 
     def dispatch(self):
         self.x__iface.dispatch()
 
     def __getattr__(self, name):
-        return _BitFieldAccess(self.x__iface, self.x__base, self.x__bfields[name])
+        try:
+            return _BitFieldAccess(self.x__iface, self.x__base, self.x__bfields[name])
+        except KeyError as ke:
+            return object.__getattr__(self,name)
+
 
 
 ControlRegister = _Register  # The control register is just the generic register
@@ -368,33 +380,37 @@ if __name__ == "__main__":
             self.rmw_mask = 0 # Mask for the aggregated RMW commands
             self.rmw_nval = 0 # Value for the aggregated RMW commands
             pass
-        
+
         class DI_future(object):
             def __init__(self,iface):
                 self.iface = iface
                 self.done = False
                 self._val = None
             def __getattr__(self,name):
-                if name == "val":
-                    # Check if the transaction is executed
-                    if self.done:
-                        return self._val
-                    else:
-                        self.iface.dispatch()
+                try:
+                    if name == "val":
+                        # Check if the transaction is executed
                         if self.done:
                             return self._val
                         else:
-                            raise Exception("val not set after dispatch!")
+                            self.iface.dispatch()
+                            if self.done:
+                                return self._val
+                            else:
+                                raise Exception("val not set after dispatch!")
+                except KeyError as ke:
+                    return object.__getattr__(self,name)
+
             def set(self, val):
                 self.done = True
-                self._val = val     
+                self._val = val
 
         def read(self, addr):
             self.rmw() # Finalize any pending RMW
             if self.opers:
                 self.dispatch()
             return self._read(addr)
-            
+
         def _read(self, addr):
             global rf
             print("reading from address:" + hex(addr) + " val=" + hex(rf[addr]))
@@ -406,7 +422,7 @@ if __name__ == "__main__":
                 self.dispatch()
             self._write(addr,val)
 
-        def _write(self, addr, val):            
+        def _write(self, addr, val):
             global rf
             print("writing " + hex(val) + " to address " + hex(addr))
             rf[addr] = val
@@ -414,19 +430,19 @@ if __name__ == "__main__":
         def writex(self, addr, val):
             self.rmw() # Finalize any pending RMW
             self.opers.append(lambda : self._write(addr, val))
-        
+
         def readx(self, addr):
             self.rmw() # Finalize any pending RMW
             df = self.DI_future(self)
             self.opers.append(lambda : df.set(self._read(addr)))
             return df
-        
+
         def _rmw(self, df, addr, mask, nval):
             # The real HW implemented RMW
             dval = df.val & ~mask
             dval |= nval
             self._write(addr, dval)
-            
+
         def rmw(self, addr=None, mask=0, val=0):
             # Call to RMW without arguments simply finalizes the last RMW
             # Check if another RMW is being prepared
@@ -436,11 +452,11 @@ if __name__ == "__main__":
                 odf = self.rmw_df
                 mask = self.rmw_mask
                 waddr = self.rmw_addr
-                nval = self.rmw_nval 
+                nval = self.rmw_nval
                 self.opers.append(lambda : self._rmw(odf, waddr, mask, nval))
                 self.rmw_addr = None
                 self.rmw_df = None
-            if addr is not None: 
+            if addr is not None:
                 # Schedule reading of the initial value of the register
                 if self.rmw_addr is None:
                     df = self.DI_future(self)
@@ -450,8 +466,8 @@ if __name__ == "__main__":
                 # Now aggregate the current operation
                 self.rmw_mask |= mask
                 self.rmw_nval &= ~mask
-                self.rmw_nval |= (val & mask)               
-        
+                self.rmw_nval |= (val & mask)
+
         def dispatch(self):
             if not self.opers:
                 print("empty dispatch")
@@ -461,7 +477,7 @@ if __name__ == "__main__":
                 x()
             self.opers = []
             print("after dispatch")
-        
+
 
     class c2(Block):
         x__size = 3
@@ -483,27 +499,27 @@ if __name__ == "__main__":
              (
                 ControlRegister, {},
              ),
-           ) 
+           )
         }
-        
+
     class c1(Block):
         x__size = 100
         x__fields = {"f1": (0, 10, (c2,)), "f2": (11, (c2,)), "size": (32, (c2,)),"x1":(40,5,(regs,))}
 
     mf = DemoIface()
     a = c1(mf, 12)
-    
-    # Check if two consecutive BF writes do not interfere 
+
+    # Check if two consecutive BF writes do not interfere
     a.f1[0].r1.t2.writex(11,False)
     print("1")
-    a.f1[0].r1.t1.writex(5,False) # We intentionally "forget" to finalize that RMW, to see 
+    a.f1[0].r1.t1.writex(5,False) # We intentionally "forget" to finalize that RMW, to see
                                   # if the autoamted handling works
     print("2")
     a.f2.r1.t1.writex(7,False)
     print("3")
     a.f2.r1.t2.writex(13,True)
     a.x1[3].rv.write(5)
-    a.x1[1].rv.write(7)    
+    a.x1[1].rv.write(7)
     p1 = a.f1[0].r1.t2.readx()
     p2 = a.f1[0].r1.t1.readx()
     a.dispatch()

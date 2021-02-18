@@ -24,16 +24,16 @@ accesses and support for optimized bitfields
 handling and read-modify-write) should provide
 additional methods:
 
-writeb(self,address,value) - that only schedules 
+writeb(self,address,value) - that only schedules
        a write (unless the operation list is full)
-readb(self,address) - that returns the "Callable" 
-       object. Calling the returned object returns 
+readb(self,address) - that returns the "Callable"
+       object. Calling the returned object returns
        the value (possibly triggering dispatch if necessary)
 write_masked(self,address,mask,value) - executes the read-modify-write
        operation defined as follows
        X:= (X and ~mask) | (value and mask)
        the operation should be handled in the FPGA.
-writeb_masked(self,address,mask,value, more=False) 
+writeb_masked(self,address,mask,value, more=False)
        Prepares the read-modify-write operation defined as follows
        X:= (X and ~mask) | (value and mask)
        Setting more to "True" blocks immediate scheduling of the operation.
@@ -71,9 +71,9 @@ class _BitFieldFuture(object):
     """Class enabling delayed access to the value read from the bitfield
     """
     def __init__(self, rfut, bf):
-    	self.rfut = rfut
-    	self.bf = bf
-    	
+        self.rfut = rfut
+        self.bf = bf
+
     def val(self):
         rval = self.rfut() & self.bf.mask
         rval >>= self.bf.lsb
@@ -97,7 +97,7 @@ class _BitFieldAccess(object):
     def readf(self) -> int:
         """ Simple read method. Does not use any access optimization.
             The read is performed immediately, the result is
-            masked, shifted and returned as integer. 
+            masked, shifted and returned as integer.
         """
         rval = self.x__iface.read(self.x__base)
         rval &= self.x__bf.mask
@@ -122,15 +122,15 @@ class _BitFieldAccess(object):
                 value += self.x__bf.sign_mask << 1
                 #print("final value: " + str(value))
         value = value << self.x__bf.lsb
-        self.x__iface.write_masked(self.x__base, self.x__bf.mask, value)        
+        self.x__iface.write_masked(self.x__base, self.x__bf.mask, value)
 
     def readfb(self) -> Callable[[],int]:
         """ Optimized read method. Schedules reading of the register.
             The "Callable" object is returned.
             When the returned object is called,
             The read is performed immediately (if not dispatched yet),
-            and the result is masked, shifted and returned. 
-        """    
+            and the result is masked, shifted and returned.
+        """
         rval = self.x__iface.readb(self.x__base)
         return _BitFieldFuture(rval,self.x__bf).val
 
@@ -155,8 +155,8 @@ class _BitFieldAccess(object):
                 #print("final value: " + str(value))
         # Calculate the shifted value
         value = value << self.x__bf.lsb
-        # Schedule the masked write operation        
-        self.x__iface.writeb_masked(self.x__base, self.x__bf.mask, value, more)        
+        # Schedule the masked write operation
+        self.x__iface.writeb_masked(self.x__base, self.x__bf.mask, value, more)
 
 class Vector(object):
     """Class describing the vector of registers or subblocks.
@@ -204,14 +204,17 @@ class Block(object):
         return self.x__fields.keys()
 
     def __getattr__(self, name):
-        f_i = self.x__fields[name]
-        if len(f_i) == 3:
-            return Vector(self.x__iface, self.x__base + f_i[0], f_i[1], f_i[2])
-        elif len(f_i) == 2:
-            if len(f_i[1]) == 1:
-                return f_i[1][0](self.x__iface, self.x__base + f_i[0])
-            # pass addititional argument to the constructor
-            return f_i[1][0](self.x__iface, self.x__base + f_i[0], f_i[1][1])
+        try:
+            f_i = self.x__fields[name]
+            if len(f_i) == 3:
+                return Vector(self.x__iface, self.x__base + f_i[0], f_i[1], f_i[2])
+            elif len(f_i) == 2:
+                if len(f_i[1]) == 1:
+                    return f_i[1][0](self.x__iface, self.x__base + f_i[0])
+                # pass addititional argument to the constructor
+                return f_i[1][0](self.x__iface, self.x__base + f_i[0], f_i[1][1])
+        except KeyError as ke:
+            return object.__getattr__(self,name)
 
     def _verify_id(self):
         id = self.ID.read()
@@ -263,7 +266,7 @@ class _Register(object):
     def read(self) -> int:
         """ Simple read method. Does not use any access optimization.
             The read is performed immediately, the result is
-            masked, shifted and returned as integer. 
+            masked, shifted and returned as integer.
         """
         return self.x__iface.read(self.x__base)
 
@@ -273,7 +276,7 @@ class _Register(object):
             When the returned object is called, the read is performed
             immediately (if not dispatched yet), and the result
             is returned as an integer.
-        """    
+        """
         return self.x__iface.readb(self.x__base)
 
     def read_fifo(self, count:int):
@@ -302,7 +305,7 @@ class _Register(object):
         """ Executes the read-modify-write method.
             X := (X & ^mask) | (value & mask)
         """
-        self.x__iface.write_masked(self.x__base, mask, value)        
+        self.x__iface.write_masked(self.x__base, mask, value)
 
     def writeb_masked(self, mask:int, value:int, more:bool=False) -> None:
         """ Prepares the read-modify-write operation defined as follows
@@ -318,7 +321,10 @@ class _Register(object):
         self.x__iface.dispatch()
 
     def __getattr__(self, name:str) -> Any:
-        return _BitFieldAccess(self.x__iface, self.x__base, self.x__bfields[name])
+        try:
+            return _BitFieldAccess(self.x__iface, self.x__base, self.x__bfields[name])
+        except KeyError as ke:
+            return object.__getattr__(self,name)
 
 
 ControlRegister = _Register  # The control register is just the generic register
@@ -378,14 +384,14 @@ if __name__ == "__main__":
                         raise Exception("val not set after dispatch!")
             def set(self, val):
                 self.done = True
-                self._val = val     
+                self._val = val
 
         def read(self, addr:int) -> int:
             self._check_wbm() # Test for uncompleted writeb_masked
             if self.opers:
                 self.dispatch()
             return self._read(addr)
-            
+
         def _read(self, addr):
             global rf
             print("reading from address:" + hex(addr) + " val=" + hex(rf[addr]))
@@ -397,7 +403,7 @@ if __name__ == "__main__":
                 self.dispatch()
             self._write(addr,val)
 
-        def _write(self, addr, val):            
+        def _write(self, addr, val):
             global rf
             print("writing " + hex(val) + " to address " + hex(addr))
             rf[addr] = val
@@ -405,13 +411,13 @@ if __name__ == "__main__":
         def writeb(self, addr:int, val:int) -> None:
             self._check_wbm() # Test for uncompleted writeb_masked
             self.opers.append(lambda : self._write(addr, val))
-        
+
         def readb(self, addr:int) -> Callable[[],int]:
             self._check_wbm() # Test for uncompleted writeb_masked
             df = self.DI_future(self)
             self.opers.append(lambda : df.set(self._read(addr)))
             return df.val
-        
+
         def _rmw(self, addr, mask, nval):
             # The real HW implemented RMW (now emulated with read and write)
             self._check_wbm() # Test for uncompleted writeb_masked
@@ -421,7 +427,7 @@ if __name__ == "__main__":
             dval |= (nval & mask)
             self._write(addr, dval)
             print("finished RMW (done in HW)")
-        
+
         def write_masked(self, addr:int, mask:int, data:int) -> None:
             self._check_wbm() # Test for uncompleted writeb_masked
             self.opers.append(lambda : self._rmw(addr, mask, data))
@@ -429,7 +435,7 @@ if __name__ == "__main__":
         def _check_wbm(self):
             if (self.rmw_addr is not None):
                 raise Exception("Another operation can't be done when writeb_masked is not completed")
-                
+
         def writeb_masked(self, addr:int, mask:int, val:int, more:bool = False):
             # Check if another RMW was not completed
             if (self.rmw_addr is not None) and (addr != self.rmw_addr):
@@ -442,15 +448,15 @@ if __name__ == "__main__":
             else:
                 self.rmw_mask |= mask
                 self.rmw_nval &= ~mask
-                self.rmw_nval |= (val & mask)               
-            if not more: 
+                self.rmw_nval |= (val & mask)
+            if not more:
                 # Schedule reading of the initial value of the register
                 addr = self.rmw_addr
                 mask = self.rmw_mask
                 nval = self.rmw_nval
                 self.opers.append(lambda : self._rmw(addr, mask, nval))
                 self.rmw_addr = None
-        
+
         def dispatch(self):
             if not self.opers:
                 print("empty dispatch")
@@ -460,7 +466,7 @@ if __name__ == "__main__":
                 x()
             self.opers = []
             print("after dispatch")
-        
+
 
     class c2(Block):
         x__size = 3
@@ -482,9 +488,9 @@ if __name__ == "__main__":
              (
                 ControlRegister, {},
              ),
-           ) 
+           )
         }
-        
+
     class c1(Block):
         x__size = 100
         x__fields = {
@@ -496,8 +502,8 @@ if __name__ == "__main__":
 
     mf = DemoIface()
     a = c1(mf, 12)
-       
-    # Check if two consecutive BF writes do not interfere 
+
+    # Check if two consecutive BF writes do not interfere
     a.f1[0].r1.t2.writefb(11,True)
     print("1")
     a.f1[0].r1.t1.writefb(5)
@@ -506,10 +512,10 @@ if __name__ == "__main__":
     print("3")
     a.f2.r1.t2.writef(13)
     a.x1[3].rv.write(5)
-    a.x1[1].rv.write(7)    
+    a.x1[1].rv.write(7)
     p1 = a.f1[0].r1.t2.readfb()
     p2 = a.f1[0].r1.t1.readfb()
-    a.x1[1].rv.writeb_masked(3<<10,0xffffff)    
+    a.x1[1].rv.writeb_masked(3<<10,0xffffff)
     p2b = a.x1[1].rv.readb()
     a.dispatch()
     print(p1(),p2(), hex(p2b()))
@@ -519,4 +525,3 @@ if __name__ == "__main__":
     print(a.f2.r1.t2.readf())
     print(a.f2.r1.t1.readf())
     a.dispatch()
-    
