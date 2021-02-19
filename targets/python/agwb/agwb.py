@@ -187,14 +187,20 @@ class Vector(object):
         self.nitems = nitems
 
     def __getitem__(self, key):
+        if isinstance(key,slice):
+            return [self[i] for i in range(*key.indices(len(self)))]
+        if key < 0:
+            key = self.nitems + key
         if key >= self.nitems:
-            raise Exception("Access outside the vector")
+            raise IndexError
         if self.args != None:
             return self.mclass(
                 self.iface, self.base + key * self.mclass.x__size, self.args
             )
         return self.mclass(self.iface, self.base + key * self.mclass.x__size)
 
+    def __len__(self):
+        return self.nitems
 
 class Block(object):
     """Class describing the blocks handled by addr_gen_wb-generated code.
