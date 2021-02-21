@@ -59,7 +59,7 @@ begin  -- architecture test
 
   -- clock generation
   Clk <= not Clk after 5 ns;
-  Clk_io_i <= not Clk_io_i after 10 ns;
+  Clk_io_i <= not Clk_io_i after 7.35 ns;
 
   -- waveform generation
   WaveGen_Proc: process
