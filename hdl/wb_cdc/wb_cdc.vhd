@@ -227,7 +227,7 @@ begin  -- architecture rtl
         req_m  <= req_m1;
         -- Check if the cycle is even or odd
         ncycle := '0';
-        if (req = "01") or (req = "11") then
+        if (req_m = "01") or (req_m = "11") then
           ncycle := '1';
         end if;
         -- Check if the cycle is active or not
@@ -236,7 +236,7 @@ begin  -- architecture rtl
         else
           active := '1';
         end if;
-        if req(0) = req(1) then
+        if req_m(0) = req_m(1) then
           cancel := '1';
         else
           cancel := '0';
