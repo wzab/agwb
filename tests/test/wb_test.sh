@@ -1,5 +1,6 @@
 #!/bin/bash
 
+#TERMINAL=mate-terminal
 TERMINAL=xterm
 
 if ! command -v ${TERMINAL} > /dev/null; then
@@ -16,5 +17,8 @@ mknod /tmp/wrpipe p
 # Uncomment the line below to run the test that uses emulated IPbus
 #${TERMINAL} -e "python3 python_ipbus/wb_test.py; echo 'press ENTER'; read" &
 # Uncomment the line below to run the test that uses raw Python access
-${TERMINAL} -e "python3 -i python_raw/wb_test.py" &
+# To play interactively with the object tree
+#${TERMINAL} -e "python3 -i python_raw/wb_test.py" &
+# To have terminal exited after the simulation
+#${TERMINAL} -e "python3 python_raw/wb_test.py; echo 'press ENTER'; read" &
 make
