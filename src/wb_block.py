@@ -1735,22 +1735,22 @@ end if;
                     # To enable testing of error detection, all test registers 
                     # have permissions set to "rw"!
                     res += (
-                        '  <node id="test_rw" address="0x'
+                        '  <node id="TEST_RW" address="0x'
                         + format(adr+spec_regs["test_rw"], "08x")
                         + '" permission="rw"/>\n'
                         )
                     res += (
-                        '  <node id="test_wo" address="0x'
+                        '  <node id="TEST_WO" address="0x'
                         + format(adr+spec_regs["test_wo"], "08x")
                         + '" permission="rw"/>\n'
                         )
                     res += (
-                        '  <node id="test_ro" address="0x'
+                        '  <node id="TEST_RO" address="0x'
                         + format(adr+spec_regs["test_ro"], "08x")
                         + '" permission="rw"/>\n'
                         )
                     res += (
-                        '  <node id="test_tout" address="0x'
+                        '  <node id="TEST_TOUT" address="0x'
                         + format(adr+spec_regs["test_tout"], "08x")
                         + '" permission="rw"/>\n'
                         )
@@ -1840,22 +1840,22 @@ end if;
                     # To enable testing of error detection, all test registers 
                     # have permissions set to "rw"!
                     res += (
-                        '  <node id="test_rw" address="0x'
+                        '  <node id="TEST_RW" address="0x'
                         + format(adr+spec_regs["test_rw"], "08x")
                         + '" permission="rw"/>\n'
                         )
                     res += (
-                        '  <node id="test_wo" address="0x'
+                        '  <node id="TEST_WO" address="0x'
                         + format(adr+spec_regs["test_wo"], "08x")
                         + '" permission="rw"/>\n'
                         )
                     res += (
-                        '  <node id="test_ro" address="0x'
+                        '  <node id="TEST_RO" address="0x'
                         + format(adr+spec_regs["test_ro"], "08x")
                         + '" permission="rw"/>\n'
                         )
                     res += (
-                        '  <node id="test_tout" address="0x'
+                        '  <node id="TEST_TOUT" address="0x'
                         + format(adr+spec_regs["test_tout"], "08x")
                         + '" permission="rw"/>\n'
                         )
@@ -2052,12 +2052,12 @@ end if;
                 # spec_regs array. The structure must be adjusted by hand!
                 if self.testdev_ena != 0:
                     # First two registers are not accessible
-                    res += "  " + XVOLATILE + " uint32_t test_err0;\n"
-                    res += "  " + XVOLATILE + " uint32_t test_err1;\n"                    
-                    res += "  " + XVOLATILE + " uint32_t test_rw;\n"
-                    res += "  " + XVOLATILE + " uint32_t test_wo;\n"
-                    res += "  " + XVOLATILE + " uint32_t test_ro;\n"
-                    res += "  " + XVOLATILE + " uint32_t test_tout;\n"
+                    res += "  " + XVOLATILE + " uint32_t TEST_ERR0;\n"
+                    res += "  " + XVOLATILE + " uint32_t TEST_ERR1;\n"                    
+                    res += "  " + XVOLATILE + " uint32_t TEST_RW;\n"
+                    res += "  " + XVOLATILE + " uint32_t TEST_WO;\n"
+                    res += "  " + XVOLATILE + " uint32_t TEST_RO;\n"
+                    res += "  " + XVOLATILE + " uint32_t TEST_TOUT;\n"
                     cur_addr += 6   
                 # Now add other registers in a loop
                 for reg in self.regs:
@@ -2137,10 +2137,10 @@ end if;
                     # Conditionally add test registers. 
                     # They are added as control registers to enable testing of
                     # read and write addresses.
-                    res += sp8 + "'test_rw':(" + hex(adr + spec_regs["test_rw"]) + ",(agwb.ControlRegister,)),\\\n"
-                    res += sp8 + "'test_wo':(" + hex(adr + spec_regs["test_wo"]) + ",(agwb.ControlRegister,)),\\\n"
-                    res += sp8 + "'test_ro':(" + hex(adr + spec_regs["test_ro"]) + ",(agwb.ControlRegister,)),\\\n"
-                    res += sp8 + "'test_tout':(" + hex(adr + spec_regs["test_tout"]) + ",(agwb.ControlRegister,)),\\\n"                    
+                    res += sp8 + "'TEST_RW':(" + hex(adr + spec_regs["test_rw"]) + ",(agwb.ControlRegister,)),\\\n"
+                    res += sp8 + "'TEST_WO':(" + hex(adr + spec_regs["test_wo"]) + ",(agwb.ControlRegister,)),\\\n"
+                    res += sp8 + "'TEST_RO':(" + hex(adr + spec_regs["test_ro"]) + ",(agwb.ControlRegister,)),\\\n"
+                    res += sp8 + "'TEST_TOUT':(" + hex(adr + spec_regs["test_tout"]) + ",(agwb.ControlRegister,)),\\\n"                    
                 for reg in self.regs:
                     res += reg.gen_python(adr,nvar)
             else:
