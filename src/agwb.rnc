@@ -13,7 +13,6 @@ start =
 blackbox =
   element blackbox {
     attribute addrbits { text },
-    attribute force_vec { text }?,
     attribute desc { text }?,
     attribute name { text },
     attribute reps { text }?,
@@ -82,7 +81,6 @@ sreg =
   }
 subblock =
   element subblock {
-    attribute force_vec { text }?,
     attribute name { text },
     attribute type { text },
     attribute desc { text }?,
