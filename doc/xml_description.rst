@@ -239,7 +239,23 @@ Optional attribute:
 
 Math within attribute value
 ###########################
-Wojtek has to  describe this.
+
+The attribute values may be specified as a valid Python number, ar as a valid Python expression.
+The expressions are evaluated using the code based on https://stackoverflow.com/a/30516254/1735409 .
+Therefore, only certain subset of Python functions are available.
+The expression make make use of the constants defined in the system description XML.
+However, one must be aware, that as epxressions are stored in the XML file, so certain characters mas be escaped:
+
+.. code-block::
+
+    & with &amp;
+    < with &lt;
+    > with &gt;
+    " with &quot;
+
+That may affect legibility of certain expressions. 
+For example the expression:
+:code:`1 << ADDRWIDTH` must be written as :code:`1 &lt;&lt; ADDRWIDTH` 
 
 Notes
 #####
