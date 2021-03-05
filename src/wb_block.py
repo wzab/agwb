@@ -915,7 +915,7 @@ class WbReg(WbObject):
             # Finally the format of the description depends on the presence of bitfields
             if not self.fields:
                 res += (
-                    '  <node id="'
+                    '  <register id="'
                     + rname
                     + '" address="0x'
                     + format(adr, "08x")
@@ -930,7 +930,7 @@ class WbReg(WbObject):
                 )
             else:
                 res += (
-                    '  <node id="'
+                    '  <register id="'
                     + rname
                     + '" address="0x'
                     + format(adr, "08x")
@@ -945,8 +945,8 @@ class WbReg(WbObject):
                 for b_f in self.fields:
                     maskval = ((1 << (b_f.msb + 1)) - 1) ^ ((1 << b_f.lsb) - 1)
                     mask = format(maskval, "08x")
-                    res += '    <node id="' + b_f.name + '" mask="0x' + mask + '"/>\n'
-                res += "  </node>\n"
+                    res += '    <field id="' + b_f.name + '" mask="0x' + mask + '"/>\n'
+                res += "  </register>\n"
 
         return res
 
@@ -1699,7 +1699,7 @@ end if;
             created_files["vhdl"].append(wb_vhdl_file)
 
     def amap_xml_hdr(self,ver_hash):
-        res = '<node id="' + self.name
+        res = '<module id="' + self.name
         res += '" id_hash="0x' + format(self.id_val, "08x")
         res += '" ver_hash="0x' + format(ver_hash, "08x")
         res += '" system_hash="0x' + format(GLB.VER_ID, "08x")
@@ -1722,12 +1722,12 @@ end if;
                 # Add two standard registers - ID and VER
                 adr = a_r.adr
                 res += (
-                    '  <node id="ID" address="0x'
+                    '  <register id="ID" address="0x'
                     + format(adr+spec_regs["id"], "08x")
                     + '" permission="r"/>\n'
                 )
                 res += (
-                    '  <node id="VER" address="0x'
+                    '  <register id="VER" address="0x'
                     + format(adr + spec_regs["ver"], "08x")
                     + '" permission="r"/>\n'
                 )
@@ -1735,22 +1735,22 @@ end if;
                     # To enable testing of error detection, all test registers 
                     # have permissions set to "rw"!
                     res += (
-                        '  <node id="TEST_RW" address="0x'
+                        '  <register id="TEST_RW" address="0x'
                         + format(adr+spec_regs["test_rw"], "08x")
                         + '" permission="rw"/>\n'
                         )
                     res += (
-                        '  <node id="TEST_WO" address="0x'
+                        '  <register id="TEST_WO" address="0x'
                         + format(adr+spec_regs["test_wo"], "08x")
                         + '" permission="rw"/>\n'
                         )
                     res += (
-                        '  <node id="TEST_RO" address="0x'
+                        '  <register id="TEST_RO" address="0x'
                         + format(adr+spec_regs["test_ro"], "08x")
                         + '" permission="rw"/>\n'
                         )
                     res += (
-                        '  <node id="TEST_TOUT" address="0x'
+                        '  <register id="TEST_TOUT" address="0x'
                         + format(adr+spec_regs["test_tout"], "08x")
                         + '" permission="rw"/>\n'
                         )
@@ -1771,7 +1771,7 @@ end if;
                 if (a_r.var_reps(nvar) == 1) and (a_r.force_vec == False):
                     # Single subblock
                     res += (
-                        '  <node id="'
+                        '  <block id="'
                         + a_r.name
                         + '"'
                         + ' address="0x'
@@ -1784,7 +1784,7 @@ end if;
                 elif (a_r.var_reps(nvar) >= 1):
                     # Not empty vector of subblocks
                     res += (
-                        '  <node id="'
+                        '  <block id="'
                         + a_r.name
                         + '"'
                         + ' address="0x'
@@ -1793,14 +1793,14 @@ end if;
                         + ' nelems="'
                         + str(a_r.var_reps(nvar))
                         + '"'
-                        + ' elemoffs="'
+                        + ' elemoffs="0x'
                         + format(a_r.obj.addr_size, "08x")
                         + '"'
                         + ' module="file://'
                         + xname
                         + '"/>\n'
                     )
-        res += "</node>\n"
+        res += "</module>\n"
         # Use the generated AMAP XML description as block version ID.
         desc = hdr+res
         blk_ver_id = zlib.crc32(bytes(desc.encode("utf-8")))
