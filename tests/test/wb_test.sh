@@ -1,7 +1,7 @@
 #!/bin/bash
 
-#TERMINAL=mate-terminal
-TERMINAL=xterm
+TERMINAL=mate-terminal
+#TERMINAL=xterm
 
 if ! command -v ${TERMINAL} > /dev/null; then
 	echo ${TERMINAL} terminal not installed.
@@ -18,7 +18,7 @@ mknod /tmp/wrpipe p
 #${TERMINAL} -e "python3 python_ipbus/wb_test.py; echo 'press ENTER'; read" &
 # Uncomment the line below to run the test that uses raw Python access
 # To play interactively with the object tree
-#${TERMINAL} -e "python3 -i python_raw/wb_test.py" &
+${TERMINAL} -e "python3 -i python_raw/wb_test.py" &
 # To have terminal exited after the simulation
 #${TERMINAL} -e "python3 python_raw/wb_test.py; echo 'press ENTER'; read" &
 make

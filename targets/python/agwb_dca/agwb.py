@@ -265,25 +265,15 @@ class _Register(object):
         self.x__iface = iface
         self.x__base = base
         if isinstance(bfields,tuple):
-            self.x__width = bfields[0]
-            self.x__is_signed = bfields[1]
+            self.x__regf = _BitFieldAccess(iface, base, BitField(bfields[0], 0, bfields[1]))
             self.x_bfields = {}
         else:
             self.x__bfields = bfields
-            # The width is found based on the number of the highest
-            # bit used in the bitfields
-            self.x__is_signed = False
-            self.x__width = 0
+            width = 0
             for bf in bfields.values():
-                if bf.msb > self.x__width - 1:
-                    self.x__width = bf.msb + 1
-        if self.x__is_signed:
-            tmp = 1 << (width-1)
-            self.vmin = -tmp
-            self.vmax = tmp - 1
-        else:
-            self.vmin = 0
-            self.vmax = (1 << width) - 1
+                if bf.msb > width - 1:
+                    width = bf.msb + 1
+            self.x__regf = _BitFieldAccess(iface, base, BitField(width-1, 0, False))
 
     def __dir__(self):
         return self.x__bfields.keys()
@@ -293,7 +283,7 @@ class _Register(object):
             The read is performed immediately, the result is
             masked, shifted and returned as integer.
         """
-        return self.x__iface.read(self.x__base)
+        return self.x__regf.readf()
 
     def readb(self) -> Callable[[],int]:
         """ Optimized read method. Schedules reading of the register.
@@ -302,7 +292,7 @@ class _Register(object):
             immediately (if not dispatched yet), and the result
             is returned as an integer.
         """
-        return self.x__iface.readb(self.x__base)
+        rvcal = self.x__regf.readfb()
 
     def read_fifo(self, count:int):
         return self.x__iface.read_fifo(self.x__base, count)
@@ -313,7 +303,7 @@ class _Register(object):
             Please note, that access to each bitfield generates
             a strobe pulse for the whole register (if strobe is implemented).
         """
-        self.x__iface.write(self.x__base, value)
+        self.x__regf.writef(value)
 
     def writeb(self, value:int) -> None:
         """ Optimized write method. The write is only scheduled.
@@ -321,7 +311,7 @@ class _Register(object):
             or if the maximum length of the scheduled operations' list is
             achieved.
         """
-        self.x__iface.writeb(self.x__base, value)
+        self.x__regf.writefb(value)
 
     def write_fifo(self, values):
         self.x__iface.write(self.x__base, values)
@@ -511,7 +501,7 @@ if __name__ == "__main__":
            "rv" : (
              1,
              (
-                ControlRegister, {},
+                ControlRegister, (32, False),
              ),
            )
         }
