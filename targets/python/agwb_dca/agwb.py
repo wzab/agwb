@@ -264,7 +264,26 @@ class _Register(object):
     def __init__(self, iface, base, bfields={}):
         self.x__iface = iface
         self.x__base = base
-        self.x__bfields = bfields
+        if isinstance(bfields,tuple):
+            self.x__width = bfields[0]
+            self.x__is_signed = bfields[1]
+            self.x_bfields = {}
+        else:
+            self.x__bfields = bfields
+            # The width is found based on the number of the highest
+            # bit used in the bitfields
+            self.x__is_signed = False
+            self.x__width = 0
+            for bf in bfields.values():
+                if bf.msb > self.x__width - 1:
+                    self.x__width = bf.msb + 1
+        if self.x__is_signed:
+            tmp = 1 << (width-1)
+            self.vmin = -tmp
+            self.vmax = tmp - 1
+        else:
+            self.vmin = 0
+            self.vmax = (1 << width) - 1
 
     def __dir__(self):
         return self.x__bfields.keys()
