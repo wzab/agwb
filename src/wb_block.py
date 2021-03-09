@@ -910,7 +910,7 @@ class WbReg(WbObject):
             # Generate the mask for register with width below 32 bits
             s_mask = ""
             if self.width < 32:
-                maskval = (1 << (self.width + 1)) - 1
+                maskval = (1 << self.width) - 1
                 s_mask = ' mask="0x' + format(maskval, "08x") + '"'            
             # Finally the format of the description depends on the presence of bitfields
             if not self.fields:
@@ -975,7 +975,7 @@ class WbReg(WbObject):
             # Generate the mask for register with width below 32 bits
             s_mask = ""
             if self.width < 32:
-                maskval = (1 << (self.width + 1)) - 1
+                maskval = (1 << self.width) - 1
                 s_mask = ' mask="0x' + format(maskval, "08x") + '"'
 
             # Finally the format of the description depends on the presence of bitfields
