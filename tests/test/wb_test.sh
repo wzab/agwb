@@ -20,5 +20,5 @@ mknod /tmp/wrpipe p
 # To play interactively with the object tree
 #${TERMINAL} -e "python3 -i python_raw/wb_test.py" &
 # To have terminal exited after the simulation
-#${TERMINAL} -e "python3 python_raw/wb_test.py; echo 'press ENTER'; read" &
+${TERMINAL} -e "python3 python_raw/wb_test.py; echo 'press ENTER'; read" &
 make

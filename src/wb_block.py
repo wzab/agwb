@@ -218,13 +218,23 @@ begin
 {testdev_access}
           if int_addr = {block_id_addr} then
              int_regs_wb_m_i.dat <= {block_id};
-             int_regs_wb_m_i.ack <= '1';
-             int_regs_wb_m_i.err <= '0';
+             if int_regs_wb_m_o.we = '1' then
+                int_regs_wb_m_i.err <= '1';
+                int_regs_wb_m_i.ack <= '0';
+             else
+                int_regs_wb_m_i.ack <= '1';
+                int_regs_wb_m_i.err <= '0';
+             end if;
           end if;
           if int_addr = {block_ver_addr} then
              int_regs_wb_m_i.dat <= g_ver_id;
-             int_regs_wb_m_i.ack <= '1';
-             int_regs_wb_m_i.err <= '0';
+             if int_regs_wb_m_o.we = '1' then
+                int_regs_wb_m_i.err <= '1';
+                int_regs_wb_m_i.ack <= '0';
+             else
+                int_regs_wb_m_i.ack <= '1';
+                int_regs_wb_m_i.err <= '0';
+             end if;
           end if;
         end if;
       end if;
