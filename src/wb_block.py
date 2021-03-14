@@ -1710,6 +1710,9 @@ end if;
 
     def amap_xml_hdr(self,ver_hash):
         res = '<module id="' + self.name
+        # set is_top depending on the top name
+        if self.name == GLB.TOP_NAME:
+            res += '" is_top="1'
         res += '" id_hash="0x' + format(self.id_val, "08x")
         res += '" ver_hash="0x' + format(ver_hash, "08x")
         res += '" system_hash="0x' + format(GLB.VER_ID, "08x")

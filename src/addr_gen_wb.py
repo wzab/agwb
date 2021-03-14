@@ -145,6 +145,8 @@ if not valid:
     sys.exit(1)
     
 TOP_NAME = EL_ROOT.attrib["top"]
+wb.GLB.TOP_NAME = TOP_NAME
+
 if "masters" in EL_ROOT.attrib:
     N_MASTERS = ex.exprval(EL_ROOT.attrib["masters"])
 else:
