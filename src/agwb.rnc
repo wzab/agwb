@@ -2,13 +2,7 @@ start =
   element sysdef {
     attribute masters { text }?,
     attribute top { text },
-    (blackbox*
-     & block*
-     & constant*
-     & creg*
-     & \include*
-     & sreg*
-     & subblock*)
+    (blackbox* & block* & extblock* & constant* & \include*)
   }
 blackbox =
   element blackbox {
@@ -23,6 +17,16 @@ blackbox =
 block =
   element block {
     attribute aggr_outs { text }?,
+    attribute name { text },
+    attribute reserved { text }?,
+    attribute testdev_ena { text }?,
+    attribute desc { text }?,
+    attribute ignore { text }?,
+    (blackbox* & creg* & sreg* & subblock*)
+  }
+extblock =
+  element block {
+    attribute aggr_outs { text }?,
     attribute external { text }?,
     attribute name { text },
     attribute reserved { text }?,
@@ -30,14 +34,24 @@ block =
     attribute desc { text }?,
     attribute ignore { text }?,
     attribute size { text }?,
-    (blackbox* & creg* & sreg* & subblock*)
+    (blackbox* & extcreg* & extsreg* & extsubblock*)
   }
 field =
   element field {
     attribute default { text }?,
     attribute desc { text }?,
     attribute ignore { text }?,
-    attribute lsb { text }?,
+    attribute name { text },
+    attribute trigger { text }?,
+    attribute type { text }?,
+    attribute width { text }
+  }
+extfield =
+  element field {
+    attribute default { text }?,
+    attribute desc { text }?,
+    attribute ignore { text }?,
+    attribute lsb { text },
     attribute name { text },
     attribute trigger { text }?,
     attribute type { text }?,
@@ -52,7 +66,6 @@ constant =
 creg =
   element creg {
     attribute name { text },
-    attribute addr { text }?,
     attribute default { text }?,
     attribute desc { text }?,
     attribute mode { text }?,
@@ -64,6 +77,22 @@ creg =
     attribute width { text }?,
     attribute ignore { text }?,
     field*
+  }
+extcreg =
+  element creg {
+    attribute name { text },
+    attribute addr { text },
+    attribute default { text }?,
+    attribute desc { text }?,
+    attribute mode { text }?,
+    attribute reps { text }?,
+    attribute stb { text }?,
+    attribute stype { text }?,
+    attribute type { text }?,
+    attribute used { text }?,
+    attribute width { text }?,
+    attribute ignore { text }?,
+    extfield*
   }
 \include =
   element include {
@@ -84,8 +113,34 @@ sreg =
     attribute ignore { text }?,
     field*
   }
+extsreg =
+  element sreg {
+    attribute ack { text }?,
+    attribute addr { text },
+    attribute desc { text }?,
+    attribute mode { text }?,
+    attribute name { text },
+    attribute reps { text }?,
+    attribute used { text }?,
+    attribute stype { text }?,
+    attribute type { text }?,
+    attribute width { text }?,
+    attribute ignore { text }?,
+    extfield*
+  }
 subblock =
   element subblock {
+    attribute name { text },
+    attribute type { text },
+    attribute addr { text }?,
+    attribute desc { text }?,
+    attribute ignore { text }?,
+    attribute reps { text }?,
+    attribute used { text }?
+  }
+extsubblock =
+  element subblock {
+    attribute addr { text },
     attribute name { text },
     attribute type { text },
     attribute desc { text }?,
