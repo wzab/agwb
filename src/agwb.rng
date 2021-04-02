@@ -17,13 +17,9 @@
 				<zeroOrMore>
 					<ref name="blackbox"/>
 				</zeroOrMore>
-				
+
 				<zeroOrMore>
 					<ref name="block"/>
-				</zeroOrMore>
-				
-				<zeroOrMore>
-					<ref name="extblock"/>
 				</zeroOrMore>
 
 				<zeroOrMore>
@@ -31,9 +27,20 @@
 				</zeroOrMore>
 
 				<zeroOrMore>
+					<ref name="creg"/>
+				</zeroOrMore>
+
+				<zeroOrMore>
 					<ref name="include"/>
 				</zeroOrMore>
 
+				<zeroOrMore>
+					<ref name="sreg"/>
+				</zeroOrMore>
+
+				<zeroOrMore>
+					<ref name="subblock"/>
+				</zeroOrMore>
 			</interleave>
 
 		</element>
@@ -80,53 +87,6 @@
 					<text/>
 				</attribute>
 			</optional>
-			<attribute name="name">
-				<text/>
-			</attribute>
-			<optional>
-				<attribute name="reserved">
-					<text/>
-				</attribute>
-			</optional>
-			<optional>
-				<attribute name="testdev_ena">
-					<text/>
-				</attribute>
-			</optional>
-			<optional>
-				<attribute name="desc">
-					<text/>
-				</attribute>
-			</optional>
-			<optional>
-				<attribute name="ignore">
-					<text/>
-				</attribute>
-			</optional>
-			<interleave>
-				<zeroOrMore>
-					<ref name="blackbox"/>
-				</zeroOrMore>
-				<zeroOrMore>
-					<ref name="creg"/>
-				</zeroOrMore>
-				<zeroOrMore>
-					<ref name="sreg"/>
-				</zeroOrMore>
-				<zeroOrMore>
-					<ref name="subblock"/>
-				</zeroOrMore>
-			</interleave>
-		</element>
-	</define>
-
-	<define name="extblock">
-		<element name="block">
-			<optional>
-				<attribute name="aggr_outs">
-					<text/>
-				</attribute>
-			</optional>
 			<optional>
 				<attribute name="external">
 					<text/>
@@ -165,13 +125,13 @@
 					<ref name="blackbox"/>
 				</zeroOrMore>
 				<zeroOrMore>
-					<ref name="extcreg"/>
+					<ref name="creg"/>
 				</zeroOrMore>
 				<zeroOrMore>
-					<ref name="extsreg"/>
+					<ref name="sreg"/>
 				</zeroOrMore>
 				<zeroOrMore>
-					<ref name="extsubblock"/>
+					<ref name="subblock"/>
 				</zeroOrMore>
 			</interleave>
 		</element>
@@ -194,6 +154,11 @@
 					<text/>
 				</attribute>
 			</optional>
+			<optional>
+				<attribute name="lsb">
+					<text/>
+				</attribute>
+			</optional>
 			<attribute name="name">
 				<text/>
 			</attribute>
@@ -212,46 +177,6 @@
 			</attribute>
 		</element>
 	</define>
-
-	<define name="extfield">
-		<element name="field">
-			<optional>
-				<attribute name="default">
-					<text/>
-				</attribute>
-			</optional>
-			<optional>
-				<attribute name="desc">
-					<text/>
-				</attribute>
-			</optional>
-			<optional>
-				<attribute name="ignore">
-					<text/>
-				</attribute>
-			</optional>
-			<attribute name="lsb">
-				<text/>
-			</attribute>
-			<attribute name="name">
-				<text/>
-			</attribute>
-			<optional>
-				<attribute name="trigger">
-					<text/>
-				</attribute>
-			</optional>
-			<optional>
-				<attribute name="type">
-					<text/>
-				</attribute>
-			</optional>
-			<attribute name="width">
-				<text/>
-			</attribute>
-		</element>
-	</define>
-
 
 	<define name="constant">
 		<element name="constant">
@@ -274,6 +199,11 @@
 			<attribute name="name">
 				<text/>
 			</attribute>
+			<optional>
+				<attribute name="addr">
+					<text/>
+				</attribute>
+			</optional>
 			<optional>
 				<attribute name="default">
 					<text/>
@@ -329,71 +259,6 @@
 			</zeroOrMore>
 		</element>
 	</define>
-
-	<define name="extcreg">
-		<element name="creg">
-			<attribute name="name">
-				<text/>
-			</attribute>
-			<attribute name="addr">
-					<text/>
-			</attribute>
-			<optional>
-				<attribute name="default">
-					<text/>
-				</attribute>
-			</optional>
-			<optional>
-				<attribute name="desc">
-					<text/>
-				</attribute>
-			</optional>
-			<optional>
-				<attribute name="mode">
-					<text/>
-				</attribute>
-			</optional>
-			<optional>
-				<attribute name="reps">
-					<text/>
-				</attribute>
-			</optional>
-			<optional>
-				<attribute name="stb">
-					<text/>
-				</attribute>
-			</optional>
-			<optional>
-				<attribute name="stype">
-					<text/>
-				</attribute>
-			</optional>
-			<optional>
-				<attribute name="type">
-					<text/>
-				</attribute>
-			</optional>
-			<optional>
-				<attribute name="used">
-					<text/>
-				</attribute>
-			</optional>
-			<optional>
-				<attribute name="width">
-					<text/>
-				</attribute>
-			</optional>
-			<optional>
-				<attribute name="ignore">
-					<text/>
-				</attribute>
-			</optional>
-			<zeroOrMore>
-				<ref name="extfield"/>
-			</zeroOrMore>
-		</element>
-	</define>
-
 
 	<define name="include">
 		<element name="include">
@@ -464,65 +329,6 @@
 		</element>
 	</define>
 
-	<define name="extsreg">
-		<element name="sreg">
-			<optional>
-				<attribute name="ack">
-					<text/>
-				</attribute>
-			</optional>
-			<attribute name="addr">
-				<text/>
-			</attribute>
-			<optional>
-				<attribute name="desc">
-					<text/>
-				</attribute>
-			</optional>
-			<optional>
-				<attribute name="mode">
-					<text/>
-				</attribute>
-			</optional>
-			<attribute name="name">
-				<text/>
-			</attribute>
-			<optional>
-				<attribute name="reps">
-					<text/>
-				</attribute>
-			</optional>
-			<optional>
-				<attribute name="used">
-					<text/>
-				</attribute>
-			</optional>
-			<optional>
-				<attribute name="stype">
-					<text/>
-				</attribute>
-			</optional>
-			<optional>
-				<attribute name="type">
-					<text/>
-				</attribute>
-			</optional>
-			<optional>
-				<attribute name="width">
-					<text/>
-				</attribute>
-			</optional>
-			<optional>
-				<attribute name="ignore">
-					<text/>
-				</attribute>
-			</optional>
-			<zeroOrMore>
-				<ref name="extfield"/>
-			</zeroOrMore>
-		</element>
-	</define>
-
 	<define name="subblock">
 		<element name="subblock">
 			<attribute name="name">
@@ -536,40 +342,6 @@
 					<text/>
 				</attribute>
 			</optional>
-			<optional>
-				<attribute name="desc">
-					<text/>
-				</attribute>
-			</optional>
-			<optional>
-				<attribute name="ignore">
-					<text/>
-				</attribute>
-			</optional>
-			<optional>
-				<attribute name="reps">
-					<text/>
-				</attribute>
-			</optional>
-			<optional>
-				<attribute name="used">
-					<text/>
-				</attribute>
-			</optional>
-		</element>
-	</define>
-
-	<define name="extsubblock">
-		<element name="subblock">
-			<attribute name="addr">
-					<text/>
-			</attribute>
-			<attribute name="name">
-				<text/>
-			</attribute>
-			<attribute name="type">
-				<text/>
-			</attribute>
 			<optional>
 				<attribute name="desc">
 					<text/>
