@@ -407,10 +407,11 @@ class WbReg(WbObject):
                 # The fields lsb must be defined
                 lsb = ex.exprval(f_l.get("lsb","-1"))
                 if lsb == -1:
-                    raise Exception("The bitfield " + e_l.name + " in external register " + self.name + " must have its position defined.")
+                    raise Exception("The bitfield " + f_l.get("name") + " in external register " + self.name + " must have its position defined.")
+                fdef = WbField(f_l, lsb)
             else:
                 if f_l.get("lsb",None) is not None:
-                    raise Exception("The bitfield " + e_l.name + " in normal register " +  self.name + " can't have fixed position.")
+                    raise Exception("The bitfield " + f_l.get("name") + " in normal register " +  self.name + " can't have fixed position.")
                 fdef = WbField(f_l, self.free_bit)
                 self.free_bit += fdef.size
                 if self.free_bit > 32:
@@ -1457,6 +1458,9 @@ class WbBlock(WbObject):
                     # This is a subblock, so the address should be defined by 
                     # the address of the instance
                     a_r.adr = ex.exprval(a_r.inst.get("addr"))
+            # Here we may have a problem if the external block has the size 
+            # that is not equal to 2^N.
+            self.adr_bits = (self.addr_size-1).bit_length()        
         else:
             # This is a generated block, so we allocate the addresses 
             # ensuring that each entity is properly aligned to a 2^N boundary
@@ -1481,9 +1485,9 @@ class WbBlock(WbObject):
                 else:
                     cur_top -= a_r.total_size
                     a_r.adr = cur_top
-            self.used = True
-            # In fact, here we should be able to generate the HDL code
-            log.debug("analyze: " + self.name + " addr_size:" + str(self.addr_size))
+        self.used = True
+        # In fact, here we should be able to generate the HDL code
+        log.debug("analyze: " + self.name + " addr_size:" + str(self.addr_size))
 
     def add_templ(self, templ_key, value, indent):
         """ That function adds the new text to the dictionary
@@ -1509,7 +1513,9 @@ class WbBlock(WbObject):
         # n_slaves,
         # p_addresses, p_masks
         # block_id, block_ver - to verify that design matches the software
-
+        if self.is_external:
+            # Do not generate VHDL for external registers
+            return
         # First - generate code for registers
         # We give empty declaration in case if the block does not contain
         # any registers
@@ -1768,39 +1774,40 @@ end if;
                 # Registers area
                 # Add two standard registers - ID and VER
                 adr = a_r.adr
-                res += (
-                    '  <register id="ID" address="0x'
-                    + format(adr+spec_regs["id"], "08x")
-                    + '" permission="r"/>\n'
-                )
-                res += (
-                    '  <register id="VER" address="0x'
-                    + format(adr + spec_regs["ver"], "08x")
-                    + '" permission="r"/>\n'
-                )
-                if self.testdev_ena != 0:
-                    # To enable testing of error detection, all test registers 
-                    # have permissions set to "rw"!
+                if not self.is_external: 
                     res += (
-                        '  <register id="TEST_RW" address="0x'
-                        + format(adr+spec_regs["test_rw"], "08x")
-                        + '" permission="rw"/>\n'
-                        )
+                        '  <register id="ID" address="0x'
+                        + format(adr+spec_regs["id"], "08x")
+                        + '" permission="r"/>\n'
+                    )
                     res += (
-                        '  <register id="TEST_WO" address="0x'
-                        + format(adr+spec_regs["test_wo"], "08x")
-                        + '" permission="rw"/>\n'
-                        )
-                    res += (
-                        '  <register id="TEST_RO" address="0x'
-                        + format(adr+spec_regs["test_ro"], "08x")
-                        + '" permission="rw"/>\n'
-                        )
-                    res += (
-                        '  <register id="TEST_TOUT" address="0x'
-                        + format(adr+spec_regs["test_tout"], "08x")
-                        + '" permission="rw"/>\n'
-                        )
+                        '  <register id="VER" address="0x'
+                        + format(adr + spec_regs["ver"], "08x")
+                        + '" permission="r"/>\n'
+                    )
+                    if self.testdev_ena != 0:
+                        # To enable testing of error detection, all test registers 
+                        # have permissions set to "rw"!
+                        res += (
+                            '  <register id="TEST_RW" address="0x'
+                            + format(adr+spec_regs["test_rw"], "08x")
+                            + '" permission="rw"/>\n'
+                            )
+                        res += (
+                            '  <register id="TEST_WO" address="0x'
+                            + format(adr+spec_regs["test_wo"], "08x")
+                            + '" permission="rw"/>\n'
+                            )
+                        res += (
+                            '  <register id="TEST_RO" address="0x'
+                            + format(adr+spec_regs["test_ro"], "08x")
+                            + '" permission="rw"/>\n'
+                            )
+                        res += (
+                            '  <register id="TEST_TOUT" address="0x'
+                            + format(adr+spec_regs["test_tout"], "08x")
+                            + '" permission="rw"/>\n'
+                            )
                 # Now add other registers in a loop
                 for reg in self.regs:
                     res += reg.gen_amap_xml(adr,nvar)
@@ -1873,39 +1880,40 @@ end if;
                 # Registers area
                 # Add two standard registers - ID and VER
                 adr = a_r.adr
-                res += (
-                    '  <node id="ID" address="0x'
-                    + format(adr+spec_regs["id"], "08x")
-                    + '" permission="r"/>\n'
-                )
-                res += (
-                    '  <node id="VER" address="0x'
-                    + format(adr + spec_regs["ver"], "08x")
-                    + '" permission="r"/>\n'
-                )
-                if self.testdev_ena != 0:
-                    # To enable testing of error detection, all test registers 
-                    # have permissions set to "rw"!
+                if not self.is_external:
                     res += (
-                        '  <node id="TEST_RW" address="0x'
-                        + format(adr+spec_regs["test_rw"], "08x")
-                        + '" permission="rw"/>\n'
-                        )
+                        '  <node id="ID" address="0x'
+                        + format(adr+spec_regs["id"], "08x")
+                        + '" permission="r"/>\n'
+                    )
                     res += (
-                        '  <node id="TEST_WO" address="0x'
-                        + format(adr+spec_regs["test_wo"], "08x")
-                        + '" permission="rw"/>\n'
-                        )
-                    res += (
-                        '  <node id="TEST_RO" address="0x'
-                        + format(adr+spec_regs["test_ro"], "08x")
-                        + '" permission="rw"/>\n'
-                        )
-                    res += (
-                        '  <node id="TEST_TOUT" address="0x'
-                        + format(adr+spec_regs["test_tout"], "08x")
-                        + '" permission="rw"/>\n'
-                        )
+                        '  <node id="VER" address="0x'
+                        + format(adr + spec_regs["ver"], "08x")
+                        + '" permission="r"/>\n'
+                    )
+                    if self.testdev_ena != 0:
+                        # To enable testing of error detection, all test registers 
+                        # have permissions set to "rw"!
+                        res += (
+                            '  <node id="TEST_RW" address="0x'
+                            + format(adr+spec_regs["test_rw"], "08x")
+                            + '" permission="rw"/>\n'
+                            )
+                        res += (
+                            '  <node id="TEST_WO" address="0x'
+                            + format(adr+spec_regs["test_wo"], "08x")
+                            + '" permission="rw"/>\n'
+                            )
+                        res += (
+                            '  <node id="TEST_RO" address="0x'
+                            + format(adr+spec_regs["test_ro"], "08x")
+                            + '" permission="rw"/>\n'
+                            )
+                        res += (
+                            '  <node id="TEST_TOUT" address="0x'
+                            + format(adr+spec_regs["test_tout"], "08x")
+                            + '" permission="rw"/>\n'
+                            )
                 # Now add other registers in a loop
                 for reg in self.regs:
                     res += reg.gen_ipbus_xml(adr)
@@ -1964,51 +1972,51 @@ end if;
         for a_r in self.areas:
             if a_r.obj is None:
                 # Registers area
-                # Add two standard registers - ID and VER
                 adr = a_r.adr
-                cdefs += (
-                    ": " + parent + "_ID " + parent + " $" + format(adr+spec_regs["id"], "x") + " + ;\n"
-                )
-                cdefs += (
-                    ": "
-                    + parent
-                    + "_VER "
-                    + parent
-                    + " $"
-                    + format(adr + spec_regs["ver"], "x")
-                    + " + ;\n"
-                )
-                if self.testdev_ena != 0:
-                    # Add additional test registers (to lower dictionary usage,
-                    # the prefix is shortened to _TSTDV)
-                   cdefs += (
-                        ": " + parent + "_TSTDV_RW " + parent + " $" + format(adr+spec_regs["test_rw"], "x") + " + ;\n"
-                   )
-                   cdefs += (
-                        ": " + parent + "_TSTDV_WO " + parent + " $" + format(adr+spec_regs["test_wo"], "x") + " + ;\n"
-                   )
-                   cdefs += (
-                        ": " + parent + "_TSTDV_RO " + parent + " $" + format(adr+spec_regs["test_ro"], "x") + " + ;\n"
-                   )
-                   cdefs += (
-                        ": " + parent + "_TSTDV_TOUT " + parent + " $" + format(adr+spec_regs["test_tout"], "x") + " + ;\n"
-                   )
-
-                # Add two constants
-                cdefs += (
-                    "$"
-                    + format(self.id_val, "x")
-                    + " constant "
-                    + parent
-                    + "_ID_VAL \n"
-                )
-                cdefs += (
-                    "$"
-                    + format(self.ver_full, "x")
-                    + " constant "
-                    + parent
-                    + "_VER_VAL \n"
-                )
+                # For non-external blocks add standard registers - ID and VER (and possibly test registers)
+                if not self.is_external:
+                    cdefs += (
+                        ": " + parent + "_ID " + parent + " $" + format(adr+spec_regs["id"], "x") + " + ;\n"
+                    )
+                    cdefs += (
+                        ": "
+                        + parent
+                        + "_VER "
+                        + parent
+                        + " $"
+                        + format(adr + spec_regs["ver"], "x")
+                        + " + ;\n"
+                    )
+                    if self.testdev_ena != 0:
+                        # Add additional test registers (to lower dictionary usage,
+                        # the prefix is shortened to _TSTDV)
+                       cdefs += (
+                            ": " + parent + "_TSTDV_RW " + parent + " $" + format(adr+spec_regs["test_rw"], "x") + " + ;\n"
+                       )
+                       cdefs += (
+                            ": " + parent + "_TSTDV_WO " + parent + " $" + format(adr+spec_regs["test_wo"], "x") + " + ;\n"
+                       )
+                       cdefs += (
+                            ": " + parent + "_TSTDV_RO " + parent + " $" + format(adr+spec_regs["test_ro"], "x") + " + ;\n"
+                       )
+                       cdefs += (
+                            ": " + parent + "_TSTDV_TOUT " + parent + " $" + format(adr+spec_regs["test_tout"], "x") + " + ;\n"
+                       )
+                    # Add two constants
+                    cdefs += (
+                        "$"
+                        + format(self.id_val, "x")
+                        + " constant "
+                        + parent
+                        + "_ID_VAL \n"
+                    )
+                    cdefs += (
+                        "$"
+                        + format(self.ver_full, "x")
+                        + " constant "
+                        + parent
+                        + "_VER_VAL \n"
+                    )
                 # Now add other registers in a loop
                 for reg in self.regs:
                     cdefs += reg.gen_forth(adr, parent)
@@ -2052,6 +2060,9 @@ end if;
         # Each block is responsible for generation of the structure, that fully
         # fills it's address space.
         #
+        if self.is_external:
+            log.debug("Generation of C header for external block " + self.name + " is not supported.")
+            return
         log.debug("Creating C header:" + self.name + "\n")
         head = "#ifndef __" + self.name + "__INC_H\n"
         head += "#define __" + self.name + "__INC_H\n"
@@ -2176,10 +2187,10 @@ end if;
         for a_r in self.areas:
             if a_r.obj is None:
                 # Registers area
+                adr = a_r.adr
                 # If the block is not "external", add standard registers
                 if not self.is_external:
                     # Add two standard register - ID and VER
-                    adr = a_r.adr
                     res += sp8 + "'ID':(" + hex(adr + spec_regs["id"]) + ",(agwb.StatusRegister, (32, False))),\\\n"
                     res += sp8 + "'VER':(" + hex(adr + spec_regs["ver"]) + ",(agwb.StatusRegister, (32, False))),\\\n"
                     if self.testdev_ena != 0:
@@ -2226,6 +2237,7 @@ end if;
 
     def gen_html(self, base, mname):
         """ This function generates the description of the particular block in a HTML format """
+        log.debug("Generation of HTML documentation does not work for external block" + self.name)
         res = ""
         # First write the name and description
         res += (

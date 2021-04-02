@@ -338,6 +338,11 @@
 				<text/>
 			</attribute>
 			<optional>
+				<attribute name="addr">
+					<text/>
+				</attribute>
+			</optional>
+			<optional>
 				<attribute name="desc">
 					<text/>
 				</attribute>
