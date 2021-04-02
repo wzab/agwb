@@ -23,11 +23,13 @@ blackbox =
 block =
   element block {
     attribute aggr_outs { text }?,
+    attribute external { text }?,
     attribute name { text },
     attribute reserved { text }?,
     attribute testdev_ena { text }?,
     attribute desc { text }?,
     attribute ignore { text }?,
+    attribute size { text }?,
     (blackbox* & creg* & sreg* & subblock*)
   }
 field =
@@ -35,6 +37,7 @@ field =
     attribute default { text }?,
     attribute desc { text }?,
     attribute ignore { text }?,
+    attribute lsb { text }?,
     attribute name { text },
     attribute trigger { text }?,
     attribute type { text }?,
@@ -49,6 +52,7 @@ constant =
 creg =
   element creg {
     attribute name { text },
+    attribute addr { text }?,
     attribute default { text }?,
     attribute desc { text }?,
     attribute mode { text }?,
@@ -68,6 +72,7 @@ creg =
 sreg =
   element sreg {
     attribute ack { text }?,
+    attribute addr { text }?,
     attribute desc { text }?,
     attribute mode { text }?,
     attribute name { text },

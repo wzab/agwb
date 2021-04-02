@@ -87,6 +87,11 @@
 					<text/>
 				</attribute>
 			</optional>
+			<optional>
+				<attribute name="external">
+					<text/>
+				</attribute>
+			</optional>
 			<attribute name="name">
 				<text/>
 			</attribute>
@@ -107,6 +112,11 @@
 			</optional>
 			<optional>
 				<attribute name="ignore">
+					<text/>
+				</attribute>
+			</optional>
+			<optional>
+				<attribute name="size">
 					<text/>
 				</attribute>
 			</optional>
@@ -141,6 +151,11 @@
 			</optional>
 			<optional>
 				<attribute name="ignore">
+					<text/>
+				</attribute>
+			</optional>
+			<optional>
+				<attribute name="lsb">
 					<text/>
 				</attribute>
 			</optional>
@@ -184,6 +199,11 @@
 			<attribute name="name">
 				<text/>
 			</attribute>
+			<optional>
+				<attribute name="addr">
+					<text/>
+				</attribute>
+			</optional>
 			<optional>
 				<attribute name="default">
 					<text/>
@@ -252,6 +272,11 @@
 		<element name="sreg">
 			<optional>
 				<attribute name="ack">
+					<text/>
+				</attribute>
+			</optional>
+			<optional>
+				<attribute name="addr">
 					<text/>
 				</attribute>
 			</optional>

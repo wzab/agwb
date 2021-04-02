@@ -379,8 +379,15 @@ class WbReg(WbObject):
         self.regtype = el.tag
         self.type = el.get("type", "std_logic_vector")
         self.stype = el.get("stype", None)
-        self.base = adr
         self.name = el.attrib["name"]
+        if adr is None:
+            self.base = ex.exprval(el.get("addr","-1"))
+            if self.base == -1:
+                raise Exception("The register " + self.name + " must have its address defined.")
+            is_external = True
+        else:
+            self.base = adr
+            is_external = False
         self.size_generic = "g_"+self.name+"_size"
         self.size_constant = "c_"+self.name+"_size"
         self.size_variants = "v_"+self.name+"_size"
@@ -396,14 +403,22 @@ class WbReg(WbObject):
         self.fields = []
         self.free_bit = 0
         for f_l in el.findall("field"):
-            fdef = WbField(f_l, self.free_bit)
-            self.free_bit += fdef.size
-            if self.free_bit > 32:
-                raise Exception(
-                    "Total width of fields in register "
-                    + self.name
-                    + " is above 32-bits"
-                )
+            if is_external:
+                # The fields lsb must be defined
+                lsb = ex.exprval(f_l.get("lsb","-1"))
+                if lsb == -1:
+                    raise Exception("The bitfield " + e_l.name + " in external register " + self.name + " must have its position defined.")
+            else:
+                if f_l.get("lsb",None) is not None:
+                    raise Exception("The bitfield " + e_l.name + " in normal register " +  self.name + " can't have fixed position.")
+                fdef = WbField(f_l, self.free_bit)
+                self.free_bit += fdef.size
+                if self.free_bit > 32:
+                    raise Exception(
+                        "Total width of fields in register "
+                        + self.name
+                        + " is above 32-bits"
+                    )
             self.fields.append(fdef)
         # For registers with bitfields we allow enforcing the name of the generated record type
         if self.fields and self.type != "std_logic_vector":
@@ -1224,12 +1239,13 @@ class WbArea(WbObject):
     """ The class representing the address area
     """
 
-    def __init__(self, size, name, obj, oreps, ignore=""):
+    def __init__(self, size, name, inst, obj, oreps, ignore=""):
         self.name = name
         self.size_generic = "g_" + self.name+ "_size"
         self.size_constant = "c_" + self.name+ "_size"
         self.size_variants = "v_" + self.name+ "_size"
         self.size = size
+        self.inst = inst
         self.obj = obj
         self.adr = 0
         self.mask = 0
@@ -1317,6 +1333,7 @@ class WbBlock(WbObject):
         """
         self.used = False  # Mark the block as not used yet
         self.templ_dict = {}
+        self.is_external = (ex.exprval(el.get("external","0")) != 0) 
         self.name = el.attrib["name"]
         self.id_val = zlib.crc32(bytes(self.name.encode("utf-8")))
         self.ver_full = 0
@@ -1335,6 +1352,12 @@ class WbBlock(WbObject):
             self.free_reg_addr = 8  # We reserve eight addresses for ID, VER and TEST DEVICE
         else:
             self.free_reg_addr = 2  # The first free address after ID & VER
+        if self.is_external:
+            # The size of the block must be defined in its XML
+            tmp = ex.exprval(el.get("size","-1"))
+            if tmp < 0:
+                raise Exception("External block " + self.name + " must have its size defined.")
+            self.addr_size = tmp            
         # Prepare the list of subblocks
         self.subblks = []
         self.N_MASTERS = 1
@@ -1343,15 +1366,14 @@ class WbBlock(WbObject):
         for child in el.findall("*"):
             # Now for registers we allocate addresses in order
             # We don't do alignment (yet)
-            if child.tag == "creg":
-                # This is a control register
-                reg = WbReg(child, self.free_reg_addr)
-                self.free_reg_addr += reg.size
-                self.regs.append(reg)
-            elif child.tag == "sreg":
-                # This is a status register
-                reg = WbReg(child, self.free_reg_addr)
-                self.free_reg_addr += reg.size
+            if child.tag in ("creg","sreg"):
+                # This is a register
+                if self.is_external:
+                    # The address will be read from the element
+                    reg = WbReg(child, None)
+                else:
+                    reg = WbReg(child, self.free_reg_addr)
+                    self.free_reg_addr += reg.size
                 self.regs.append(reg)
             elif child.tag == "subblock":
                 # This is a subblock definition
@@ -1370,7 +1392,7 @@ class WbBlock(WbObject):
 
     def analyze(self):
         # Add the length of the local addresses to the list of areas
-        self.areas.append(WbArea(self.free_reg_addr, "int_regs", None, get_reps(None)))
+        self.areas.append(WbArea(self.free_reg_addr, "int_regs", None, None, get_reps(None)))
         # Scan the subblocks
         for sblk in self.subblks:
             if sblk.tag == "subblock":
@@ -1378,7 +1400,10 @@ class WbBlock(WbObject):
                 # Is currently lost. We must to decide how it should be passed
                 # To the generated code@!@
                 b_l = GLB.blocks[sblk.attrib["type"]]
-                # If the subblock was not analyzed yet, analyze it now
+                # Each subblock of an external block must be also external
+                if self.is_external and not b_l.is_external:
+                    raise Exception("External " + self.name + " can't contain non-external " + b_l.name)
+                # If the subblock was not analyzed yet, analyze it now                
                 if not b_l.areas:
                     b_l.analyze()
                     # Now we can be sure, that it is analyzed, so we can
@@ -1390,7 +1415,7 @@ class WbBlock(WbObject):
                 # block repetitions
                 addr_size = b_l.addr_size * oreps.max_reps
                 self.areas.append(
-                    WbArea(addr_size, sblk.get("name"), b_l, oreps, ignore)
+                    WbArea(addr_size, sblk.get("name"), sblk, b_l, oreps, ignore)
                 )
             elif sblk.tag == "blackbox":
                 # We don't need to analyze the blackbox. We allready have its
@@ -1402,7 +1427,7 @@ class WbBlock(WbObject):
                 ignore = sblk.get("ignore", "")
                 addr_size = b_l.addr_size * oreps.max_reps
                 self.areas.append(
-                    WbArea(addr_size, sblk.get("name"), b_l, oreps, ignore)
+                    WbArea(addr_size, sblk.get("name"), sblk, b_l, oreps, ignore)
                 )
             else:
                 raise Exception("Unknown type of subblock")
@@ -1411,37 +1436,54 @@ class WbBlock(WbObject):
         #    The calculated size of the address space is adjusted to the 2^N
         # 2. The registers are allocated at the begining of the address space,
         #    after the reserved area.
-        # 3. The blocks are allocated starting freom the end of the address
+        # 3. The blocks are allocated starting from the end of the address
         #
         # First calculate the total length of address space
         #
         # We use the simplest algorithm - all blocks are sorted,
         # their size is rounded up to the nearest power of 2
         # They are allocated in order.
-        cur_size = self.reserved
-        self.areas.sort(key=WbArea.sort_key, reverse=True)
-        for a_r in self.areas:
-            a_r.adr_bits = (a_r.size - 1).bit_length()
-            a_r.total_size = 1 << a_r.adr_bits
-            # Now we shift the position of the next block
-            cur_size += a_r.total_size
-            log.debug("added size:" + str(a_r.total_size))
-        # We must adjust the address space to the power of two
-        self.adr_bits = (cur_size - 1).bit_length()
-        self.addr_size = 1 << self.adr_bits
-        # Now we allocate the base addresses
-        cur_top = self.addr_size
-        for a_r in self.areas:
-            if a_r.obj is None:
-                # This is the register block, so we allocate it at the begining, after the reserved area
-                self.reg_base = self.reserved
-                a_r.adr = self.reserved
-            else:
-                cur_top -= a_r.total_size
-                a_r.adr = cur_top
-        self.used = True
-        # In fact, here we should be able to generate the HDL code
-        log.debug("analyze: " + self.name + " addr_size:" + str(self.addr_size))
+        if self.is_external:
+            # This is an "external" block, so all addresses should be already set
+            # We assign to each child its address
+            # Please note, that we ignore the sizes of the areas that were calculated
+            # previously.
+            for a_r in self.areas:
+                if a_r.obj is None:
+                    # This is a register block, so we count addresses starting from 0 
+                    # (I assume we don't use "reserved" for externals)
+                    a_r.adr = 0
+                else:
+                    # This is a subblock, so the address should be defined by 
+                    # the address of the instance
+                    a_r.adr = ex.exprval(a_r.inst.get("addr"))
+        else:
+            # This is a generated block, so we allocate the addresses 
+            # ensuring that each entity is properly aligned to a 2^N boundary
+            cur_size = self.reserved
+            self.areas.sort(key=WbArea.sort_key, reverse=True)
+            for a_r in self.areas:
+                a_r.adr_bits = (a_r.size - 1).bit_length()
+                a_r.total_size = 1 << a_r.adr_bits
+                # Now we shift the position of the next block
+                cur_size += a_r.total_size
+                log.debug("added size:" + str(a_r.total_size))
+            # We must adjust the address space to the power of two
+            self.adr_bits = (cur_size - 1).bit_length()
+            self.addr_size = 1 << self.adr_bits
+            # Now we allocate the base addresses
+            cur_top = self.addr_size
+            for a_r in self.areas:
+                if a_r.obj is None:
+                    # This is the register block, so we allocate it at the begining, after the reserved area
+                    self.reg_base = self.reserved
+                    a_r.adr = self.reserved
+                else:
+                    cur_top -= a_r.total_size
+                    a_r.adr = cur_top
+            self.used = True
+            # In fact, here we should be able to generate the HDL code
+            log.debug("analyze: " + self.name + " addr_size:" + str(self.addr_size))
 
     def add_templ(self, templ_key, value, indent):
         """ That function adds the new text to the dictionary
@@ -2134,18 +2176,21 @@ end if;
         for a_r in self.areas:
             if a_r.obj is None:
                 # Registers area
-                # Add two standard register - ID and VER
-                adr = a_r.adr
-                res += sp8 + "'ID':(" + hex(adr + spec_regs["id"]) + ",(agwb.StatusRegister, (32, False))),\\\n"
-                res += sp8 + "'VER':(" + hex(adr + spec_regs["ver"]) + ",(agwb.StatusRegister, (32, False))),\\\n"
-                if self.testdev_ena != 0:
-                    # Conditionally add test registers. 
-                    # They are added as control registers to enable testing of
-                    # read and write addresses.
-                    res += sp8 + "'TEST_RW':(" + hex(adr + spec_regs["test_rw"]) + ",(agwb.ControlRegister, (32, False))),\\\n"
-                    res += sp8 + "'TEST_WO':(" + hex(adr + spec_regs["test_wo"]) + ",(agwb.ControlRegister, (32, False))),\\\n"
-                    res += sp8 + "'TEST_RO':(" + hex(adr + spec_regs["test_ro"]) + ",(agwb.ControlRegister, (32, False))),\\\n"
-                    res += sp8 + "'TEST_TOUT':(" + hex(adr + spec_regs["test_tout"]) + ",(agwb.ControlRegister,(32, False))),\\\n"                    
+                # If the block is not "external", add standard registers
+                if not self.is_external:
+                    # Add two standard register - ID and VER
+                    adr = a_r.adr
+                    res += sp8 + "'ID':(" + hex(adr + spec_regs["id"]) + ",(agwb.StatusRegister, (32, False))),\\\n"
+                    res += sp8 + "'VER':(" + hex(adr + spec_regs["ver"]) + ",(agwb.StatusRegister, (32, False))),\\\n"
+                    if self.testdev_ena != 0:
+                        # Conditionally add test registers. 
+                        # They are added as control registers to enable testing of
+                        # read and write addresses.
+                        res += sp8 + "'TEST_RW':(" + hex(adr + spec_regs["test_rw"]) + ",(agwb.ControlRegister, (32, False))),\\\n"
+                        res += sp8 + "'TEST_WO':(" + hex(adr + spec_regs["test_wo"]) + ",(agwb.ControlRegister, (32, False))),\\\n"
+                        res += sp8 + "'TEST_RO':(" + hex(adr + spec_regs["test_ro"]) + ",(agwb.ControlRegister, (32, False))),\\\n"
+                        res += sp8 + "'TEST_TOUT':(" + hex(adr + spec_regs["test_tout"]) + ",(agwb.ControlRegister,(32, False))),\\\n"                    
+                # Other registers are created also for externals
                 for reg in self.regs:
                     res += reg.gen_python(adr,nvar)
             else:
