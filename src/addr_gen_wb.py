@@ -261,7 +261,7 @@ if wb.GLB.PYTHON_PATH:
 # analyze the block dependencies.
 
 # Create the list of blocks
-for el in EL_ROOT.findall("block"):
+for el in EL_ROOT.findall("block") + EL_ROOT.findall("xblock"):
     # Here we take each block and count registers inside
     # We also prepare the list of subblocks (of vectors of
     # subblocks)

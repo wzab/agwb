@@ -402,7 +402,7 @@ class WbReg(WbObject):
         # Read list of fields
         self.fields = []
         self.free_bit = 0
-        for f_l in el.findall("field"):
+        for f_l in el.findall("field") + el.findall("xfield"):
             if is_external:
                 # The fields lsb must be defined
                 lsb = ex.exprval(f_l.get("lsb","-1"))
@@ -913,9 +913,9 @@ class WbReg(WbObject):
             else:
                 rvec = ""
             # Set permissions
-            if self.regtype == "creg":
+            if self.regtype in ("creg","xcreg"):
                 perms = "rw"
-            elif self.regtype == "sreg":
+            elif self.regtype in ("sreg","xsreg"):
                 perms = "r"
             else:
                 raise Exception("Unknown type of register")
@@ -977,9 +977,9 @@ class WbReg(WbObject):
             else:
                 rname = self.name
             # Set permissions
-            if self.regtype == "creg":
+            if self.regtype in ("creg","xcreg"):
                 perms = "rw"
-            elif self.regtype == "sreg":
+            elif self.regtype in ("sreg","xsreg"):
                 perms = "r"
             else:
                 raise Exception("Unknown type of register")
@@ -1169,9 +1169,9 @@ class WbReg(WbObject):
             else:
                 # Single register
                 res += sp8 + "'" + self.name + "':(" + hex(reg_base + self.base) + ",("
-            if self.regtype == "sreg":
+            if self.regtype in ("sreg","xsreg"):
                 res += "agwb.StatusRegister,"
-            elif self.regtype == "creg":
+            elif self.regtype in ("creg","xcreg"):
                 res += "agwb.ControlRegister,"
             else:
                 raise Exception("Incorrect type of register:" + self.regtype)
@@ -1334,7 +1334,7 @@ class WbBlock(WbObject):
         """
         self.used = False  # Mark the block as not used yet
         self.templ_dict = {}
-        self.is_external = (ex.exprval(el.get("external","0")) != 0) 
+        self.is_external = (el.tag == "xblock")
         self.name = el.attrib["name"]
         self.id_val = zlib.crc32(bytes(self.name.encode("utf-8")))
         self.ver_full = 0
@@ -1367,7 +1367,7 @@ class WbBlock(WbObject):
         for child in el.findall("*"):
             # Now for registers we allocate addresses in order
             # We don't do alignment (yet)
-            if child.tag in ("creg","sreg"):
+            if child.tag in ("creg","sreg", "xcreg", "xsreg"):
                 # This is a register
                 if self.is_external:
                     # The address will be read from the element
@@ -1376,7 +1376,7 @@ class WbBlock(WbObject):
                     reg = WbReg(child, self.free_reg_addr)
                     self.free_reg_addr += reg.size
                 self.regs.append(reg)
-            elif child.tag == "subblock":
+            elif child.tag in ("subblock", "xsubblock"):
                 # This is a subblock definition
                 # We only add it to the list, the addresses can't be allocated yet
                 self.subblks.append(child)
@@ -1396,7 +1396,7 @@ class WbBlock(WbObject):
         self.areas.append(WbArea(self.free_reg_addr, "int_regs", None, None, get_reps(None)))
         # Scan the subblocks
         for sblk in self.subblks:
-            if sblk.tag == "subblock":
+            if sblk.tag in ("subblock","xsubblock"):
                 # @!@ Here we must to correct something! The name of the subblock
                 # Is currently lost. We must to decide how it should be passed
                 # To the generated code@!@

@@ -2,13 +2,7 @@ start =
   element sysdef {
     attribute masters { text }?,
     attribute top { text },
-    (blackbox*
-     & block*
-     & constant*
-     & creg*
-     & \include*
-     & sreg*
-     & subblock*)
+    (blackbox* & block* & xblock* & constant* & \include*)
   }
 blackbox =
   element blackbox {
@@ -29,8 +23,15 @@ block =
     attribute testdev_ena { text }?,
     attribute desc { text }?,
     attribute ignore { text }?,
-    attribute size { text }?,
-    (blackbox* & creg* & sreg* & subblock*)
+    (blackbox* & creg* & sreg* & subblock* & xsubblock*)
+  }
+xblock =
+  element xblock {
+    attribute name { text },
+    attribute desc { text }?,
+    attribute ignore { text }?,
+    attribute size { text },
+    (xcreg* & xsreg* & xsubblock*)
   }
 field =
   element field {
@@ -38,6 +39,17 @@ field =
     attribute desc { text }?,
     attribute ignore { text }?,
     attribute lsb { text }?,
+    attribute name { text },
+    attribute trigger { text }?,
+    attribute type { text }?,
+    attribute width { text }
+  }
+xfield =
+  element xfield {
+    attribute default { text }?,
+    attribute desc { text }?,
+    attribute ignore { text }?,
+    attribute lsb { text },
     attribute name { text },
     attribute trigger { text }?,
     attribute type { text }?,
@@ -52,7 +64,6 @@ constant =
 creg =
   element creg {
     attribute name { text },
-    attribute addr { text }?,
     attribute default { text }?,
     attribute desc { text }?,
     attribute mode { text }?,
@@ -65,6 +76,22 @@ creg =
     attribute ignore { text }?,
     field*
   }
+xcreg =
+  element xcreg {
+    attribute name { text },
+    attribute addr { text },
+    attribute default { text }?,
+    attribute desc { text }?,
+    attribute mode { text }?,
+    attribute reps { text }?,
+    attribute stb { text }?,
+    attribute stype { text }?,
+    attribute type { text }?,
+    attribute used { text }?,
+    attribute width { text }?,
+    attribute ignore { text }?,
+    xfield*
+  }
 \include =
   element include {
     attribute path { text }
@@ -72,7 +99,6 @@ creg =
 sreg =
   element sreg {
     attribute ack { text }?,
-    attribute addr { text }?,
     attribute desc { text }?,
     attribute mode { text }?,
     attribute name { text },
@@ -84,10 +110,35 @@ sreg =
     attribute ignore { text }?,
     field*
   }
+xsreg =
+  element xsreg {
+    attribute ack { text }?,
+    attribute addr { text },
+    attribute desc { text }?,
+    attribute mode { text }?,
+    attribute name { text },
+    attribute reps { text }?,
+    attribute used { text }?,
+    attribute stype { text }?,
+    attribute type { text }?,
+    attribute width { text }?,
+    attribute ignore { text }?,
+    xfield*
+  }
 subblock =
   element subblock {
     attribute name { text },
     attribute type { text },
+    attribute desc { text }?,
+    attribute ignore { text }?,
+    attribute reps { text }?,
+    attribute used { text }?
+  }
+xsubblock =
+  element xsubblock {
+    attribute name { text },
+    attribute type { text },
+    attribute addr { text }?,
     attribute desc { text }?,
     attribute ignore { text }?,
     attribute reps { text }?,

@@ -7,7 +7,7 @@
 <include path="xtest.xml"/>
 
 <block name="MAIN" reserved="0x2000" testdev_ena="1" >
-  <subblock name="EXT1" type="XBLK1" used="1;0" />
+  <xsubblock name="EXT1" type="XBLK1" used="1;0" />
   <subblock name="LINKS" type="SYS1" reps="NSEL_MAX;2" />
   <blackbox name="EXTERN" type="EXTTEST" addrbits="10" reps="NEXTERNS" />
   <creg name="CTRL" desc="Control register in the main block" default="0x11">
