@@ -123,16 +123,15 @@ except et.ParseError as perr:
         print("file: " + src[0] + ", line:" + str(src[1]))
     sys.exit(1)
 
-# Check tree with RELAX NG schema
+# Check tree with DTD
 lxml_parser = let.XMLParser(dtd_validation=True)
-relax_ng_path = os.path.join(os.path.dirname(__file__), "agwb.rng")
-relaxng_doc = let.parse(relax_ng_path)
-relax_ng = let.RelaxNG(relaxng_doc)
+dtd_path = os.path.join(os.path.dirname(__file__), "agwb.dtd")
+dtd = let.DTD(dtd_path)
 agwb_tree = let.parse(StringIO(FINAL_XML))
-valid = relax_ng.validate(agwb_tree)
+valid = dtd.validate(agwb_tree)
 if not valid:
-    print(relax_ng.error_log)
-    errline=str(relax_ng.error_log[0]).split(":")
+    print(dtd.error_log)
+    errline=str(dtd.error_log[0]).split(":")
     if len(errline) > 2:
         ROW=int(errline[1])
         COL=int(errline[2])

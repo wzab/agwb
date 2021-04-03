@@ -1,0 +1,139 @@
+<?xml encoding="UTF-8"?>
+
+<!ELEMENT sysdef (blackbox|block|xblock|constant|include)*>
+<!ATTLIST sysdef
+  masters CDATA #IMPLIED
+  top CDATA #REQUIRED>
+
+<!ELEMENT blackbox EMPTY>
+<!ATTLIST blackbox
+  addrbits CDATA #REQUIRED
+  desc CDATA #IMPLIED
+  name CDATA #REQUIRED
+  reps CDATA #IMPLIED
+  type CDATA #REQUIRED
+  used CDATA #IMPLIED
+  xmlpath CDATA #IMPLIED>
+
+<!ELEMENT block (blackbox|creg|sreg|subblock|xsubblock)*>
+<!ATTLIST block
+  aggr_outs CDATA #IMPLIED
+  external CDATA #IMPLIED
+  name CDATA #REQUIRED
+  reserved CDATA #IMPLIED
+  testdev_ena CDATA #IMPLIED
+  desc CDATA #IMPLIED
+  ignore CDATA #IMPLIED>
+
+<!ELEMENT xblock (xcreg|xsreg|xsubblock)*>
+<!ATTLIST xblock
+  name CDATA #REQUIRED
+  desc CDATA #IMPLIED
+  ignore CDATA #IMPLIED
+  size CDATA #REQUIRED>
+
+<!ELEMENT field EMPTY>
+<!ATTLIST field
+  default CDATA #IMPLIED
+  desc CDATA #IMPLIED
+  ignore CDATA #IMPLIED
+  name CDATA #REQUIRED
+  trigger CDATA #IMPLIED
+  type CDATA #IMPLIED
+  width CDATA #REQUIRED>
+
+<!ELEMENT xfield EMPTY>
+<!ATTLIST xfield
+  default CDATA #IMPLIED
+  desc CDATA #IMPLIED
+  ignore CDATA #IMPLIED
+  lsb CDATA #REQUIRED
+  name CDATA #REQUIRED
+  trigger CDATA #IMPLIED
+  type CDATA #IMPLIED
+  width CDATA #REQUIRED>
+
+<!ELEMENT constant EMPTY>
+<!ATTLIST constant
+  name CDATA #REQUIRED
+  val CDATA #REQUIRED
+  desc CDATA #IMPLIED>
+
+<!ELEMENT creg (field)*>
+<!ATTLIST creg
+  name CDATA #REQUIRED
+  default CDATA #IMPLIED
+  desc CDATA #IMPLIED
+  mode CDATA #IMPLIED
+  reps CDATA #IMPLIED
+  stb CDATA #IMPLIED
+  stype CDATA #IMPLIED
+  type CDATA #IMPLIED
+  used CDATA #IMPLIED
+  width CDATA #IMPLIED
+  ignore CDATA #IMPLIED>
+
+<!ELEMENT xcreg (xfield)*>
+<!ATTLIST xcreg
+  name CDATA #REQUIRED
+  addr CDATA #REQUIRED
+  default CDATA #IMPLIED
+  desc CDATA #IMPLIED
+  mode CDATA #IMPLIED
+  reps CDATA #IMPLIED
+  stb CDATA #IMPLIED
+  stype CDATA #IMPLIED
+  type CDATA #IMPLIED
+  used CDATA #IMPLIED
+  width CDATA #IMPLIED
+  ignore CDATA #IMPLIED>
+
+<!ELEMENT include EMPTY>
+<!ATTLIST include
+  path CDATA #REQUIRED>
+
+<!ELEMENT sreg (field)*>
+<!ATTLIST sreg
+  ack CDATA #IMPLIED
+  desc CDATA #IMPLIED
+  mode CDATA #IMPLIED
+  name CDATA #REQUIRED
+  reps CDATA #IMPLIED
+  used CDATA #IMPLIED
+  stype CDATA #IMPLIED
+  type CDATA #IMPLIED
+  width CDATA #IMPLIED
+  ignore CDATA #IMPLIED>
+
+<!ELEMENT xsreg (xfield)*>
+<!ATTLIST xsreg
+  ack CDATA #IMPLIED
+  addr CDATA #REQUIRED
+  desc CDATA #IMPLIED
+  mode CDATA #IMPLIED
+  name CDATA #REQUIRED
+  reps CDATA #IMPLIED
+  used CDATA #IMPLIED
+  stype CDATA #IMPLIED
+  type CDATA #IMPLIED
+  width CDATA #IMPLIED
+  ignore CDATA #IMPLIED>
+
+<!ELEMENT subblock EMPTY>
+<!ATTLIST subblock
+  name CDATA #REQUIRED
+  type CDATA #REQUIRED
+  desc CDATA #IMPLIED
+  ignore CDATA #IMPLIED
+  reps CDATA #IMPLIED
+  used CDATA #IMPLIED>
+
+<!ELEMENT xsubblock EMPTY>
+<!ATTLIST xsubblock
+  name CDATA #REQUIRED
+  type CDATA #REQUIRED
+  addr CDATA #IMPLIED
+  desc CDATA #IMPLIED
+  ignore CDATA #IMPLIED
+  reps CDATA #IMPLIED
+  used CDATA #IMPLIED>
