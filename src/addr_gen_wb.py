@@ -128,8 +128,6 @@ lxml_parser = let.XMLParser(dtd_validation=True)
 relax_ng_path = os.path.join(os.path.dirname(__file__), "agwb.rng")
 relaxng_doc = let.parse(relax_ng_path)
 relax_ng = let.RelaxNG(relaxng_doc)
-with open("ftot.xml","wt") as fout:
-  fout.write(FINAL_XML)
 agwb_tree = let.parse(StringIO(FINAL_XML))
 valid = relax_ng.validate(agwb_tree)
 if not valid:
