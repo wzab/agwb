@@ -1,4 +1,4 @@
-<block name="SYS1">
+<block nafme="SYS1" >
   <creg name="CTRL" desc="Control register" stb="1" used="1;0">
     <field name="START" width="1" desc="Start the operation" trigger="1" />
     <field name="STOP" width="1" desc="Stop the operation" trigger="1" />
