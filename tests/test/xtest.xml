@@ -1,0 +1,17 @@
+<include path="./xnest.xml" />
+<xblock name="XBLK1" size="256">
+  <xcreg name="nctrl" desc="Control register" addr="13" stb="1" used="1;0">
+    <xfield name="freq" width="12" lssb="2" desc="Start the operation" trigger="1" />
+    <xfield name="mute" width="1" lsb="0" desc="Stop the operation" trigger="1" />
+    <xfield name="irq" width="1" lsb="14" default="1" desc="Transmission speed"/>
+  </xcreg>
+  <xcreg name="nreg" stb="1" reps="3" addr="21" >
+    <xfield name="B1" width="1" lsb="0" desc="Start the operation" trigger="1" />
+    <xfield name="B2" width="1" lsb="1" desc="Start the operation"  />
+    <xfield name="B3" width="1" lsb="2" desc="Start the operation" trigger="1" />    
+  </xcreg>
+  <xcreg name="select" desc="Link enable registers" addr="50" reps="9;10" default="0x0"/>
+  <xsreg name="status" desc="Status register" addr="80" ack="1" />
+  <xsubblock name="s" type="XNEST1" addr="100" reps="5"/>
+</xblock>
+

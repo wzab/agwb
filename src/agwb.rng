@@ -177,11 +177,6 @@
 					<text/>
 				</attribute>
 			</optional>
-			<optional>
-				<attribute name="lsb">
-					<text/>
-				</attribute>
-			</optional>
 			<attribute name="name">
 				<text/>
 			</attribute>

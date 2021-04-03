@@ -38,7 +38,6 @@ field =
     attribute default { text }?,
     attribute desc { text }?,
     attribute ignore { text }?,
-    attribute lsb { text }?,
     attribute name { text },
     attribute trigger { text }?,
     attribute type { text }?,

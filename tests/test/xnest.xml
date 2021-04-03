@@ -1,0 +1,13 @@
+<xblock name="XNEST1" size="13">
+  <xcreg name="xct" desc="Control register" addr="1" stb="1" used="1;0">
+    <xfield name="run" width="1" lsb="0" desc="Start the operation" trigger="1" />
+    <xfield name="stop" width="1" lsb="1" desc="Stop the operation" trigger="1" />
+    <xfield name="width" width="5" lsb="2" default="1" desc="Transmission speed"/>
+  </xcreg>
+  <xcreg name="reg2" stb="1" reps="3" addr="4" >
+    <xfield name="A1" width="1" lsb="0" desc="Start the operation" trigger="1" />
+    <xfield name="A2" width="1" lsb="1" desc="Start the operation"  />
+  </xcreg>
+  <xsreg name="result" desc="Status register" addr="7" ack="1" reps="3" />
+</xblock>
+
