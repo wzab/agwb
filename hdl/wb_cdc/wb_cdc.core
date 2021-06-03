@@ -6,7 +6,7 @@ filesets:
     rtl:
         files:
             - wb_cdc.vhd : {file_type: vhdlSource-93}        
-        logical_name: vhdl_simple
+        logical_name: agwb
 
     vivado_constr:
         files:
