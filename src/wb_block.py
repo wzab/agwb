@@ -1547,6 +1547,9 @@ end if;
                     d_c += ","
                 d_c += 'x"' + format(self.ver_var[i], "08x") + '"'
             d_c += ");\n"
+        else:
+            d_c += "constant v_"+self.name+"_ver_id : t_ver_id_variants(0 downto 0) := ("
+            d_c += '0 => x"' + format(self.ver_full, "08x") + '");\n'
         self.add_templ("p_generics_consts", d_c, 2)        
         if self.aggregate_outs != "0":
             self.out_type = "t_" + self.name + "_out_regs"
