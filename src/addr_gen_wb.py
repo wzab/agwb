@@ -45,6 +45,7 @@ PARSER.add_argument(
     "--fusesoc", help="Generate FuseSoc .core file", action="store_true"
 )
 PARSER.add_argument("--fusesoc_vlnv", help="FuseSoc VLNV tag", default="")
+PARSER.add_argument("--eprj", help="Generate the VEXTPROJ .eprj file", action="store_true")
 ARGS = PARSER.parse_args()
 
 INFILENAME = ARGS.infile
@@ -381,3 +382,16 @@ if ARGS.fusesoc:
         coredata["targets"]["default"]["filesets"] = ["rtl"]
 
         fo.write(yaml.dump(coredata))
+
+if ARGS.eprj:
+    with open(wb.GLB.VHDL_PATH + "/agwb_" + TOP_NAME + ".eprj", "w") as fo:
+        # Copy the list of created files, but remove the directory
+        created_files = []
+        created_files.append("agwb_pkg.vhd")
+        for file in wb.created_files["vhdl"]:
+            file = file.split("/")[-1]
+            created_files.append(file)
+        created_files.append(TOP_NAME + "_const_pkg.vhd")
+        for file in created_files:
+            fo.write("vhdl agwb " + file + "\n")
+
