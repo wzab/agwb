@@ -15,10 +15,6 @@
 
 			<interleave>
 				<zeroOrMore>
-					<ref name="blackbox"/>
-				</zeroOrMore>
-
-				<zeroOrMore>
 					<ref name="block"/>
 				</zeroOrMore>
 
@@ -27,19 +23,7 @@
 				</zeroOrMore>
 
 				<zeroOrMore>
-					<ref name="creg"/>
-				</zeroOrMore>
-
-				<zeroOrMore>
 					<ref name="include"/>
-				</zeroOrMore>
-
-				<zeroOrMore>
-					<ref name="sreg"/>
-				</zeroOrMore>
-
-				<zeroOrMore>
-					<ref name="subblock"/>
 				</zeroOrMore>
 			</interleave>
 

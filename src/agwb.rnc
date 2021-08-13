@@ -2,13 +2,7 @@ start =
   element sysdef {
     attribute masters { text }?,
     attribute top { text },
-    (blackbox*
-     & block*
-     & constant*
-     & creg*
-     & \include*
-     & sreg*
-     & subblock*)
+    (block* & constant* & \include*)
   }
 blackbox =
   element blackbox {
