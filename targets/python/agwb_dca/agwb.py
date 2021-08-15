@@ -136,14 +136,16 @@ class _BitFieldAccess(object):
 
     def writefb(self, value:int, more:bool=False) -> None:
         """ Optimized write method. The write is translated into the
-            rmw command. Multiple writex commands to bitfields located
+            rmw command. Multiple writefb commands to bitfields located
             in the same register are aggregated into a single rmw,
-            unless "now" is True.
-            Reading of the register is scheduled after the first writex
+            as long as "more" is True.
+            Reading of the register is scheduled after the first writefb
             is executed.
-            If "now" is True, or another operation than rmw to the same
-            register is executed, the write is scheduled with current
-            mask and value, resulting from rmws aggregated up to now.
+            If "more" is False, the writefb is completed and the write 
+            is scheduled with the aggregated masks and values.
+            As long as writefb is not complete, other operations
+            on the interface raise the exception.
+
         """
         # Check if the value to be stored is correct
         if (value < self.x__bf.vmin) or (value > self.x__bf.vmax):

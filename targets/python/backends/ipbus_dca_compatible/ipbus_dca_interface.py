@@ -61,7 +61,7 @@ class IPbusInterface:
 
     def writeb_masked(self,address,mask,value, more=False):
         # Check if another RMW was not completed
-        if (self.rmw_addr is not None) and (addr != self.rmw_addr):
+        if (self.rmw_addr is not None) and (address != self.rmw_addr):
             raise Exception("aggregated writeb_masked must use the same address")
         if self.rmw_addr is None:
             self.rmw_addr = address

@@ -218,13 +218,23 @@ begin
 {testdev_access}
           if int_addr = {block_id_addr} then
              int_regs_wb_m_i.dat <= {block_id};
-             int_regs_wb_m_i.ack <= '1';
-             int_regs_wb_m_i.err <= '0';
+             if int_regs_wb_m_o.we = '1' then
+                int_regs_wb_m_i.err <= '1';
+                int_regs_wb_m_i.ack <= '0';
+             else
+                int_regs_wb_m_i.ack <= '1';
+                int_regs_wb_m_i.err <= '0';
+             end if;
           end if;
           if int_addr = {block_ver_addr} then
              int_regs_wb_m_i.dat <= g_ver_id;
-             int_regs_wb_m_i.ack <= '1';
-             int_regs_wb_m_i.err <= '0';
+             if int_regs_wb_m_o.we = '1' then
+                int_regs_wb_m_i.err <= '1';
+                int_regs_wb_m_i.ack <= '0';
+             else
+                int_regs_wb_m_i.ack <= '1';
+                int_regs_wb_m_i.err <= '0';
+             end if;
           end if;
         end if;
       end if;
@@ -1590,6 +1600,9 @@ end if;
                     d_c += ","
                 d_c += 'x"' + format(self.ver_var[i], "08x") + '"'
             d_c += ");\n"
+        else:
+            d_c += "constant v_"+self.name+"_ver_id : t_ver_id_variants(0 downto 0) := ("
+            d_c += '0 => x"' + format(self.ver_full, "08x") + '");\n'
         self.add_templ("p_generics_consts", d_c, 2)        
         if self.aggregate_outs != "0":
             self.out_type = "t_" + self.name + "_out_regs"
@@ -1753,6 +1766,9 @@ end if;
 
     def amap_xml_hdr(self,ver_hash):
         res = '<module id="' + self.name
+        # set is_top depending on the top name
+        if self.name == GLB.TOP_NAME:
+            res += '" is_top="1'
         res += '" id_hash="0x' + format(self.id_val, "08x")
         res += '" ver_hash="0x' + format(ver_hash, "08x")
         res += '" system_hash="0x' + format(GLB.VER_ID, "08x")

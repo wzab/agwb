@@ -15,10 +15,6 @@
 
 			<interleave>
 				<zeroOrMore>
-					<ref name="blackbox"/>
-				</zeroOrMore>
-
-				<zeroOrMore>
 					<ref name="block"/>
 				</zeroOrMore>
 
@@ -33,7 +29,6 @@
 				<zeroOrMore>
 					<ref name="include"/>
 				</zeroOrMore>
-
 			</interleave>
 
 		</element>

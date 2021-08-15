@@ -6,7 +6,7 @@
 -- Author     : Wojciech Zabolotny  <wzab01@gmail.com> or <wzab@ise.pw.edu.pl>
 -- Company    : 
 -- Created    : 2018-03-11
--- Last update: 2020-10-15
+-- Last update: 2021-05-09
 -- Platform   :
 -- Standard   : VHDL'93/02
 -- License    : PUBLIC DOMAIN or Creative Commons CC0
@@ -133,12 +133,14 @@ begin  -- architecture rtl
         resp_s1     <= '0';
         resp_s0     <= '0';
         slave_o.ack <= '0';
+	slave_o.stall <= '0';
         ms_state    <= ST_IDLE;
       else
         -- defaults
         slave_o.ack <= '0';
         slave_o.err <= '0';
         slave_o.rty <= '0';
+	slave_o.stall <= '0';
         -- Check if the cycle is even or odd
         ncycle := '0';
         if (req = "01") or (req = "11") then

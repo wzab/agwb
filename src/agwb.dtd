@@ -1,6 +1,6 @@
 <?xml encoding="UTF-8"?>
 
-<!ELEMENT sysdef (blackbox|block|xblock|constant|include)*>
+<!ELEMENT sysdef (block|xblock|constant|include)*>
 <!ATTLIST sysdef
   masters CDATA #IMPLIED
   top CDATA #REQUIRED>
