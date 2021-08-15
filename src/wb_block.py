@@ -62,6 +62,8 @@ package {p_entity}_pkg is
 
 {p_package}
 {out_record}
+{in_record}
+{ack_record}
 end {p_entity}_pkg;
 
 package body {p_entity}_pkg is
@@ -676,9 +678,30 @@ class WbReg(WbObject):
                     )
                 else:
                     parent.add_templ("out_record", self.name + "_stb : std_logic;\n", 4)
+        # If the inputs are aggregated, add the type of the signal to the output record type
+        if self.regtype == "sreg" and parent.in_type is not None:
+            if self.size > 1:
+                parent.add_templ(
+                    "in_record", self.name + " : u" + tname + "_array(" + self.size_constant + " - 1 downto 0);\n", 4
+                )
+            else:
+                parent.add_templ("in_record", self.name + " : " + tname + ";\n", 4)
+            if self.ack == 1:
+                parent.gen_ack = True
+                if self.size > 1:
+                    parent.add_templ(
+                        "ack_record",
+                        self.name
+                        + " : std_logic_vector("
+                        + self.size_constant +" - 1"
+                        + " downto 0);\n",
+                        4,
+                    )
+                else:
+                    parent.add_templ("ack_record", self.name + " : std_logic;\n", 4)
 
         # Now generate the entity ports.
-        # For simplicity of the code, in case of aggregated outputs the port definition
+        # For simplicity of the code, in case of aggregated outputs or aggregated inputs the port definition
         # is generated, but finally dropped
         d_t = ""
         sfx = "_i"
@@ -713,7 +736,10 @@ class WbReg(WbObject):
                 )
             else:
                 d_t += self.name + sfx + "_ack : out std_logic;\n"
-        if self.regtype != "creg" or parent.out_type is None:
+        # Output the generated port only if the particular register is not
+        # aggregated
+        if (self.regtype == "creg" and parent.out_type is None) or \
+           (self.regtype == "sreg" and parent.in_type is None):
             parent.add_templ("signal_ports", d_t, 4)
         # Generate the intermediate signals for output ports
         # (because they can't be read back)
@@ -772,6 +798,8 @@ class WbReg(WbObject):
                     )
             parent.add_templ("signal_decls", d_t, 2)
             parent.add_templ("cont_assigns", dt2, 2)
+        # Connect the register inputs to the input record
+        
         # Reset control registers
         if self.regtype == "creg":
             if self.default is not None:
@@ -823,6 +851,11 @@ class WbReg(WbObject):
         if self.regtype == "sreg":
             # First initialize the whole return value with zeroes
             d_t += "    int_regs_wb_m_i.dat <= (others => '0');\n"
+            # Set the right input signal name
+            if parent.in_type is None:
+                sig_name = self.name + "_i"
+            else:
+                sig_name = parent.in_name + "." + self.name
             # Now set the used bits with correct values
             d_t += (
                 "    int_regs_wb_m_i.dat("
@@ -830,21 +863,25 @@ class WbReg(WbObject):
                 + " downto 0) <= "
                 + conv_fun
                 + "("
-                + self.name
-                + "_i"
+                + sig_name
                 + ind
                 + ");\n"
             )
             if self.ack == 1:
+                # Set the right ACK signal name
+                if parent.ack_type is None:
+                    ack_name = self.name + sfx + "_ack"
+                else:
+                    ack_name = parent.ack_name + "." + self.name 
                 d_t += "    if int_regs_wb_m_i.ack = '0' then\n"
-                # We shorten the STB to a single clock
-                d_t += "       " + self.name + sfx + "_ack" + ind + " <= '1';\n"
+                # We shorten the ACK to a single clock
+                d_t += "       " + ack_name + ind + " <= '1';\n"
                 d_t += "    end if;\n"
                 # Add clearing of ACK signal at the begining of the process
                 if self.force_vec:
-                    d_i += self.name + sfx + "_ack <= (others => '0');\n"
+                    d_i += ack_name + " <= (others => '0');\n"
                 else:
-                    d_i += self.name + sfx + "_ack <= '0';\n"
+                    d_i += ack_name + " <= '0';\n"
         else:
             # First initialize the whole return value with zeroes
             d_t += "    int_regs_wb_m_i.dat <= (others => '0');\n"
@@ -1355,6 +1392,9 @@ class WbBlock(WbObject):
         self.reserved = ex.exprval(el.get("reserved", "0"))
         # We check if the outputs from the registers should be aggregated
         self.aggregate_outs = el.get("aggr_outs", "0")
+        # We check if the inputs to the registers should be aggregated
+        self.aggregate_ins = el.get("aggr_ins", "0")
+        self.gen_ack = False
         # We prepare the list of address areas
         self.areas = []
         # We prepare the table for storing the registers.
@@ -1510,6 +1550,12 @@ class WbBlock(WbObject):
             if l_n != "":
                 self.templ_dict[templ_key] += indent * " " + l_n
 
+    def set_templ(self, templ_key, value):
+        """ That function sets the code template in the dictionary 
+            to the given value.
+        """
+        self.templ_dict[templ_key] = value
+                
     def create_addr(self,adr):
         return '"' + format(adr, "0" + str(self.reg_adr_bits) + "b") + '"'
 
@@ -1545,6 +1591,8 @@ class WbBlock(WbObject):
         self.add_templ("signal_ports", "", 0)
         self.add_templ("signals_idle", "", 0)
         self.add_templ("out_record", "", 0)
+        self.add_templ("in_record", "", 0)
+        self.add_templ("ack_record", "", 0)
         if self.testdev_ena != 0:
             d_t = "-- Test device signals\n"
             d_t += "signal sig_testdev_rw : std_logic_vector(31 downto 0) := (others => '0');\n"
@@ -1611,6 +1659,18 @@ end if;
         else:
             self.out_type = None
             self.out_name = None
+        if self.aggregate_ins != "0":
+            self.in_type = "t_" + self.name + "_in_regs"
+            self.add_templ("in_record", "type " + self.in_type + " is record\n", 2)
+            self.in_name = "in_regs"
+            self.ack_type = "t_" + self.name + "_ack_regs"
+            self.add_templ("ack_record", "type " + self.ack_type + " is record\n", 2)
+            self.ack_name = "ack_regs_o"
+        else:
+            self.in_type = None
+            self.in_name = None
+            self.ack_type = None
+            self.ack_name = None
         for reg in self.regs:
             # generate
             reg.gen_vhdl(self)
@@ -1754,6 +1814,20 @@ end if;
             self.add_templ(
                 "signal_ports", self.out_name + " : out " + self.out_type + ";\n", 4
             )
+        if self.in_type is not None:
+            self.add_templ("in_record", "end record;\n\n", 2)
+            self.add_templ(
+                "signal_ports", self.in_name + " : in " + self.in_type + ";\n", 4
+            )
+        # The ack_regs port is added only if at least one ack signal was created
+        if (self.ack_type is not None) and self.gen_ack :
+            self.add_templ("ack_record", "end record;\n\n", 2)
+            self.add_templ(
+                "signal_ports", self.ack_name + " : out " + self.ack_type + ";\n", 4
+            )
+        else:
+            # We need to clear the start of the record from the template
+            self.set_templ("ack_record","")
         # All template is filled, so we can now generate the files
         wb_vhdl_pkg_file = GLB.VHDL_PATH + "/" + self.name + "_pkg.vhd"
         with open(wb_vhdl_pkg_file, "w") as f_o:

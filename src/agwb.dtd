@@ -17,6 +17,7 @@
 
 <!ELEMENT block (blackbox|creg|sreg|subblock|xsubblock)*>
 <!ATTLIST block
+  aggr_ins CDATA #IMPLIED
   aggr_outs CDATA #IMPLIED
   external CDATA #IMPLIED
   name CDATA #REQUIRED

@@ -16,6 +16,7 @@ blackbox =
   }
 block =
   element block {
+    attribute aggr_ins { text }?,
     attribute aggr_outs { text }?,
     attribute external { text }?,
     attribute name { text },
