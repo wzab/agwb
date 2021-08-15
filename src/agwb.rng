@@ -67,6 +67,11 @@
 	<define name="block">
 		<element name="block">
 			<optional>
+				<attribute name="aggr_ins">
+					<text/>
+				</attribute>
+			</optional>
+			<optional>
 				<attribute name="aggr_outs">
 					<text/>
 				</attribute>

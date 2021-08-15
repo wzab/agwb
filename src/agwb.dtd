@@ -17,6 +17,7 @@
 
 <!ELEMENT block (blackbox|creg|sreg|subblock)*>
 <!ATTLIST block
+  aggr_ins CDATA #IMPLIED
   aggr_outs CDATA #IMPLIED
   name CDATA #REQUIRED
   reserved CDATA #IMPLIED
