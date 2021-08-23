@@ -1,4 +1,4 @@
-# AGWB (Address Generator for WishBone) - register access for hierarchical Wishbone connected systems
+# AGWB (Address Generator for Wishbone) - register access for hierarchical Wishbone connected systems
 
 ## Overview
 
