@@ -286,5 +286,5 @@ It is possible to extend that functionality to other backends.
 variants
 ~~~~~~~~
 
-To be described
+To be described. At the moment, please look at https://github.com/wzab/agwb/wiki/Multiple-AGWB-trees for information about the reason for introducing the variants.
 
