@@ -365,8 +365,8 @@ if __name__ == "__main__":
         int(0),
     ]
 
-    # The class iface provides just two methods
-    # read(address) and write(address,value)
+    # The class iface implements the basic (read, write) 
+    # and the extended (readb, writeb, write_maske, writeb_masked, dispatch) methods
     class DemoIface(object):
         def __init__(self):
             self.opers = [] # List of operations
