@@ -38,7 +38,7 @@ writeb_masked(self,address,mask,value, more=False)
        X:= (X and ~mask) | (value and mask)
        Setting more to "True" blocks immediate scheduling of the operation.
        Then multiple writes TO FIELDS LOCATED IN THE SAME REGISTER
-       are accumulated. The last call must have "more" set to True.
+       are accumulated. The last call must have "more" set to False.
        It schedules the resulting read-modify-write command.
 dispatch() - executes the accumulated list of operations
       (the list may be executed automatically, if it grows
