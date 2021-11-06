@@ -11,8 +11,8 @@ The early version of AGWB was described in https://doi.org/10.1117/12.2536259 .
 
 The [wbgen2](https://www.ohwr.org/projects/wishbone-gen/wiki/wbgen2-documentation) is a very nice tool. However, it has certain limitations that were critical for me. Namely it does not support arrays of registers, and does not support nested blocks. Probably it can be extended to support those features, but I definitely prefere to write code generators in Python than in Lua. Therefore I decided to try to write adr\_gen\_wb.py in Python, almost from scratch.
 
-The code is licensed under GPL v2 license.
-The generated code is free, and you can freely use it in your design.
+The AGWB code is licensed under GPL v2 license.
+The generated code is free, and you can freely use it in your design. However, it uses the blocks provided by the General cores library (https://ohwr.org/project/general-cores/tree/master/modules/wishbone) licensed under Solderpad Hardware License, Version 2.0 (http://solderpad.org/licenses/SHL-2.0/).
 
 I'd like to thank Marek Gumiński, Michał Kruszewski and Walter F.J. Müller for important suggestions related to concept of that solution.
 
