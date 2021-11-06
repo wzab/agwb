@@ -3,7 +3,7 @@
 ## AGWB publications
 
 The current version of AGWB is described in the article https://doi.org/10.3390/s21217378 (also available at https://www.mdpi.com/1424-8220/21/21/7378 ).
-If you use AGWB in your work and publish results, please consider quoting that paper.
+If you use AGWB in your work and publish results, please consider citing that paper.
 There is also a preprint version  https://doi.org/10.20944/preprints202110.0098.v1 which contains a more detailed description of the AGWB system description format.
 The early version of AGWB was described in https://doi.org/10.1117/12.2536259 .
 
