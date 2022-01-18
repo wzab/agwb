@@ -444,7 +444,7 @@ class WbReg(WbObject):
                 raise Exception(
                     "Default value for " + self.name + " register is too big."
                 )
-            if self.size != 1:
+            if (self.size != 1) or (self.force_vec == True):
                 self.default = "(others => "
             else:
                 self.default = ""
@@ -471,7 +471,7 @@ class WbReg(WbObject):
                 )
             if self.fields:
                 self.default += ")"
-            if self.size != 1:
+            if (self.size != 1) or (self.force_vec == True):
                 self.default += ")"
         else:
             self.default = None
@@ -644,14 +644,14 @@ class WbReg(WbObject):
 
         # If the outputs are aggregated, add the type of the signal to the output record type
         if self.regtype == "creg" and parent.out_type is not None:
-            if self.size > 1:
+            if (self.size > 1) or (self.force_vec == True):
                 parent.add_templ(
                     "out_record", self.name + " : u" + tname + "_array(" + self.size_constant + " - 1 downto 0);\n", 4
                 )
             else:
                 parent.add_templ("out_record", self.name + " : " + tname + ";\n", 4)
             if self.stb == 1:
-                if self.size > 1:
+                if (self.size > 1) or (self.force_vec == True):
                     parent.add_templ(
                         "out_record",
                         self.name
@@ -664,7 +664,7 @@ class WbReg(WbObject):
                     parent.add_templ("out_record", self.name + "_stb : std_logic;\n", 4)
         # If the inputs are aggregated, add the type of the signal to the output record type
         if self.regtype == "sreg" and parent.in_type is not None:
-            if self.size > 1:
+            if (self.size > 1) or (self.force_vec == True):
                 parent.add_templ(
                     "in_record", self.name + " : u" + tname + "_array(" + self.size_constant + " - 1 downto 0);\n", 4
                 )
@@ -672,7 +672,7 @@ class WbReg(WbObject):
                 parent.add_templ("in_record", self.name + " : " + tname + ";\n", 4)
             if self.ack == 1:
                 parent.gen_ack = True
-                if self.size > 1:
+                if (self.size > 1) or (self.force_vec == True):
                     parent.add_templ(
                         "ack_record",
                         self.name

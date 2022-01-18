@@ -4,6 +4,11 @@
     <field name="SPEED" width="4" default="-1" type="signed" desc="Transmission speed"/>
     <field name="STOP" width="1" desc="Stop the operation" />
   </creg>
+  <creg name="Test1" desc="Test register for issue 64" stb="1" reps="1">
+    <field name="FIELD1" width="1" desc="test field 1"/>
+    <field name="FIELD2" width="4" default="-1" type="signed" desc="test field 2"/>
+    <field name="FIELD3" width="1" desc="test field 3" />
+  </creg>
   <sreg name="STATUS" desc="Status register" ack="1" />
   <creg name="ENABLEs" desc="Link enable registers" stb="1" reps="10" default="0x0"/>
 </block>
