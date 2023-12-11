@@ -1582,7 +1582,7 @@ end if;
             self.add_templ("testdev_access",d_t,10);
         # If the outputs must be aggregated in a single record,
         # we will generate a type for that record instead of output ports
-        log.debug(self, self.name)
+        log.debug(self.name)
         # Generate the block version id constants
         d_c = 'constant c_'+self.name+'_ver_id : std_logic_vector(31 downto 0) := '
         d_c += 'x"' + format(self.ver_full, "08x") + '";\n'

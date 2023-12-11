@@ -24,11 +24,13 @@ import zlib
 import argparse
 import wb_block as wb
 import include
+import logging as log
 
 # The module expressions accepts definitions of constants (function addval)
 # and evaluates the expressions (function exprval)
 import expressions as ex
 import yaml
+
 
 
 PARSER = argparse.ArgumentParser()
@@ -46,7 +48,12 @@ PARSER.add_argument(
 )
 PARSER.add_argument("--fusesoc_vlnv", help="FuseSoc VLNV tag", default="")
 PARSER.add_argument("--eprj", help="Generate the VEXTPROJ .eprj file", action="store_true")
+PARSER.add_argument("--verbose", help="Add verbosity to program output", action="store_true")
 ARGS = PARSER.parse_args()
+
+if ARGS.verbose:
+    log.basicConfig(level=log.DEBUG)
+    
 
 INFILENAME = ARGS.infile
 
