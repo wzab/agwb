@@ -250,6 +250,7 @@ class Block(object):
             subblock = getattr(self, k)
             if not issubclass(type(subblock), Block):
                 continue
+            subblock.verify_id_and_version()
 
         if self.x__is_blackbox == False:
             self._verify_id()
