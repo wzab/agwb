@@ -1317,7 +1317,7 @@ class WbBlackBox(WbObject):
         res += "#define __" + self.name + "__INC_H\n"
         res += "typedef struct {\n"
         res += "  " + XVOLATILE + " uint32_t filler[" + str(self.addr_size) + "];\n"
-        res += "}  __attribute__((packed)) " + "agwb_" + self.name + ";\n"
+        res += "}  __attribute__((aligned(4))) " + "agwb_" + self.name + ";\n"
         res += "#endif\n"
         with open(GLB.C_HEADER_PATH + "/agwb_" + self.name + ".h", "w") as f_o:
             f_o.write(res)
