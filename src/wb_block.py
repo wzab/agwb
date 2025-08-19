@@ -265,12 +265,6 @@ def blocks():
 def blackboxes():
     return GLB.blackboxes
 
-
-def vhdl_address_cst_str(name, addr):
-    res = f'constant {name}_addr : std_logic_vector(32 - 1 downto 0) := x"{addr:08x}";'    
-    return res
-    
-
 def get_reps(el):
     """ That function reads the number of repetitions of the block or register
         in different variants, or reads the information about its usage 
@@ -937,12 +931,6 @@ class WbReg(WbObject):
         parent.add_templ("register_access", d_t, 10)
         parent.add_templ("signals_idle", d_i, 8)
         parent.add_templ("trigger_bits_reset", d_tbr, 8)
-
-    def gen_vhdl_map(self, base, name):
-        res = ""
-        res += vhdl_address_cst_str(name=name+ self.name, addr=base+self.base)
-        res += " --" + self.desc + "\n"
-        return res
 
     def gen_amap_xml(self, reg_base, nvar = None):
         res = ""
@@ -1789,7 +1777,6 @@ end if;
             self.set_templ("ack_record","")
         # All template is filled, so we can now generate the files
         wb_vhdl_pkg_file = GLB.VHDL_PATH + "/" + self.name + "_pkg.vhd"
-        log.debug(self.areas)
         with open(wb_vhdl_pkg_file, "w") as f_o:
             f_o.write(TEMPL_PKG.format(**self.templ_dict))
             created_files["vhdl"].append(wb_vhdl_pkg_file)
@@ -1797,97 +1784,6 @@ end if;
         with open(wb_vhdl_file, "w") as f_o:
             f_o.write(templ_wb(self.N_MASTERS).format(**self.templ_dict))
             created_files["vhdl"].append(wb_vhdl_file)
-            
-        # TODO: make the map generation a parameter
-        
-        # map_const = '   constant c_{reg_name}_off : {address_t} := {reg_address};\n'
-        # address_const = ''.join([map_const for x in range(6)])
-        parameters_dict = {
-            'p_entity' : self.templ_dict['p_entity'],
-            'address_const' : ''
-                           }
-        
-        template = '''\
---- This file has been automatically generated
---- by the agwb (https://github.com/wzab/agwb).
---- Please don't edit it manually, unless you really have to do it
-library ieee;
-
-use ieee.std_logic_1164.all;
-use ieee.numeric_std.all;
-
-library general_cores;
-use general_cores.wishbone_pkg.all;
-
-library work;
-use work.agwb_pkg.all;
-
-package {p_entity}_wb_map_pkg is
-{address_const}
-end {p_entity}_wb_map_pkg;
-'''
-
-        
-        parameters_dict['address_const'] = self.gen_vhdl_map(0, "")
-        wb_vhdl_wb_map_pkg_file = GLB.VHDL_PATH + "/" + self.name + "_wb_map_pkg.vhd"
-        with open(wb_vhdl_wb_map_pkg_file, "w") as f_o:
-            f_o.write(template.format(**parameters_dict))
-            created_files["vhdl"].append(wb_vhdl_wb_map_pkg_file)
-        
-    def gen_vhdl_map(self, base, mname):
-        """This function generates a VHDL register mapping so that register addresses are available as constants for the digital design itself
-        """
-        res = ""
-        
-        if mname != "":
-            mname += '_' # appending to module name
-        
-        self.areas.sort(key=WbArea.sort_adr)
-        for (
-            a_r
-        ) in self.areas:  # We assume that they are sorted by increasing base address
-            if a_r.obj is None:
-                area_name = "-- Registers"
-            else:
-                area_name = a_r.name
-            res += "\n"
-            res += (
-                "--" +
-                hex(base + a_r.adr)
-                + "-"
-                + hex(base + a_r.adr + a_r.total_size - 1)
-                + " "
-                + area_name
-                + "\n"
-            )
-            # Here we generate the detailed description of the area
-            if a_r.obj is None:
-                # Registers
-                res += (
-                    vhdl_address_cst_str(name=mname+'id', addr=base+a_r.adr)
-                    + " -- block ID register\n"
-                )
-                res += (
-                    vhdl_address_cst_str(name=mname+'ver', addr=base+a_r.adr+1)
-                    + " -- block VER register\n"
-                )
-                for reg in self.regs:
-                    res += reg.gen_vhdl_map(base + a_r.adr, mname)
-            else:
-                # Blocks or vectors of blocks
-                if (a_r.reps == 1) and (a_r.force_vec == False):
-                    # Single block
-                    res += a_r.obj.gen_vhdl_map(base + a_r.adr, mname + a_r.name)
-                else:
-                    # Vector of blocks
-                    for i in range(0, a_r.reps):
-                        res += a_r.obj.gen_vhdl_map(
-                            base + a_r.adr + i * a_r.obj.addr_size,
-                            mname + "." + a_r.name + "[" + str(i) + "]",
-                        )
-                    res += "\n"
-        return res
-        
 
     def amap_xml_hdr(self,ver_hash):
         res = '<module id="' + self.name
