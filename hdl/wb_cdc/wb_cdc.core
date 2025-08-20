@@ -8,15 +8,15 @@ filesets:
             - wb_cdc.vhd : {file_type: vhdlSource-93}        
         logical_name: agwb
 
-    vivado_constr:
-        files:
-            - wb_cdc.tcl : {file_type : SDC}
+#    vivado_constr:
+#        files:
+#            - wb_cdc.tcl : {file_type : SDC}
 
     tcl:
         files:
+            - "tool_vivado ? (wb_cdc.tcl)" : {file_type : SDC}
             - wb_cdc_wrapper.tcl : {file_type : tclSource}
 
 targets:
     default:
-        filesets: [rtl, "tool_vivado? (vivado_constr)", tcl]
-
+        filesets: [rtl, tcl]
